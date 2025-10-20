@@ -11,7 +11,7 @@ async def file_input_to_bytes(input_data: FileInput) -> tuple[bytes, str]:
         return input_data, "application/octet-stream"
 
     if hasattr(input_data, "read"):
-        content = input_data.read()
+        content = await asyncio.to_thread(input_data.read)
         if isinstance(content, str):
             content = content.encode()
         return content, "application/octet-stream"
@@ -53,36 +53,40 @@ async def send_request(
     endpoint = f"{base_url}{model.url_path}"
 
     timeout = aiohttp.ClientTimeout(total=300)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        request_task = asyncio.create_task(
-            session.post(
+
+    async def make_request() -> bytes:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(
                 endpoint,
                 headers={"X-API-KEY": api_key},
                 data=form_data,
-            ).__aenter__()
+            ) as response:
+                if not response.ok:
+                    error_text = await response.text()
+                    raise create_processing_error(
+                        f"Processing failed: {response.status} - {error_text}"
+                    )
+                return await response.read()
+
+    if cancel_token:
+        request_task = asyncio.create_task(make_request())
+        cancel_task = asyncio.create_task(cancel_token.wait())
+
+        done, pending = await asyncio.wait(
+            [request_task, cancel_task], return_when=asyncio.FIRST_COMPLETED
         )
 
-        if cancel_token:
-            cancel_task = asyncio.create_task(cancel_token.wait())
-            done, pending = await asyncio.wait(
-                [request_task, cancel_task],
-                return_when=asyncio.FIRST_COMPLETED
-            )
-            
-            for task in pending:
-                task.cancel()
-            
-            if cancel_task in done:
-                request_task.cancel()
-                raise asyncio.CancelledError("Request cancelled by user")
-        
-        response = await request_task
+        for task in pending:
+            task.cancel()
 
-        async with response:
-            if not response.ok:
-                error_text = await response.text()
-                raise create_processing_error(
-                    f"Processing failed: {response.status} - {error_text}"
-                )
+        if cancel_task in done:
+            request_task.cancel()
+            try:
+                await request_task
+            except asyncio.CancelledError:
+                pass
+            raise asyncio.CancelledError("Request cancelled by user")
 
-            return await response.read()
+        return await request_task
+
+    return await make_request()

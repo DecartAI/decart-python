@@ -1,4 +1,4 @@
-from typing import Any, Literal, get_args
+from typing import Any, Literal
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from .errors import create_model_not_found_error
 from .types import FileInput
@@ -175,21 +175,24 @@ _MODELS = {
 class Models:
     @staticmethod
     def realtime(model: RealTimeModels) -> ModelDefinition:
-        if model not in get_args(RealTimeModels):
+        try:
+            return _MODELS["realtime"][model]
+        except KeyError:
             raise create_model_not_found_error(model)
-        return _MODELS["realtime"][model]
 
     @staticmethod
     def video(model: VideoModels) -> ModelDefinition:
-        if model not in get_args(VideoModels):
+        try:
+            return _MODELS["video"][model]
+        except KeyError:
             raise create_model_not_found_error(model)
-        return _MODELS["video"][model]
 
     @staticmethod
     def image(model: ImageModels) -> ModelDefinition:
-        if model not in get_args(ImageModels):
+        try:
+            return _MODELS["image"][model]
+        except KeyError:
             raise create_model_not_found_error(model)
-        return _MODELS["image"][model]
 
 
 models = Models()

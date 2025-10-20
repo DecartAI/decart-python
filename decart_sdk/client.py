@@ -18,9 +18,6 @@ class DecartConfiguration(BaseModel):
 
 class DecartClient:
     def __init__(self, configuration: DecartConfiguration) -> None:
-        if not configuration.api_key:
-            raise create_invalid_api_key_error()
-
         self._process_client = ProcessClient(
             api_key=configuration.api_key,
             base_url=configuration.base_url,
