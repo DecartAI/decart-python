@@ -1,4 +1,5 @@
 from typing import Any, Optional
+import aiohttp
 from pydantic import BaseModel, Field, field_validator, ValidationError
 from .errors import InvalidAPIKeyError, InvalidBaseURLError, InvalidInputError
 from .models import ModelDefinition
@@ -39,6 +40,27 @@ class DecartClient:
         
         self.api_key = api_key
         self.base_url = base_url
+        self._session: Optional[aiohttp.ClientSession] = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the aiohttp session."""
+        if self._session is None or self._session.closed:
+            timeout = aiohttp.ClientTimeout(total=300)
+            self._session = aiohttp.ClientSession(timeout=timeout)
+        return self._session
+
+    async def close(self) -> None:
+        """Close the HTTP session and cleanup resources."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self.close()
 
     async def process(self, options: dict[str, Any]) -> bytes:
         """
@@ -62,29 +84,33 @@ class DecartClient:
 
         inputs = {k: v for k, v in options.items() if k not in ("model", "cancel_token")}
 
-        # Separate file inputs from other inputs
-        file_fields = {"data", "start", "end"}
-        file_inputs = {k: v for k, v in inputs.items() if k in file_fields}
-        non_file_inputs = {k: v for k, v in inputs.items() if k not in file_fields}
+        # File fields that need special handling (not validated by Pydantic)
+        FILE_FIELDS = {"data", "start", "end"}
+        
+        # Separate file inputs from regular inputs
+        file_inputs = {k: v for k, v in inputs.items() if k in FILE_FIELDS}
+        non_file_inputs = {k: v for k, v in inputs.items() if k not in FILE_FIELDS}
 
-        # Validate inputs using model's schema
-        validation_inputs = non_file_inputs.copy()
-        for field in file_fields:
-            if field in file_inputs:
-                validation_inputs[field] = b""  # Placeholder for validation
+        # Validate non-file inputs and create placeholder for file fields
+        validation_inputs = {
+            **non_file_inputs,
+            **{k: b"" for k in file_inputs.keys()}  # Placeholder bytes for validation
+        }
 
         try:
             validated_inputs = model.input_schema(**validation_inputs)
         except ValidationError as e:
             raise InvalidInputError(f"Invalid inputs for {model.name}: {str(e)}") from e
 
-        # Merge validated inputs with file inputs
-        processed_inputs = validated_inputs.model_dump(exclude_none=True)
-        for field in file_fields:
-            if field in file_inputs:
-                processed_inputs[field] = file_inputs[field]
+        # Build final inputs: validated non-file inputs + original file inputs
+        processed_inputs = {
+            **validated_inputs.model_dump(exclude_none=True),
+            **file_inputs  # Override placeholders with actual file data
+        }
 
+        session = await self._get_session()
         response = await send_request(
+            session=session,
             base_url=self.base_url,
             api_key=self.api_key,
             model=model,

@@ -1,8 +1,16 @@
-from typing import BinaryIO, Union, Optional
+from typing import BinaryIO, Union, Optional, Protocol, runtime_checkable
+from pathlib import Path
 from pydantic import BaseModel, Field
 
 
-FileInput = Union[BinaryIO, bytes, str]
+@runtime_checkable
+class HasRead(Protocol):
+    """Protocol for file-like objects with a read method."""
+    def read(self) -> Union[bytes, str]:
+        ...
+
+
+FileInput = Union[HasRead, bytes, str, Path]
 
 
 class Prompt(BaseModel):
