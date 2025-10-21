@@ -1,0 +1,102 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.1"
+
+[project]
+name = "decart-sdk"
+version = "0.0.1"
+description = "Decart's Python SDK"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    { name = "Adir Amsalem", email = "adir@decart.ai" }
+]
+keywords = ["decart", "ai", "video", "image", "generation", "transformation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "aiohttp>=3.9.0",
+    "aiofiles>=23.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+realtime = [
+    "aiortc>=1.9.0",
+    "av>=12.0.0",
+    "tenacity>=8.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/decartai/decart-python"
+Documentation = "https://docs.platform.decart.ai/sdks/python"
+Repository = "https://github.com/decartai/decart-python"
+Issues = "https://github.com/decartai/decart-python/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["decart_sdk"]
+core-metadata-version = "2.1"
+
+[tool.hatch.build.targets.wheel.force-include]
+"decart_sdk/py.typed" = "decart_sdk/py.typed"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+# Testing
+decart-test = "pytest:main"
+decart-lint = "ruff:main"
+decart-format = "black:main"
