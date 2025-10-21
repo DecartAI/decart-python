@@ -4,6 +4,14 @@ A Python SDK for Decart's models.
 
 ## Installation
 
+### Using UV
+
+```bash
+uv pip install decart-sdk
+```
+
+### Using pip
+
 ```bash
 pip install decart-sdk
 ```
@@ -55,6 +63,51 @@ with open("input.mp4", "rb") as video_file:
 # Save the result
 with open("output.mp4", "wb") as f:
     f.write(result)
+```
+
+## Development
+
+### Setup with UV
+
+```bash
+# Clone the repository
+git clone https://github.com/decartai/decart-python
+cd decart-python
+
+# Install UV
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install all dependencies (including dev dependencies)
+uv sync --all-extras
+
+# Run tests
+uv run pytest
+
+# Run linting
+uv run ruff check decart_sdk/
+
+# Format code
+uv run black decart_sdk/ tests/ examples/
+
+# Type check
+uv run mypy decart_sdk/
+```
+
+### Common Commands
+
+```bash
+# Install dependencies
+uv sync --all-extras
+
+# Run tests with coverage
+uv run pytest --cov=decart_sdk --cov-report=html
+
+# Run examples
+uv run python examples/process_video.py
+uv run python examples/realtime_synthetic.py
+
+# Update dependencies
+uv lock --upgrade
 ```
 
 ## License

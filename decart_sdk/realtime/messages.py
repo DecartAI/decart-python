@@ -7,7 +7,7 @@ import json
 class OfferMessage:
     type: Literal["offer"]
     sdp: str
-    
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
@@ -16,7 +16,7 @@ class OfferMessage:
 class AnswerMessage:
     type: Literal["answer"]
     sdp: str
-    
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
@@ -26,7 +26,7 @@ class IceCandidatePayload:
     candidate: str
     sdpMLineIndex: int
     sdpMid: str
-    
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
@@ -35,19 +35,16 @@ class IceCandidatePayload:
 class IceCandidateMessage:
     type: Literal["ice-candidate"]
     candidate: IceCandidatePayload
-    
+
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "type": self.type,
-            "candidate": self.candidate.to_dict()
-        }
+        return {"type": self.type, "candidate": self.candidate.to_dict()}
 
 
 @dataclass
 class PromptMessage:
     type: Literal["prompt"]
     prompt: str
-    
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
@@ -56,7 +53,7 @@ class PromptMessage:
 class SwitchCameraMessage:
     type: Literal["switch_camera"]
     rotateY: int
-    
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
@@ -70,12 +67,14 @@ class SessionIdMessage:
 
 
 IncomingMessage = Union[OfferMessage, AnswerMessage, IceCandidateMessage, SessionIdMessage]
-OutgoingMessage = Union[OfferMessage, AnswerMessage, IceCandidateMessage, PromptMessage, SwitchCameraMessage]
+OutgoingMessage = Union[
+    OfferMessage, AnswerMessage, IceCandidateMessage, PromptMessage, SwitchCameraMessage
+]
 
 
 def parse_incoming_message(data: dict[str, Any]) -> Optional[IncomingMessage]:
     msg_type = data.get("type")
-    
+
     if msg_type == "offer":
         return OfferMessage(type="offer", sdp=data["sdp"])
     elif msg_type == "answer":
@@ -87,17 +86,17 @@ def parse_incoming_message(data: dict[str, Any]) -> Optional[IncomingMessage]:
             candidate=IceCandidatePayload(
                 candidate=candidate_data["candidate"],
                 sdpMLineIndex=candidate_data["sdpMLineIndex"],
-                sdpMid=candidate_data["sdpMid"]
-            )
+                sdpMid=candidate_data["sdpMid"],
+            ),
         )
     elif msg_type == "session_id":
         return SessionIdMessage(
             type="session_id",
             session_id=data["session_id"],
             server_port=data["server_port"],
-            server_ip=data["server_ip"]
+            server_ip=data["server_ip"],
         )
-    
+
     return None
 
 

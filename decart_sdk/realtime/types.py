@@ -1,7 +1,7 @@
 from typing import Literal, Callable, Optional
 from dataclasses import dataclass
 from ..models import ModelDefinition
-from ..types import Prompt as PromptState, ModelState
+from ..types import ModelState
 
 try:
     from aiortc import MediaStreamTrack

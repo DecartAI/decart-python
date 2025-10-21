@@ -24,7 +24,11 @@ wheels/
 venv/
 env/
 ENV/
+.venv/
 .venv
+
+# UV
+.python-version
 
 # IDEs
 .vscode/

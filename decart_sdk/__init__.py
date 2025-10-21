@@ -5,7 +5,13 @@ from .types import FileInput, ModelState, Prompt
 from .process import ProcessClient
 
 try:
-    from .realtime import RealtimeClient, RealtimeClientFactory, RealtimeConnectOptions, ConnectionState
+    from .realtime import (
+        RealtimeClient,
+        RealtimeClientFactory,
+        RealtimeConnectOptions,
+        ConnectionState,
+    )
+
     REALTIME_AVAILABLE = True
 except ImportError:
     REALTIME_AVAILABLE = False
@@ -31,9 +37,11 @@ __all__ = [
 ]
 
 if REALTIME_AVAILABLE:
-    __all__.extend([
-        "RealtimeClient",
-        "RealtimeClientFactory",
-        "RealtimeConnectOptions",
-        "ConnectionState",
-    ])
+    __all__.extend(
+        [
+            "RealtimeClient",
+            "RealtimeClientFactory",
+            "RealtimeConnectOptions",
+            "ConnectionState",
+        ]
+    )

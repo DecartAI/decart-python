@@ -1,5 +1,5 @@
-from typing import Any, Literal
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from typing import Literal
+from pydantic import BaseModel, Field, ConfigDict
 from .errors import create_model_not_found_error
 from .types import FileInput
 
@@ -19,7 +19,7 @@ Model = Literal[RealTimeModels, VideoModels, ImageModels]
 
 class ModelDefinition(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     name: str
     url_path: str
     fps: int = Field(ge=1)
@@ -37,7 +37,7 @@ class TextToVideoInput(BaseModel):
 
 class ImageToVideoInput(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     prompt: str = Field(..., min_length=1)
     data: FileInput
     seed: int | None = None
@@ -46,7 +46,7 @@ class ImageToVideoInput(BaseModel):
 
 class VideoToVideoInput(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     prompt: str = Field(..., min_length=1)
     data: FileInput
     seed: int | None = None
@@ -57,7 +57,7 @@ class VideoToVideoInput(BaseModel):
 
 class FirstLastFrameInput(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     prompt: str = Field(..., min_length=1)
     start: FileInput
     end: FileInput
@@ -74,7 +74,7 @@ class TextToImageInput(BaseModel):
 
 class ImageToImageInput(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     prompt: str = Field(..., min_length=1)
     data: FileInput
     seed: int | None = None

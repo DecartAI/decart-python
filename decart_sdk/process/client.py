@@ -31,9 +31,7 @@ class ProcessClient:
         try:
             validated_inputs = model.input_schema(**validation_inputs)
         except ValidationError as e:
-            raise create_invalid_input_error(
-                f"Invalid inputs for {model.name}: {str(e)}"
-            ) from e
+            raise create_invalid_input_error(f"Invalid inputs for {model.name}: {str(e)}") from e
 
         processed_inputs = validated_inputs.model_dump(exclude_none=True)
         for field in file_fields:

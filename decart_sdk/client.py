@@ -1,10 +1,11 @@
 from typing import Any
-from pydantic import BaseModel, Field, field_validator, HttpUrl
+from pydantic import BaseModel, Field, field_validator
 from .errors import create_invalid_api_key_error, create_invalid_base_url_error
 from .process.client import ProcessClient
 
 try:
     from .realtime.factory import RealtimeClientFactory
+
     REALTIME_AVAILABLE = True
 except ImportError:
     REALTIME_AVAILABLE = False
@@ -29,11 +30,10 @@ class DecartClient:
             api_key=configuration.api_key,
             base_url=configuration.base_url,
         )
-        
+
         if REALTIME_AVAILABLE:
             self.realtime = RealtimeClientFactory(
-                base_url=configuration.base_url,
-                api_key=configuration.api_key
+                base_url=configuration.base_url, api_key=configuration.api_key
             )
         else:
             self.realtime = None  # type: ignore
