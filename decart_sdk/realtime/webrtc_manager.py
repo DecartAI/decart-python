@@ -1,15 +1,14 @@
-import asyncio
 import logging
 from typing import Optional, Callable
 from dataclasses import dataclass
-
-try:
-    from aiortc import MediaStreamTrack
-
-    WEBRTC_AVAILABLE = True
-except ImportError:
-    WEBRTC_AVAILABLE = False
-    MediaStreamTrack = None  # type: ignore
+from aiortc import MediaStreamTrack
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception,
+    before_sleep_log,
+)
 
 from .webrtc_connection import WebRTCConnection
 from .messages import OutgoingMessage
@@ -32,55 +31,37 @@ class WebRTCConfiguration:
     customize_offer: Optional[Callable] = None
 
 
+def _is_retryable_error(exception: Exception) -> bool:
+    """Check if an error is retryable (not a permanent error)."""
+    permanent_errors = ["permission denied", "not allowed", "invalid session"]
+    error_msg = str(exception).lower()
+    return not any(err in error_msg for err in permanent_errors)
+
+
 class WebRTCManager:
-    PERMANENT_ERRORS = [
-        "permission denied",
-        "not allowed",
-        "invalid session",
-    ]
-
     def __init__(self, configuration: WebRTCConfiguration):
-        if not WEBRTC_AVAILABLE:
-            raise ImportError(
-                "aiortc is required for Realtime API. "
-                "Install with: pip install decart-sdk[realtime]"
-            )
-
         self._config = configuration
         self._connection = self._create_connection()
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1, min=1, max=10),
+        retry=retry_if_exception(_is_retryable_error),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
     async def connect(self, local_track: MediaStreamTrack) -> bool:
-        retries = 0
-        max_retries = 5
-        delay = 1.0
-
-        while retries < max_retries:
-            try:
-                await self._connection.connect(
-                    url=self._config.webrtc_url,
-                    local_track=local_track,
-                )
-
-                return True
-
-            except Exception as e:
-                error_msg = str(e).lower()
-                is_permanent = any(err in error_msg for err in self.PERMANENT_ERRORS)
-
-                if is_permanent or retries >= max_retries - 1:
-                    logger.error(f"Connection failed permanently: {e}")
-                    raise
-
-                retries += 1
-                logger.warning(f"Connection attempt {retries} failed: {e}. Retrying in {delay}s...")
-
-                await self._connection.cleanup()
-                self._connection = self._create_connection()
-                await asyncio.sleep(delay)
-
-                delay = min(delay * 2, 10.0)
-
-        return False
+        try:
+            await self._connection.connect(
+                url=self._config.webrtc_url,
+                local_track=local_track,
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Connection attempt failed: {e}")
+            await self._connection.cleanup()
+            self._connection = self._create_connection()
+            raise
 
     def _create_connection(self) -> WebRTCConnection:
         return WebRTCConnection(

@@ -1,14 +1,7 @@
 from typing import Callable
 import logging
 import uuid
-
-try:
-    from aiortc import MediaStreamTrack
-
-    WEBRTC_AVAILABLE = True
-except ImportError:
-    WEBRTC_AVAILABLE = False
-    MediaStreamTrack = None  # type: ignore
+from aiortc import MediaStreamTrack
 
 from .webrtc_manager import WebRTCManager, WebRTCConfiguration
 from .messages import PromptMessage, SwitchCameraMessage
@@ -33,12 +26,6 @@ class RealtimeClient:
         local_track: MediaStreamTrack,
         options: RealtimeConnectOptions,
     ) -> "RealtimeClient":
-        if not WEBRTC_AVAILABLE:
-            raise ImportError(
-                "aiortc is required for Realtime API. "
-                "Install with: pip install decart-sdk[realtime]"
-            )
-
         session_id = str(uuid.uuid4())
         ws_url = f"{base_url}{options.model.url_path}"
         ws_url += f"?api_key={api_key}&model={options.model.name}"

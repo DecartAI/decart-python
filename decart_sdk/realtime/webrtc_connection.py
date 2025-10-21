@@ -2,25 +2,17 @@ import asyncio
 import json
 import logging
 from typing import Optional, Callable
+import aiohttp
+from aiortc import (
+    RTCPeerConnection,
+    RTCSessionDescription,
+    RTCIceCandidate,
+    RTCConfiguration,
+    RTCIceServer,
+    MediaStreamTrack,
+)
+
 from ..errors import WebRTCError
-
-try:
-    import aiohttp
-    from aiortc import (
-        RTCPeerConnection,
-        RTCSessionDescription,
-        RTCIceCandidate,
-        RTCConfiguration,
-        RTCIceServer,
-    )
-    from aiortc import MediaStreamTrack
-
-    WEBRTC_AVAILABLE = True
-except ImportError:
-    WEBRTC_AVAILABLE = False
-    RTCPeerConnection = None  # type: ignore
-    MediaStreamTrack = None  # type: ignore
-
 from .messages import (
     parse_incoming_message,
     message_to_json,
@@ -42,11 +34,6 @@ class WebRTCConnection:
         on_error: Optional[Callable[[Exception], None]] = None,
         customize_offer: Optional[Callable] = None,
     ):
-        if not WEBRTC_AVAILABLE:
-            raise ImportError(
-                "aiortc is required for Realtime API. "
-                "Install with: pip install decart-sdk[realtime]"
-            )
 
         self._pc: Optional[RTCPeerConnection] = None
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None

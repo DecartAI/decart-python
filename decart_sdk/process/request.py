@@ -118,7 +118,6 @@ async def send_request(
             task.cancel()
 
         if cancel_task in done:
-            request_task.cancel()
             try:
                 await request_task
             except asyncio.CancelledError:

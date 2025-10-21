@@ -17,9 +17,11 @@ ImageModels = Literal["lucy-pro-t2i", "lucy-pro-i2i"]
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
 
 
-class ModelDefinition(BaseModel):
+class DecartBaseModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+
+class ModelDefinition(DecartBaseModel):
     name: str
     url_path: str
     fps: int = Field(ge=1)
@@ -35,18 +37,14 @@ class TextToVideoInput(BaseModel):
     orientation: Optional[str] = None
 
 
-class ImageToVideoInput(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class ImageToVideoInput(DecartBaseModel):
     prompt: str = Field(..., min_length=1)
     data: FileInput
     seed: Optional[int] = None
     resolution: Optional[str] = None
 
 
-class VideoToVideoInput(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class VideoToVideoInput(DecartBaseModel):
     prompt: str = Field(..., min_length=1)
     data: FileInput
     seed: Optional[int] = None
@@ -55,9 +53,7 @@ class VideoToVideoInput(BaseModel):
     num_inference_steps: Optional[int] = None
 
 
-class FirstLastFrameInput(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class FirstLastFrameInput(DecartBaseModel):
     prompt: str = Field(..., min_length=1)
     start: FileInput
     end: FileInput
@@ -72,9 +68,7 @@ class TextToImageInput(BaseModel):
     orientation: Optional[str] = None
 
 
-class ImageToImageInput(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class ImageToImageInput(DecartBaseModel):
     prompt: str = Field(..., min_length=1)
     data: FileInput
     seed: Optional[int] = None
