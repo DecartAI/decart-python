@@ -56,8 +56,6 @@ class WebRTCManager:
 
         while retries < max_retries:
             try:
-                logger.info(f"Connecting to WebRTC (attempt {retries + 1}/{max_retries})")
-
                 await self._connection.connect(
                     url=self._config.webrtc_url,
                     local_track=local_track,

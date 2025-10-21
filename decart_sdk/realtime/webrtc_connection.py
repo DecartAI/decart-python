@@ -64,7 +64,6 @@ class WebRTCConnection:
             await self._set_state("connecting")
 
             ws_url = url.replace("https://", "wss://").replace("http://", "ws://")
-            logger.info(f"Connecting to WebSocket: {ws_url}")
 
             self._session = aiohttp.ClientSession()
             self._ws = await self._session.ws_connect(ws_url)
@@ -78,7 +77,6 @@ class WebRTCConnection:
             deadline = asyncio.get_event_loop().time() + timeout
             while asyncio.get_event_loop().time() < deadline:
                 if self._state == "connected":
-                    logger.info("WebRTC connection established")
                     return
                 await asyncio.sleep(0.1)
 
@@ -234,8 +232,6 @@ class WebRTCConnection:
         return self._state
 
     async def cleanup(self) -> None:
-        logger.info("Cleaning up WebRTC connection")
-
         if self._ws_task:
             self._ws_task.cancel()
             try:
