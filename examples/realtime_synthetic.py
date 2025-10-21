@@ -3,7 +3,7 @@ import logging
 import os
 import numpy as np
 from pathlib import Path
-from decart_sdk import create_decart_client, models
+from decart_sdk import DecartClient, models
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -62,9 +62,11 @@ async def main():
         return
 
     print("Creating Decart client...")
-    client = create_decart_client(api_key=api_key)
+    client = DecartClient(api_key=api_key)
 
-    if not client.realtime:
+    try:
+        from decart_sdk.realtime.client import RealtimeClient
+    except ImportError:
         print("Error: Realtime API not available")
         print("Install with: pip install decart-sdk[realtime]")
         return
@@ -95,16 +97,19 @@ async def main():
         print(f"🔄 Connection state: {state}")
 
     def on_error(error):
-        print(f"❌ Error: {error.code} - {error.message}")
+        print(f"❌ Error: {error.__class__.__name__} - {error.message}")
 
     print("\nConnecting to Realtime API...")
     try:
+        from decart_sdk.realtime.client import RealtimeClient
         from decart_sdk.realtime.types import RealtimeConnectOptions
         from decart_sdk.types import ModelState, Prompt
 
-        realtime_client = await client.realtime.connect(
-            video_track,
-            RealtimeConnectOptions(
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=video_track,
+            options=RealtimeConnectOptions(
                 model=model,
                 on_remote_stream=on_remote_stream,
                 initial_state=ModelState(

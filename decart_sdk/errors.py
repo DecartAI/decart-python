@@ -2,59 +2,63 @@ from typing import Any, Optional
 
 
 class DecartSDKError(Exception):
+    """Base exception for all Decart SDK errors."""
+
     def __init__(
         self,
-        code: str,
         message: str,
         data: Optional[dict[str, Any]] = None,
         cause: Optional[Exception] = None,
     ) -> None:
-        self.code = code
         self.message = message
         self.data = data or {}
         self.cause = cause
         super().__init__(message)
 
     def __str__(self) -> str:
-        return f"[{self.code}] {self.message}"
+        return self.message
 
     def __repr__(self) -> str:
-        return f"DecartSDKError(code={self.code!r}, message={self.message!r})"
+        return f"{self.__class__.__name__}({self.message!r})"
 
 
-class ErrorCodes:
-    INVALID_API_KEY = "INVALID_API_KEY"
-    INVALID_BASE_URL = "INVALID_BASE_URL"
-    WEB_RTC_ERROR = "WEB_RTC_ERROR"
-    PROCESSING_ERROR = "PROCESSING_ERROR"
-    INVALID_INPUT = "INVALID_INPUT"
-    INVALID_OPTIONS = "INVALID_OPTIONS"
-    MODEL_NOT_FOUND = "MODEL_NOT_FOUND"
+class InvalidAPIKeyError(DecartSDKError):
+    """Raised when API key is invalid or missing."""
+
+    def __init__(self) -> None:
+        super().__init__("API key is required and must be a non-empty string")
 
 
-def create_invalid_api_key_error() -> DecartSDKError:
-    return DecartSDKError(
-        ErrorCodes.INVALID_API_KEY,
-        "API key is required and must be a non-empty string",
-    )
+class InvalidBaseURLError(DecartSDKError):
+    """Raised when base URL is invalid."""
+
+    def __init__(self, url: Optional[str] = None) -> None:
+        message = f"Invalid base URL: {url}" if url else "Invalid base URL"
+        super().__init__(message)
 
 
-def create_invalid_base_url_error(url: Optional[str] = None) -> DecartSDKError:
-    message = f"Invalid base URL: {url}" if url else "Invalid base URL"
-    return DecartSDKError(ErrorCodes.INVALID_BASE_URL, message)
+class WebRTCError(DecartSDKError):
+    """Raised when WebRTC connection fails."""
+
+    def __init__(self, message: str = "WebRTC error", cause: Optional[Exception] = None) -> None:
+        super().__init__(message, cause=cause)
 
 
-def create_webrtc_error(error: Exception) -> DecartSDKError:
-    return DecartSDKError(ErrorCodes.WEB_RTC_ERROR, "WebRTC error", cause=error)
+class InvalidInputError(DecartSDKError):
+    """Raised when input validation fails."""
+
+    pass
 
 
-def create_invalid_input_error(message: str) -> DecartSDKError:
-    return DecartSDKError(ErrorCodes.INVALID_INPUT, message)
+class ModelNotFoundError(DecartSDKError):
+    """Raised when model is not found."""
+
+    def __init__(self, model: str) -> None:
+        super().__init__(f"Model {model} not found")
+        self.model = model
 
 
-def create_model_not_found_error(model: str) -> DecartSDKError:
-    return DecartSDKError(ErrorCodes.MODEL_NOT_FOUND, f"Model {model} not found")
+class ProcessingError(DecartSDKError):
+    """Raised when processing fails."""
 
-
-def create_processing_error(message: str) -> DecartSDKError:
-    return DecartSDKError(ErrorCodes.PROCESSING_ERROR, message)
+    pass

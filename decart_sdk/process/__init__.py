@@ -1,3 +1,4 @@
-from .client import ProcessClient
+# Process module - request handling for batch processing
+from .request import send_request
 
-__all__ = ["ProcessClient"]
+__all__ = ["send_request"]

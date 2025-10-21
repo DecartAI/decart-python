@@ -1,19 +1,23 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from decart_sdk import create_decart_client, models
+from decart_sdk import DecartClient, models
+
+try:
+    from decart_sdk.realtime.client import RealtimeClient
+    REALTIME_AVAILABLE = True
+except ImportError:
+    REALTIME_AVAILABLE = False
 
 pytestmark = pytest.mark.skipif(
-    not hasattr(create_decart_client(api_key="test"), "realtime")
-    or create_decart_client(api_key="test").realtime is None,
+    not REALTIME_AVAILABLE,
     reason="Realtime API not available - install with: pip install decart-sdk[realtime]",
 )
 
 
-def test_realtime_client_factory_exists():
-    """Test that realtime factory is available when aiortc is installed"""
-    client = create_decart_client(api_key="test-key")
-    assert hasattr(client, "realtime")
-    assert client.realtime is not None
+def test_realtime_client_available():
+    """Test that realtime client is available when aiortc is installed"""
+    assert REALTIME_AVAILABLE
+    assert RealtimeClient is not None
 
 
 def test_realtime_models_available():
@@ -31,9 +35,9 @@ def test_realtime_models_available():
 @pytest.mark.asyncio
 async def test_realtime_client_creation_with_mock():
     """Test client creation with mocked WebRTC"""
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
 
-    with patch("decart_sdk.realtime.factory.WebRTCManager") as mock_manager_class:
+    with patch("decart_sdk.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager.is_connected = MagicMock(return_value=True)
@@ -44,10 +48,12 @@ async def test_realtime_client_creation_with_mock():
 
         from decart_sdk.realtime.types import RealtimeConnectOptions
         from decart_sdk.types import ModelState, Prompt
-
-        realtime_client = await client.realtime.connect(
-            mock_track,
-            RealtimeConnectOptions(
+        
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
                 model=models.realtime("mirage"),
                 on_remote_stream=lambda t: None,
                 initial_state=ModelState(prompt=Prompt(text="Test", enrich=True), mirror=False),
@@ -62,9 +68,9 @@ async def test_realtime_client_creation_with_mock():
 @pytest.mark.asyncio
 async def test_realtime_set_prompt_with_mock():
     """Test set_prompt with mocked WebRTC"""
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
 
-    with patch("decart_sdk.realtime.factory.WebRTCManager") as mock_manager_class:
+    with patch("decart_sdk.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager.send_message = AsyncMock()
@@ -74,9 +80,11 @@ async def test_realtime_set_prompt_with_mock():
 
         from decart_sdk.realtime.types import RealtimeConnectOptions
 
-        realtime_client = await client.realtime.connect(
-            mock_track,
-            RealtimeConnectOptions(
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
                 model=models.realtime("mirage"),
                 on_remote_stream=lambda t: None,
             ),
@@ -93,9 +101,9 @@ async def test_realtime_set_prompt_with_mock():
 @pytest.mark.asyncio
 async def test_realtime_set_mirror_with_mock():
     """Test set_mirror with mocked WebRTC"""
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
 
-    with patch("decart_sdk.realtime.factory.WebRTCManager") as mock_manager_class:
+    with patch("decart_sdk.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager.send_message = AsyncMock()
@@ -105,9 +113,11 @@ async def test_realtime_set_mirror_with_mock():
 
         from decart_sdk.realtime.types import RealtimeConnectOptions
 
-        realtime_client = await client.realtime.connect(
-            mock_track,
-            RealtimeConnectOptions(
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
                 model=models.realtime("mirage"),
                 on_remote_stream=lambda t: None,
             ),
@@ -124,9 +134,9 @@ async def test_realtime_set_mirror_with_mock():
 @pytest.mark.asyncio
 async def test_realtime_events():
     """Test event handling"""
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
 
-    with patch("decart_sdk.realtime.factory.WebRTCManager") as mock_manager_class:
+    with patch("decart_sdk.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager_class.return_value = mock_manager
@@ -135,9 +145,11 @@ async def test_realtime_events():
 
         from decart_sdk.realtime.types import RealtimeConnectOptions
 
-        realtime_client = await client.realtime.connect(
-            mock_track,
-            RealtimeConnectOptions(
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
                 model=models.realtime("mirage"),
                 on_remote_stream=lambda t: None,
             ),
@@ -160,7 +172,7 @@ async def test_realtime_events():
 
         from decart_sdk.errors import DecartSDKError
 
-        test_error = DecartSDKError("TEST", "Test error")
+        test_error = DecartSDKError("Test error")
         realtime_client._emit_error(test_error)
         assert len(errors) == 1
-        assert errors[0].code == "TEST"
+        assert errors[0].message == "Test error"

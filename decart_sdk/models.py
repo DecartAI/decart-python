@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, Field, ConfigDict
-from .errors import create_model_not_found_error
+from .errors import ModelNotFoundError
 from .types import FileInput
 
 
@@ -178,21 +178,21 @@ class Models:
         try:
             return _MODELS["realtime"][model]
         except KeyError:
-            raise create_model_not_found_error(model)
+            raise ModelNotFoundError(model)
 
     @staticmethod
     def video(model: VideoModels) -> ModelDefinition:
         try:
             return _MODELS["video"][model]
         except KeyError:
-            raise create_model_not_found_error(model)
+            raise ModelNotFoundError(model)
 
     @staticmethod
     def image(model: ImageModels) -> ModelDefinition:
         try:
             return _MODELS["image"][model]
         except KeyError:
-            raise create_model_not_found_error(model)
+            raise ModelNotFoundError(model)
 
 
 models = Models()

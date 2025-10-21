@@ -1,12 +1,12 @@
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
-from decart_sdk import create_decart_client, models, DecartSDKError
+from decart_sdk import DecartClient, models, DecartSDKError
 
 
 @pytest.mark.asyncio
 async def test_process_text_to_video() -> None:
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
 
     with patch("aiohttp.ClientSession") as mock_session_cls:
         mock_response = MagicMock()
@@ -34,7 +34,7 @@ async def test_process_text_to_video() -> None:
 
 @pytest.mark.asyncio
 async def test_process_missing_model() -> None:
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
 
     with pytest.raises(DecartSDKError):
         await client.process(
@@ -46,7 +46,7 @@ async def test_process_missing_model() -> None:
 
 @pytest.mark.asyncio
 async def test_process_missing_required_field() -> None:
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
 
     with pytest.raises(DecartSDKError):
         await client.process(
@@ -58,7 +58,7 @@ async def test_process_missing_required_field() -> None:
 
 @pytest.mark.asyncio
 async def test_process_video_to_video() -> None:
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
 
     with patch("aiohttp.ClientSession") as mock_session_cls:
         mock_response = MagicMock()
@@ -88,7 +88,7 @@ async def test_process_video_to_video() -> None:
 
 @pytest.mark.asyncio
 async def test_process_with_cancellation() -> None:
-    client = create_decart_client(api_key="test-key")
+    client = DecartClient(api_key="test-key")
     cancel_token = asyncio.Event()
 
     cancel_token.set()

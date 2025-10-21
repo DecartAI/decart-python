@@ -3,7 +3,7 @@ import asyncio
 from typing import Any, Optional
 from ..types import FileInput
 from ..models import ModelDefinition
-from ..errors import create_invalid_input_error, create_processing_error
+from ..errors import InvalidInputError, ProcessingError
 
 
 async def file_input_to_bytes(input_data: FileInput) -> tuple[bytes, str]:
@@ -18,19 +18,19 @@ async def file_input_to_bytes(input_data: FileInput) -> tuple[bytes, str]:
 
     if isinstance(input_data, str):
         if not input_data.startswith(("http://", "https://")):
-            raise create_invalid_input_error("URL must start with http:// or https://")
+            raise InvalidInputError("URL must start with http:// or https://")
 
         async with aiohttp.ClientSession() as session:
             async with session.get(input_data) as response:
                 if not response.ok:
-                    raise create_invalid_input_error(
+                    raise InvalidInputError(
                         f"Failed to fetch file from URL: {response.status}"
                     )
                 content = await response.read()
                 content_type = response.headers.get("Content-Type", "application/octet-stream")
                 return content, content_type
 
-    raise create_invalid_input_error("Invalid file input type")
+    raise InvalidInputError("Invalid file input type")
 
 
 async def send_request(
@@ -63,7 +63,7 @@ async def send_request(
             ) as response:
                 if not response.ok:
                     error_text = await response.text()
-                    raise create_processing_error(
+                    raise ProcessingError(
                         f"Processing failed: {response.status} - {error_text}"
                     )
                 return await response.read()

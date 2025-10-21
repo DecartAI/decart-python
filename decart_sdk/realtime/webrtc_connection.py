@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 from typing import Optional, Callable
-from ..errors import create_webrtc_error
+from ..errors import WebRTCError
 
 try:
     import aiohttp
@@ -87,7 +87,7 @@ class WebRTCConnection:
             await self._set_state("disconnected")
             if self._on_error:
                 self._on_error(e)
-            raise create_webrtc_error(e)
+            raise WebRTCError(str(e), cause=e)
 
     async def _setup_peer_connection(self, local_track: MediaStreamTrack) -> None:
         config = RTCConfiguration(iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])])
@@ -164,18 +164,17 @@ class WebRTCConnection:
                 self._on_error(e)
 
     async def _handle_message(self, data: dict) -> None:
-        message = parse_incoming_message(data)
-        if not message:
-            logger.warning(f"Unknown message type: {data.get('type')}")
+        try:
+            message = parse_incoming_message(data)
+        except Exception as e:
+            logger.warning(f"Failed to parse message: {e}")
             return
 
-        msg_type = data.get("type")
-
-        if msg_type == "answer":
+        if message.type == "answer":
             await self._handle_answer(message.sdp)
-        elif msg_type == "ice-candidate":
+        elif message.type == "ice-candidate":
             await self._handle_ice_candidate(message.candidate)
-        elif msg_type == "session_id":
+        elif message.type == "session_id":
             logger.debug(f"Session ID: {message.session_id}")
 
     async def _handle_answer(self, sdp: str) -> None:

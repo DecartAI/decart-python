@@ -1,10 +1,10 @@
 import asyncio
 import os
-from decart_sdk import create_decart_client, models
+from decart_sdk import DecartClient, models
 
 
 async def main() -> None:
-    client = create_decart_client(api_key=os.getenv("DECART_API_KEY", "your-api-key-here"))
+    client = DecartClient(api_key=os.getenv("DECART_API_KEY", "your-api-key-here"))
 
     print("Generating image from text...")
     result = await client.process(

@@ -1,28 +1,80 @@
 from typing import Callable, Optional
 import logging
-from .webrtc_manager import WebRTCManager
-from .methods import RealtimeMethods
-from .types import ConnectionState
-from ..errors import DecartSDKError
+import uuid
+
+try:
+    from aiortc import MediaStreamTrack
+    WEBRTC_AVAILABLE = True
+except ImportError:
+    WEBRTC_AVAILABLE = False
+    MediaStreamTrack = None  # type: ignore
+
+from .webrtc_manager import WebRTCManager, WebRTCConfiguration
+from .messages import PromptMessage, SwitchCameraMessage
+from .types import ConnectionState, RealtimeConnectOptions
+from ..errors import DecartSDKError, InvalidInputError, WebRTCError
 
 logger = logging.getLogger(__name__)
 
 
 class RealtimeClient:
-    def __init__(self, webrtc_manager: Optional[WebRTCManager], session_id: str):
-        self._manager = webrtc_manager
+    def __init__(self, manager: WebRTCManager, session_id: str):
+        self._manager = manager
         self.session_id = session_id
-        self._methods: Optional[RealtimeMethods] = None
-
-        if webrtc_manager:
-            self._methods = RealtimeMethods(webrtc_manager)
-
         self._connection_callbacks: list[Callable[[ConnectionState], None]] = []
         self._error_callbacks: list[Callable[[DecartSDKError], None]] = []
 
-    def _set_manager(self, manager: WebRTCManager) -> None:
-        self._manager = manager
-        self._methods = RealtimeMethods(manager)
+    @classmethod
+    async def connect(
+        cls,
+        base_url: str,
+        api_key: str,
+        local_track: MediaStreamTrack,
+        options: RealtimeConnectOptions,
+    ) -> "RealtimeClient":
+        if not WEBRTC_AVAILABLE:
+            raise ImportError(
+                "aiortc is required for Realtime API. "
+                "Install with: pip install decart-sdk[realtime]"
+            )
+
+        session_id = str(uuid.uuid4())
+        ws_url = f"{base_url}{options.model.url_path}"
+        ws_url += f"?api_key={api_key}&model={options.model.name}"
+
+        config = WebRTCConfiguration(
+            webrtc_url=ws_url,
+            api_key=api_key,
+            session_id=session_id,
+            fps=options.model.fps,
+            on_remote_stream=options.on_remote_stream,
+            on_connection_state_change=None,
+            on_error=None,
+            initial_state=options.initial_state,
+            customize_offer=options.customize_offer,
+        )
+
+        manager = WebRTCManager(config)
+        client = cls(manager=manager, session_id=session_id)
+
+        config.on_connection_state_change = client._emit_connection_change
+        config.on_error = lambda error: client._emit_error(WebRTCError(str(error), cause=error))
+
+        try:
+            await manager.connect(local_track)
+
+            if options.initial_state:
+                if options.initial_state.prompt:
+                    await client.set_prompt(
+                        options.initial_state.prompt.text,
+                        enrich=options.initial_state.prompt.enrich,
+                    )
+                if options.initial_state.mirror is not None:
+                    await client.set_mirror(options.initial_state.mirror)
+        except Exception as e:
+            raise WebRTCError(str(e), cause=e)
+
+        return client
 
     def _emit_connection_change(self, state: ConnectionState) -> None:
         for callback in self._connection_callbacks:
@@ -39,28 +91,24 @@ class RealtimeClient:
                 logger.exception(f"Error in error callback: {e}")
 
     async def set_prompt(self, prompt: str, enrich: bool = True) -> None:
-        if not self._methods:
-            raise RuntimeError("Client not initialized")
-        await self._methods.set_prompt(prompt, enrich)
+        if not prompt or not prompt.strip():
+            raise InvalidInputError("Prompt cannot be empty")
+        await self._manager.send_message(PromptMessage(type="prompt", prompt=prompt))
 
     async def set_mirror(self, enabled: bool) -> None:
-        if not self._methods:
-            raise RuntimeError("Client not initialized")
-        await self._methods.set_mirror(enabled)
+        rotate_y = 2 if enabled else 0
+        await self._manager.send_message(
+            SwitchCameraMessage(type="switch_camera", rotateY=rotate_y)
+        )
 
     def is_connected(self) -> bool:
-        if not self._manager:
-            return False
         return self._manager.is_connected()
 
     def get_connection_state(self) -> ConnectionState:
-        if not self._manager:
-            return "disconnected"
         return self._manager.get_connection_state()
 
     async def disconnect(self) -> None:
-        if self._manager:
-            await self._manager.cleanup()
+        await self._manager.cleanup()
 
     def on(self, event: str, callback: Callable) -> None:
         if event == "connection_change":
