@@ -26,13 +26,13 @@ jobs:
         run: uv sync --all-extras
 
       - name: Check formatting with Black
-        run: uv run black --check decart_sdk/ tests/ examples/
+        run: uv run black --check decart/ tests/ examples/
 
       - name: Lint with Ruff
-        run: uv run ruff check decart_sdk/ tests/ examples/
+        run: uv run ruff check decart/ tests/ examples/
 
       - name: Type check with MyPy
-        run: uv run mypy decart_sdk/
+        run: uv run mypy decart/
         continue-on-error: true # Don't fail on type errors yet
 
   test:
@@ -58,7 +58,7 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run tests
-        run: uv run pytest tests/ -v --cov=decart_sdk --cov-report=xml --cov-report=term
+        run: uv run pytest tests/ -v --cov=decart --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
