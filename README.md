@@ -7,13 +7,13 @@ A Python SDK for Decart's models.
 ### Using UV
 
 ```bash
-uv pip install decart-sdk
+uv pip install decart
 ```
 
 ### Using pip
 
 ```bash
-pip install decart-sdk
+pip install decart
 ```
 
 ## Documentation
@@ -28,7 +28,7 @@ For complete documentation, guides, and examples, visit:
 ```python
 import asyncio
 import os
-from decart_sdk import DecartClient, models
+from decart import DecartClient, models
 
 async def main():
     async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
@@ -82,13 +82,13 @@ uv sync --all-extras
 uv run pytest
 
 # Run linting
-uv run ruff check decart_sdk/
+uv run ruff check decart/
 
 # Format code
-uv run black decart_sdk/ tests/ examples/
+uv run black decart/ tests/ examples/
 
 # Type check
-uv run mypy decart_sdk/
+uv run mypy decart/
 ```
 
 ### Common Commands
@@ -98,7 +98,7 @@ uv run mypy decart_sdk/
 uv sync --all-extras
 
 # Run tests with coverage
-uv run pytest --cov=decart_sdk --cov-report=html
+uv run pytest --cov=decart --cov-report=html
 
 # Run examples
 uv run python examples/process_video.py

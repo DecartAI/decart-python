@@ -849,7 +849,7 @@ wheels = [
 ]
 
 [[package]]
-name = "decart-sdk"
+name = "decart"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [

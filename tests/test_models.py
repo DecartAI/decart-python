@@ -1,5 +1,5 @@
 import pytest
-from decart_sdk import models, DecartSDKError
+from decart import models, DecartSDKError
 
 
 def test_realtime_models() -> None:

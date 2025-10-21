@@ -9,8 +9,8 @@ allow-direct-references = true
 core-metadata-version = "2.1"
 
 [project]
-name = "decart-sdk"
-version = "0.0.1"
+name = "decart"
+version = "0.0.3"
 description = "Decart's Python SDK"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -59,11 +59,11 @@ Repository = "https://github.com/decartai/decart-python"
 Issues = "https://github.com/decartai/decart-python/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["decart_sdk"]
+packages = ["decart"]
 core-metadata-version = "2.1"
 
 [tool.hatch.build.targets.wheel.force-include]
-"decart_sdk/py.typed" = "decart_sdk/py.typed"
+"decart/py.typed" = "decart/py.typed"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -1,5 +1,5 @@
 import pytest
-from decart_sdk import DecartClient, InvalidAPIKeyError, InvalidBaseURLError
+from decart import DecartClient, InvalidAPIKeyError, InvalidBaseURLError
 
 
 def test_create_client_success() -> None:

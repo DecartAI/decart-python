@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from decart_sdk import DecartClient, models
+from decart import DecartClient, models
 
 try:
-    from decart_sdk.realtime.client import RealtimeClient
+    from decart.realtime.client import RealtimeClient
 
     REALTIME_AVAILABLE = True
 except ImportError:
@@ -11,7 +11,7 @@ except ImportError:
 
 pytestmark = pytest.mark.skipif(
     not REALTIME_AVAILABLE,
-    reason="Realtime API not available - install with: pip install decart-sdk[realtime]",
+    reason="Realtime API not available - install with: pip install decart[realtime]",
 )
 
 
@@ -38,7 +38,7 @@ async def test_realtime_client_creation_with_mock():
     """Test client creation with mocked WebRTC"""
     client = DecartClient(api_key="test-key")
 
-    with patch("decart_sdk.realtime.client.WebRTCManager") as mock_manager_class:
+    with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager.is_connected = MagicMock(return_value=True)
@@ -47,8 +47,8 @@ async def test_realtime_client_creation_with_mock():
 
         mock_track = MagicMock()
 
-        from decart_sdk.realtime.types import RealtimeConnectOptions
-        from decart_sdk.types import ModelState, Prompt
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.types import ModelState, Prompt
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
@@ -71,7 +71,7 @@ async def test_realtime_set_prompt_with_mock():
     """Test set_prompt with mocked WebRTC"""
     client = DecartClient(api_key="test-key")
 
-    with patch("decart_sdk.realtime.client.WebRTCManager") as mock_manager_class:
+    with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager.send_message = AsyncMock()
@@ -79,7 +79,7 @@ async def test_realtime_set_prompt_with_mock():
 
         mock_track = MagicMock()
 
-        from decart_sdk.realtime.types import RealtimeConnectOptions
+        from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
@@ -104,7 +104,7 @@ async def test_realtime_set_mirror_with_mock():
     """Test set_mirror with mocked WebRTC"""
     client = DecartClient(api_key="test-key")
 
-    with patch("decart_sdk.realtime.client.WebRTCManager") as mock_manager_class:
+    with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager.send_message = AsyncMock()
@@ -112,7 +112,7 @@ async def test_realtime_set_mirror_with_mock():
 
         mock_track = MagicMock()
 
-        from decart_sdk.realtime.types import RealtimeConnectOptions
+        from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
@@ -137,14 +137,14 @@ async def test_realtime_events():
     """Test event handling"""
     client = DecartClient(api_key="test-key")
 
-    with patch("decart_sdk.realtime.client.WebRTCManager") as mock_manager_class:
+    with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager_class.return_value = mock_manager
 
         mock_track = MagicMock()
 
-        from decart_sdk.realtime.types import RealtimeConnectOptions
+        from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
@@ -171,7 +171,7 @@ async def test_realtime_events():
         realtime_client._emit_connection_change("connected")
         assert connection_states == ["connected"]
 
-        from decart_sdk.errors import DecartSDKError
+        from decart.errors import DecartSDKError
 
         test_error = DecartSDKError("Test error")
         realtime_client._emit_error(test_error)

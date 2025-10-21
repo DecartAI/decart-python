@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
-from decart_sdk import DecartClient, models, DecartSDKError
+from decart import DecartClient, models, DecartSDKError
 
 
 @pytest.mark.asyncio
