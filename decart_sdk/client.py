@@ -1,6 +1,6 @@
 from typing import Any, Optional
 import aiohttp
-from pydantic import BaseModel, Field, field_validator, ValidationError
+from pydantic import ValidationError
 from .errors import InvalidAPIKeyError, InvalidBaseURLError, InvalidInputError
 from .models import ModelDefinition
 from .process.request import send_request

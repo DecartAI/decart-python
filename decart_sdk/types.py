@@ -1,4 +1,4 @@
-from typing import BinaryIO, Union, Optional, Protocol, runtime_checkable
+from typing import Union, Optional, Protocol, runtime_checkable
 from pathlib import Path
 from pydantic import BaseModel, Field
 
