@@ -24,18 +24,34 @@ export DECART_API_KEY="your-api-key-here"
 - **`process_image.py`** - Generate and transform images
 - **`process_url.py`** - Transform videos from URLs
 
+### Realtime API
+
+First, install the realtime dependencies:
+
+```bash
+pip install decart-sdk[realtime]
+```
+
+- **`realtime_synthetic.py`** - Test realtime API with synthetic colored frames
+- **`realtime_file.py`** - Process a video file in realtime
+
 ### Running Examples
 
 ```bash
 # Generate and transform videos
 python examples/process_video.py
 
-
 # Generate and transform images
 python examples/process_image.py
 
 # Transform video from URL
 python examples/process_url.py
+
+# Realtime API with synthetic video (saves to output_realtime_synthetic.mp4)
+python examples/realtime_synthetic.py
+
+# Realtime API with video file (saves to output_realtime_<filename>.mp4)
+python examples/realtime_file.py input.mp4
 ```
 
 ## Next Steps
