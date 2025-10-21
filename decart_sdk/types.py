@@ -1,4 +1,4 @@
-from typing import BinaryIO, Union
+from typing import BinaryIO, Union, Optional
 from pydantic import BaseModel, Field
 
 
@@ -11,5 +11,5 @@ class Prompt(BaseModel):
 
 
 class ModelState(BaseModel):
-    prompt: Prompt | None = None
+    prompt: Optional[Prompt] = None
     mirror: bool = Field(default=False)

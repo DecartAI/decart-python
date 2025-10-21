@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 from pydantic import BaseModel, Field, ConfigDict
 from .errors import create_model_not_found_error
 from .types import FileInput
@@ -30,9 +30,9 @@ class ModelDefinition(BaseModel):
 
 class TextToVideoInput(BaseModel):
     prompt: str = Field(..., min_length=1)
-    seed: int | None = None
-    resolution: str | None = None
-    orientation: str | None = None
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
+    orientation: Optional[str] = None
 
 
 class ImageToVideoInput(BaseModel):
@@ -40,8 +40,8 @@ class ImageToVideoInput(BaseModel):
 
     prompt: str = Field(..., min_length=1)
     data: FileInput
-    seed: int | None = None
-    resolution: str | None = None
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
 
 
 class VideoToVideoInput(BaseModel):
@@ -49,10 +49,10 @@ class VideoToVideoInput(BaseModel):
 
     prompt: str = Field(..., min_length=1)
     data: FileInput
-    seed: int | None = None
-    resolution: str | None = None
-    enhance_prompt: bool | None = None
-    num_inference_steps: int | None = None
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
+    enhance_prompt: Optional[bool] = None
+    num_inference_steps: Optional[int] = None
 
 
 class FirstLastFrameInput(BaseModel):
@@ -61,15 +61,15 @@ class FirstLastFrameInput(BaseModel):
     prompt: str = Field(..., min_length=1)
     start: FileInput
     end: FileInput
-    seed: int | None = None
-    resolution: str | None = None
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
 
 
 class TextToImageInput(BaseModel):
     prompt: str = Field(..., min_length=1)
-    seed: int | None = None
-    resolution: str | None = None
-    orientation: str | None = None
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
+    orientation: Optional[str] = None
 
 
 class ImageToImageInput(BaseModel):
@@ -77,9 +77,9 @@ class ImageToImageInput(BaseModel):
 
     prompt: str = Field(..., min_length=1)
     data: FileInput
-    seed: int | None = None
-    resolution: str | None = None
-    enhance_prompt: bool | None = None
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
+    enhance_prompt: Optional[bool] = None
 
 
 _MODELS = {
