@@ -4,6 +4,7 @@ from decart_sdk import DecartClient, models
 
 try:
     from decart_sdk.realtime.client import RealtimeClient
+
     REALTIME_AVAILABLE = True
 except ImportError:
     REALTIME_AVAILABLE = False
@@ -48,7 +49,7 @@ async def test_realtime_client_creation_with_mock():
 
         from decart_sdk.realtime.types import RealtimeConnectOptions
         from decart_sdk.types import ModelState, Prompt
-        
+
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
             api_key=client.api_key,

@@ -7,6 +7,7 @@ from .process.request import send_request
 
 try:
     from .realtime.client import RealtimeClient
+
     REALTIME_AVAILABLE = True
 except ImportError:
     REALTIME_AVAILABLE = False
@@ -16,11 +17,11 @@ except ImportError:
 class DecartClient:
     """
     Decart API client for video and image generation/transformation.
-    
+
     Args:
         api_key: Your Decart API key
         base_url: API base URL (defaults to production)
-    
+
     Example:
         ```python
         client = DecartClient(api_key="your-key")
@@ -34,10 +35,10 @@ class DecartClient:
     def __init__(self, api_key: str, base_url: str = "https://api.decart.ai") -> None:
         if not api_key or not api_key.strip():
             raise InvalidAPIKeyError()
-        
+
         if not base_url.startswith(("http://", "https://")):
             raise InvalidBaseURLError(base_url)
-        
+
         self.api_key = api_key
         self.base_url = base_url
         self._session: Optional[aiohttp.ClientSession] = None
@@ -65,13 +66,13 @@ class DecartClient:
     async def process(self, options: dict[str, Any]) -> bytes:
         """
         Process video or image generation/transformation.
-        
+
         Args:
             options: Processing options including model and inputs
-        
+
         Returns:
             Generated/transformed media as bytes
-        
+
         Raises:
             InvalidInputError: If inputs are invalid
             ProcessingError: If processing fails
@@ -86,7 +87,7 @@ class DecartClient:
 
         # File fields that need special handling (not validated by Pydantic)
         FILE_FIELDS = {"data", "start", "end"}
-        
+
         # Separate file inputs from regular inputs
         file_inputs = {k: v for k, v in inputs.items() if k in FILE_FIELDS}
         non_file_inputs = {k: v for k, v in inputs.items() if k not in FILE_FIELDS}
@@ -94,7 +95,7 @@ class DecartClient:
         # Validate non-file inputs and create placeholder for file fields
         validation_inputs = {
             **non_file_inputs,
-            **{k: b"" for k in file_inputs.keys()}  # Placeholder bytes for validation
+            **{k: b"" for k in file_inputs.keys()},  # Placeholder bytes for validation
         }
 
         try:
@@ -105,7 +106,7 @@ class DecartClient:
         # Build final inputs: validated non-file inputs + original file inputs
         processed_inputs = {
             **validated_inputs.model_dump(exclude_none=True),
-            **file_inputs  # Override placeholders with actual file data
+            **file_inputs,  # Override placeholders with actual file data
         }
 
         session = await self._get_session()

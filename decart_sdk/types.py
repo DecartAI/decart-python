@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 @runtime_checkable
 class HasRead(Protocol):
     """Protocol for file-like objects with a read method."""
-    def read(self) -> Union[bytes, str]:
-        ...
+
+    def read(self) -> Union[bytes, str]: ...
 
 
 FileInput = Union[HasRead, bytes, str, Path]

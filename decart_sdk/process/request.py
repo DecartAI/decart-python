@@ -12,18 +12,18 @@ async def file_input_to_bytes(
     input_data: FileInput, session: aiohttp.ClientSession
 ) -> tuple[bytes, str]:
     """Convert various file input types to bytes asynchronously.
-    
+
     Args:
         input_data: The file input (bytes, Path, str, or file-like object)
         session: Reusable aiohttp session for URL fetching
-        
+
     Returns:
         Tuple of (content bytes, content type)
-        
+
     Raises:
         InvalidInputError: If input is invalid or processing fails
     """
-    
+
     if isinstance(input_data, bytes):
         return input_data, "application/octet-stream"
 
@@ -48,7 +48,7 @@ async def file_input_to_bytes(
                 return content, "application/octet-stream"
             except Exception as e:
                 raise InvalidInputError(f"Failed to read file {input_data}: {str(e)}")
-        
+
         # Otherwise treat as URL
         if not input_data.startswith(("http://", "https://")):
             raise InvalidInputError(
@@ -58,14 +58,13 @@ async def file_input_to_bytes(
         # Use the provided session instead of creating a new one
         async with session.get(input_data) as response:
             if not response.ok:
-                raise InvalidInputError(
-                    f"Failed to fetch file from URL: {response.status}"
-                )
+                raise InvalidInputError(f"Failed to fetch file from URL: {response.status}")
             content = await response.read()
             content_type = response.headers.get("Content-Type", "application/octet-stream")
             return content, content_type
 
     from ..types import HasRead
+
     if isinstance(input_data, HasRead):
         # Sync file-like objects (for backwards compatibility)
         content = await asyncio.to_thread(input_data.read)
@@ -104,9 +103,7 @@ async def send_request(
         ) as response:
             if not response.ok:
                 error_text = await response.text()
-                raise ProcessingError(
-                    f"Processing failed: {response.status} - {error_text}"
-                )
+                raise ProcessingError(f"Processing failed: {response.status} - {error_text}")
             return await response.read()
 
     if cancel_token:

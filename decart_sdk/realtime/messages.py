@@ -83,13 +83,13 @@ OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage, Switch
 def parse_incoming_message(data: dict) -> IncomingMessage:
     """
     Parse incoming WebSocket message.
-    
+
     Args:
         data: Message dictionary
-    
+
     Returns:
         Parsed message instance
-    
+
     Raises:
         ValidationError: If message format is invalid
     """
@@ -99,10 +99,10 @@ def parse_incoming_message(data: dict) -> IncomingMessage:
 def message_to_json(message: OutgoingMessage) -> str:
     """
     Serialize outgoing message to JSON.
-    
+
     Args:
         message: Message to serialize
-    
+
     Returns:
         JSON string
     """
