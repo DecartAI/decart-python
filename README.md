@@ -27,23 +27,20 @@ For complete documentation, guides, and examples, visit:
 
 ```python
 import asyncio
-from decart_sdk import create_decart_client, models
 import os
+from decart_sdk import DecartClient, models
 
 async def main():
-    client = create_decart_client(
-        api_key=os.getenv("DECART_API_KEY")
-    )
+    async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
+        # Generate a video from text
+        result = await client.process({
+            "model": models.video("lucy-pro-t2v"),
+            "prompt": "A cat walking in a lego world",
+        })
 
-    # Generate a video from text
-    result = await client.process({
-        "model": models.video("lucy-pro-t2v"),
-        "prompt": "A cat walking in a lego world",
-    })
-
-    # Save the result
-    with open("output.mp4", "wb") as f:
-        f.write(result)
+        # Save the result
+        with open("output.mp4", "wb") as f:
+            f.write(result)
 
 asyncio.run(main())
 ```
@@ -51,18 +48,19 @@ asyncio.run(main())
 ### Video Transformation
 
 ```python
-# Transform a video file
-with open("input.mp4", "rb") as video_file:
-    result = await client.process({
-        "model": models.video("lucy-pro-v2v"),
-        "prompt": "Anime style with vibrant colors",
-        "data": video_file,
-        "enhance_prompt": True,
-    })
+async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
+    # Transform a video file
+    with open("input.mp4", "rb") as video_file:
+        result = await client.process({
+            "model": models.video("lucy-pro-v2v"),
+            "prompt": "Anime style with vibrant colors",
+            "data": video_file,
+            "enhance_prompt": True,
+        })
 
-# Save the result
-with open("output.mp4", "wb") as f:
-    f.write(result)
+    # Save the result
+    with open("output.mp4", "wb") as f:
+        f.write(result)
 ```
 
 ## Development
