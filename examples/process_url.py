@@ -4,9 +4,7 @@ from decart_sdk import DecartClient, models
 
 
 async def main() -> None:
-    async with DecartClient(
-        api_key=os.getenv("DECART_API_KEY", "your-api-key-here")
-    ) as client:
+    async with DecartClient(api_key=os.getenv("DECART_API_KEY", "your-api-key-here")) as client:
         print("Transforming video from URL...")
         result = await client.process(
             {
