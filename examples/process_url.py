@@ -1,6 +1,6 @@
 import asyncio
 import os
-from decart_sdk import DecartClient, models
+from decart import DecartClient, models
 
 
 async def main() -> None:

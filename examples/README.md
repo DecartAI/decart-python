@@ -7,7 +7,7 @@ This directory contains example scripts demonstrating how to use the Decart Pyth
 1. Install the SDK:
 
 ```bash
-pip install decart-sdk
+pip install decart
 ```
 
 2. Set your API key:
@@ -29,7 +29,7 @@ export DECART_API_KEY="your-api-key-here"
 First, install the realtime dependencies:
 
 ```bash
-pip install decart-sdk[realtime]
+pip install decart[realtime]
 ```
 
 - **`realtime_synthetic.py`** - Test realtime API with synthetic colored frames
