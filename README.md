@@ -7,7 +7,7 @@ A Python SDK for Decart's models.
 ### Using UV
 
 ```bash
-uv pip install decart
+uv add decart
 ```
 
 ### Using pip
