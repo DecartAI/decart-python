@@ -61,9 +61,6 @@ async def main():
         print("Usage: DECART_API_KEY=your-key python realtime_synthetic.py")
         return
 
-    print("Creating Decart client...")
-    client = DecartClient(api_key=api_key)
-
     try:
         from decart_sdk.realtime.client import RealtimeClient
     except ImportError:
@@ -71,90 +68,92 @@ async def main():
         print("Install with: pip install decart-sdk[realtime]")
         return
 
-    print("Creating synthetic video track...")
-    video_track = SyntheticVideoTrack()
+    print("Creating Decart client...")
+    async with DecartClient(api_key=api_key) as client:
+        print("Creating synthetic video track...")
+        video_track = SyntheticVideoTrack()
 
-    model = models.realtime("mirage")
-    print(f"Using model: {model.name}")
-    print(f"Model config - FPS: {model.fps}, Size: {model.width}x{model.height}")
+        model = models.realtime("mirage")
+        print(f"Using model: {model.name}")
+        print(f"Model config - FPS: {model.fps}, Size: {model.width}x{model.height}")
 
-    frame_count = 0
-    recorder = None
-    output_file = Path("output_realtime_synthetic.mp4")
+        frame_count = 0
+        recorder = None
+        output_file = Path("output_realtime_synthetic.mp4")
 
-    def on_remote_stream(track):
-        nonlocal frame_count, recorder
-        frame_count += 1
-        print(f"📹 Received remote stream frame #{frame_count}")
+        def on_remote_stream(track):
+            nonlocal frame_count, recorder
+            frame_count += 1
+            print(f"📹 Received remote stream frame #{frame_count}")
 
-        if recorder is None:
-            print(f"💾 Recording to {output_file}")
-            recorder = MediaRecorder(str(output_file))
-            recorder.addTrack(track)
-            asyncio.create_task(recorder.start())
+            if recorder is None:
+                print(f"💾 Recording to {output_file}")
+                recorder = MediaRecorder(str(output_file))
+                recorder.addTrack(track)
+                asyncio.create_task(recorder.start())
 
-    def on_connection_change(state):
-        print(f"🔄 Connection state: {state}")
+        def on_connection_change(state):
+            print(f"🔄 Connection state: {state}")
 
-    def on_error(error):
-        print(f"❌ Error: {error.__class__.__name__} - {error.message}")
+        def on_error(error):
+            print(f"❌ Error: {error.__class__.__name__} - {error.message}")
 
-    print("\nConnecting to Realtime API...")
-    try:
-        from decart_sdk.realtime.client import RealtimeClient
-        from decart_sdk.realtime.types import RealtimeConnectOptions
-        from decart_sdk.types import ModelState, Prompt
-
-        realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
-            api_key=client.api_key,
-            local_track=video_track,
-            options=RealtimeConnectOptions(
-                model=model,
-                on_remote_stream=on_remote_stream,
-                initial_state=ModelState(
-                    prompt=Prompt(text="Anime style", enrich=True), mirror=False
-                ),
-            ),
-        )
-
-        realtime_client.on("connection_change", on_connection_change)
-        realtime_client.on("error", on_error)
-
-        print("✓ Connected!")
-        print(f"Session ID: {realtime_client.session_id}")
-        print("Processing video for 10 seconds...")
-
+        print("\nConnecting to Realtime API...")
         try:
-            await asyncio.sleep(5)
+            from decart_sdk.realtime.client import RealtimeClient
+            from decart_sdk.realtime.types import RealtimeConnectOptions
+            from decart_sdk.types import ModelState, Prompt
 
-            print("\n🎨 Changing style to 'Cyberpunk city'...")
-            await realtime_client.set_prompt("Cyberpunk city")
+            realtime_client = await RealtimeClient.connect(
+                base_url=client.base_url,
+                api_key=client.api_key,
+                local_track=video_track,
+                options=RealtimeConnectOptions(
+                    model=model,
+                    on_remote_stream=on_remote_stream,
+                    initial_state=ModelState(
+                        prompt=Prompt(text="Anime style", enrich=True), mirror=False
+                    ),
+                ),
+            )
 
-            await asyncio.sleep(5)
+            realtime_client.on("connection_change", on_connection_change)
+            realtime_client.on("error", on_error)
 
-            print(f"\n✓ Processed {frame_count} frames total")
+            print("✓ Connected!")
+            print(f"Session ID: {realtime_client.session_id}")
+            print("Processing video for 10 seconds...")
+
+            try:
+                await asyncio.sleep(5)
+
+                print("\n🎨 Changing style to 'Cyberpunk city'...")
+                await realtime_client.set_prompt("Cyberpunk city")
+
+                await asyncio.sleep(5)
+
+                print(f"\n✓ Processed {frame_count} frames total")
+            finally:
+                if recorder:
+                    try:
+                        print(f"💾 Saving video to {output_file}...")
+                        await asyncio.sleep(0.5)
+                        await recorder.stop()
+                        print(f"✓ Video saved to {output_file}")
+                    except Exception as e:
+                        print(f"⚠️ Warning: Could not save video cleanly: {e}")
+                        print("   Video file may be incomplete or corrupted")
+
+        except Exception as e:
+            print(f"\n❌ Connection failed: {e}")
+            import traceback
+
+            traceback.print_exc()
         finally:
-            if recorder:
-                try:
-                    print(f"💾 Saving video to {output_file}...")
-                    await asyncio.sleep(0.5)  # Let pending frames flush
-                    await recorder.stop()
-                    print(f"✓ Video saved to {output_file}")
-                except Exception as e:
-                    print(f"⚠️ Warning: Could not save video cleanly: {e}")
-                    print("   Video file may be incomplete or corrupted")
-
-    except Exception as e:
-        print(f"\n❌ Connection failed: {e}")
-        import traceback
-
-        traceback.print_exc()
-    finally:
-        if "realtime_client" in locals():
-            print("\nDisconnecting...")
-            await realtime_client.disconnect()
-            print("✓ Disconnected")
+            if "realtime_client" in locals():
+                print("\nDisconnecting...")
+                await realtime_client.disconnect()
+                print("✓ Disconnected")
 
 
 if __name__ == "__main__":
