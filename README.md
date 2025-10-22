@@ -82,7 +82,7 @@ uv sync --all-extras
 uv run pytest
 
 # Run linting
-uv run ruff check decart/
+uv run ruff check decart/ tests/ examples/
 
 # Format code
 uv run black decart/ tests/ examples/
