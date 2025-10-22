@@ -35,6 +35,9 @@ dependencies = [
     "aiohttp>=3.9.0",
     "aiofiles>=23.0.0",
     "pydantic>=2.0.0",
+    "websockets>=15.0.1",
+    "numpy>=2.0.2",
+    "opencv-python>=4.11.0.86",
 ]
 
 [project.optional-dependencies]
