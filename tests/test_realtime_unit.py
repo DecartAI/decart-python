@@ -28,6 +28,14 @@ def test_realtime_models_available():
     assert model.fps == 25
     assert model.width == 1280
     assert model.height == 704
+    assert model.url_path == "/v1/stream"
+
+    model2 = models.realtime("mirage_v2")
+    assert model2.name == "mirage_v2"
+    assert model2.fps == 12
+    assert model2.width == 1280
+    assert model2.height == 704
+    assert model2.url_path == "/v1/stream"
 
     model2 = models.realtime("lucy_v2v_720p_rt")
     assert model2.name == "lucy_v2v_720p_rt"

@@ -73,7 +73,7 @@ async def main():
         print("Creating synthetic video track...")
         video_track = SyntheticVideoTrack()
 
-        model = models.realtime("mirage")
+        model = models.realtime("mirage_v2")
         print(f"Using model: {model.name}")
         print(f"Model config - FPS: {model.fps}, Size: {model.width}x{model.height}")
 
