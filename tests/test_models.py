@@ -10,6 +10,13 @@ def test_realtime_models() -> None:
     assert model.height == 704
     assert model.url_path == "/v1/stream"
 
+    model = models.realtime("mirage_v2")
+    assert model.name == "mirage_v2"
+    assert model.fps == 12
+    assert model.width == 1280
+    assert model.height == 704
+    assert model.url_path == "/v1/stream"
+
 
 def test_video_models() -> None:
     model = models.video("lucy-pro-t2v")
