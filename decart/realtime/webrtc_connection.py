@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 from typing import Optional, Callable
+from urllib.parse import quote
 import aiohttp
 from aiortc import (
     RTCPeerConnection,
@@ -13,6 +14,7 @@ from aiortc import (
 )
 
 from ..errors import WebRTCError
+from .._user_agent import build_user_agent
 from .messages import (
     parse_incoming_message,
     message_to_json,
@@ -46,11 +48,18 @@ class WebRTCConnection:
         self._ws_task: Optional[asyncio.Task] = None
         self._ice_candidates_queue: list[RTCIceCandidate] = []
 
-    async def connect(self, url: str, local_track: MediaStreamTrack, timeout: float = 30) -> None:
+    async def connect(
+        self, url: str, local_track: MediaStreamTrack, timeout: float = 30, integration: Optional[str] = None
+    ) -> None:
         try:
             await self._set_state("connecting")
 
             ws_url = url.replace("https://", "wss://").replace("http://", "ws://")
+            
+            # Add user agent as query parameter (browsers don't support WS headers)
+            user_agent = build_user_agent(integration)
+            separator = "&" if "?" in ws_url else "?"
+            ws_url = f"{ws_url}{separator}user_agent={quote(user_agent)}"
 
             self._session = aiohttp.ClientSession()
             self._ws = await self._session.ws_connect(ws_url)

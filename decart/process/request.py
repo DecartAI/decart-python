@@ -6,6 +6,7 @@ from typing import Any, Optional
 from ..types import FileInput
 from ..models import ModelDefinition
 from ..errors import InvalidInputError, ProcessingError
+from .._user_agent import build_user_agent
 
 
 async def file_input_to_bytes(
@@ -82,6 +83,7 @@ async def send_request(
     model: ModelDefinition,
     inputs: dict[str, Any],
     cancel_token: Optional[asyncio.Event] = None,
+    integration: Optional[str] = None,
 ) -> bytes:
     form_data = aiohttp.FormData()
 
@@ -98,7 +100,10 @@ async def send_request(
     async def make_request() -> bytes:
         async with session.post(
             endpoint,
-            headers={"X-API-KEY": api_key},
+            headers={
+                "X-API-KEY": api_key,
+                "User-Agent": build_user_agent(integration),
+            },
             data=form_data,
         ) as response:
             if not response.ok:
