@@ -2,7 +2,6 @@ import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
 from decart import DecartClient, models, DecartSDKError
-from decart._version import __version__
 
 
 @pytest.mark.asyncio
@@ -134,7 +133,7 @@ async def test_process_includes_user_agent_header() -> None:
         mock_session.post.assert_called_once()
         call_kwargs = mock_session.post.call_args[1]
         headers = call_kwargs.get("headers", {})
-        
+
         assert "User-Agent" in headers
         assert headers["User-Agent"].startswith("decart-python-sdk/")
         assert "lang/py" in headers["User-Agent"]
@@ -170,7 +169,7 @@ async def test_process_includes_integration_in_user_agent() -> None:
         mock_session.post.assert_called_once()
         call_kwargs = mock_session.post.call_args[1]
         headers = call_kwargs.get("headers", {})
-        
+
         assert "User-Agent" in headers
         assert headers["User-Agent"].startswith("decart-python-sdk/")
         assert "lang/py" in headers["User-Agent"]

@@ -49,13 +49,17 @@ class WebRTCConnection:
         self._ice_candidates_queue: list[RTCIceCandidate] = []
 
     async def connect(
-        self, url: str, local_track: MediaStreamTrack, timeout: float = 30, integration: Optional[str] = None
+        self,
+        url: str,
+        local_track: MediaStreamTrack,
+        timeout: float = 30,
+        integration: Optional[str] = None,
     ) -> None:
         try:
             await self._set_state("connecting")
 
             ws_url = url.replace("https://", "wss://").replace("http://", "ws://")
-            
+
             # Add user agent as query parameter (browsers don't support WS headers)
             user_agent = build_user_agent(integration)
             separator = "&" if "?" in ws_url else "?"

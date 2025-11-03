@@ -34,7 +34,10 @@ class DecartClient:
     """
 
     def __init__(
-        self, api_key: str, base_url: str = "https://api.decart.ai", integration: Optional[str] = None
+        self,
+        api_key: str,
+        base_url: str = "https://api.decart.ai",
+        integration: Optional[str] = None,
     ) -> None:
         if not api_key or not api_key.strip():
             raise InvalidAPIKeyError()
