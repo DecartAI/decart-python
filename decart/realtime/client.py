@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 import logging
 import uuid
 from aiortc import MediaStreamTrack
@@ -25,6 +25,7 @@ class RealtimeClient:
         api_key: str,
         local_track: MediaStreamTrack,
         options: RealtimeConnectOptions,
+        integration: Optional[str] = None,
     ) -> "RealtimeClient":
         session_id = str(uuid.uuid4())
         ws_url = f"{base_url}{options.model.url_path}"
@@ -40,6 +41,7 @@ class RealtimeClient:
             on_error=None,
             initial_state=options.initial_state,
             customize_offer=options.customize_offer,
+            integration=integration,
         )
 
         manager = WebRTCManager(config)

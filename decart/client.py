@@ -21,6 +21,7 @@ class DecartClient:
     Args:
         api_key: Your Decart API key
         base_url: API base URL (defaults to production)
+        integration: Optional integration identifier (e.g., "langchain/0.1.0")
 
     Example:
         ```python
@@ -32,7 +33,12 @@ class DecartClient:
         ```
     """
 
-    def __init__(self, api_key: str, base_url: str = "https://api.decart.ai") -> None:
+    def __init__(
+        self,
+        api_key: str,
+        base_url: str = "https://api.decart.ai",
+        integration: Optional[str] = None,
+    ) -> None:
         if not api_key or not api_key.strip():
             raise InvalidAPIKeyError()
 
@@ -41,6 +47,7 @@ class DecartClient:
 
         self.api_key = api_key
         self.base_url = base_url
+        self.integration = integration
         self._session: Optional[aiohttp.ClientSession] = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
@@ -117,6 +124,7 @@ class DecartClient:
             model=model,
             inputs=processed_inputs,
             cancel_token=cancel_token,
+            integration=self.integration,
         )
 
         return response

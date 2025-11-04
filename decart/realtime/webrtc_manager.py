@@ -29,6 +29,7 @@ class WebRTCConfiguration:
     on_error: Optional[Callable[[Exception], None]] = None
     initial_state: Optional[ModelState] = None
     customize_offer: Optional[Callable] = None
+    integration: Optional[str] = None
 
 
 def _is_retryable_error(exception: Exception) -> bool:
@@ -55,6 +56,7 @@ class WebRTCManager:
             await self._connection.connect(
                 url=self._config.webrtc_url,
                 local_track=local_track,
+                integration=self._config.integration,
             )
             return True
         except Exception as e:
