@@ -89,7 +89,7 @@ _MODELS = {
         "mirage_v2": ModelDefinition(
             name="mirage_v2",
             url_path="/v1/stream",
-            fps=18,
+            fps=22,
             width=1280,
             height=704,
             input_schema=BaseModel,
