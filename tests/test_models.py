@@ -12,7 +12,7 @@ def test_realtime_models() -> None:
 
     model = models.realtime("mirage_v2")
     assert model.name == "mirage_v2"
-    assert model.fps == 18
+    assert model.fps == 22
     assert model.width == 1280
     assert model.height == 704
     assert model.url_path == "/v1/stream"
