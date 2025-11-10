@@ -21,3 +21,9 @@ class Prompt(BaseModel):
 class ModelState(BaseModel):
     prompt: Optional[Prompt] = None
     mirror: bool = Field(default=False)
+
+
+class MotionTrajectoryInput(BaseModel):
+    frame: int = Field(..., ge=0)
+    x: float = Field(..., ge=0)
+    y: float = Field(..., ge=0)
