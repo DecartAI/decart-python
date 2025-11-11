@@ -107,7 +107,7 @@ async def test_process_image_to_motion_video() -> None:
 
         result = await client.process(
             {
-                "model": models.video("lucy-motion-i2v"),
+                "model": models.video("lucy-motion"),
                 "data": b"fake input image",
                 "trajectory": [
                     MotionTrajectoryInput(frame=0, x=0, y=0),

@@ -12,7 +12,7 @@ VideoModels = Literal[
     "lucy-pro-i2v",
     "lucy-pro-v2v",
     "lucy-pro-flf2v",
-    "lucy-motion-i2v",
+    "lucy-motion",
 ]
 ImageModels = Literal["lucy-pro-t2i", "lucy-pro-i2i"]
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
@@ -160,9 +160,9 @@ _MODELS = {
             height=704,
             input_schema=FirstLastFrameInput,
         ),
-        "lucy-motion-i2v": ModelDefinition(
-            name="lucy-motion-i2v",
-            url_path="/v1/generate/lucy-motion-i2v",
+        "lucy-motion": ModelDefinition(
+            name="lucy-motion",
+            url_path="/v1/generate/lucy-motion",
             fps=25,
             width=1280,
             height=704,
