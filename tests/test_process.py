@@ -123,6 +123,25 @@ async def test_process_image_to_motion_video() -> None:
 
 
 @pytest.mark.asyncio
+async def test_process_image_to_motion_video_invalid_trajectory() -> None:
+    client = DecartClient(api_key="test-key")
+
+    with pytest.raises(DecartSDKError) as exception:
+        await client.process(
+            {
+                "model": models.video("lucy-motion"),
+                "data": b"fake input image",
+                "trajectory": [
+                    MotionTrajectoryInput(frame=0, x=0, y=0),
+                ],
+            }
+        )
+    assert "Invalid inputs for lucy-motion: 1 validation error for ImageToMotionVideoInput" in str(
+        exception
+    )
+
+
+@pytest.mark.asyncio
 async def test_process_with_cancellation() -> None:
     client = DecartClient(api_key="test-key")
     cancel_token = asyncio.Event()

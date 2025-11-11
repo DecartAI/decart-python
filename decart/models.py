@@ -64,7 +64,7 @@ class FirstLastFrameInput(DecartBaseModel):
 
 class ImageToMotionVideoInput(DecartBaseModel):
     data: FileInput
-    trajectory: List[MotionTrajectoryInput]
+    trajectory: List[MotionTrajectoryInput] = Field(..., min_length=2, max_length=121)
     seed: Optional[int] = None
     resolution: Optional[str] = None
 
