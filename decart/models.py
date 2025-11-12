@@ -1,7 +1,7 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 from .errors import ModelNotFoundError
-from .types import FileInput
+from .types import FileInput, MotionTrajectoryInput
 
 
 RealTimeModels = Literal["mirage", "mirage_v2", "lucy_v2v_720p_rt"]
@@ -12,6 +12,7 @@ VideoModels = Literal[
     "lucy-pro-i2v",
     "lucy-pro-v2v",
     "lucy-pro-flf2v",
+    "lucy-motion",
 ]
 ImageModels = Literal["lucy-pro-t2i", "lucy-pro-i2i"]
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
@@ -57,6 +58,13 @@ class FirstLastFrameInput(DecartBaseModel):
     prompt: str = Field(..., min_length=1)
     start: FileInput
     end: FileInput
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
+
+
+class ImageToMotionVideoInput(DecartBaseModel):
+    data: FileInput
+    trajectory: List[MotionTrajectoryInput] = Field(..., min_length=2, max_length=121)
     seed: Optional[int] = None
     resolution: Optional[str] = None
 
@@ -151,6 +159,14 @@ _MODELS = {
             width=1280,
             height=704,
             input_schema=FirstLastFrameInput,
+        ),
+        "lucy-motion": ModelDefinition(
+            name="lucy-motion",
+            url_path="/v1/generate/lucy-motion",
+            fps=25,
+            width=1280,
+            height=704,
+            input_schema=ImageToMotionVideoInput,
         ),
     },
     "image": {
