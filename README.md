@@ -110,24 +110,23 @@ uv lock --upgrade
 
 ### Publishing a New Version
 
-The package is automatically published to PyPI when you create a GitHub release:
+The package is automatically published to PyPI when you create a GitHub release.
+
+#### Automated Release
+
+Use the release script to automate the entire process:
 
 ```bash
-# 1. Update version in pyproject.toml
-version = "0.0.4"
-
-# 2. Commit and push
-git add pyproject.toml
-git commit -m "chore: bump version to 0.0.4"
-git push
-
-# 3. Create a GitHub release
-gh release create v0.0.4 \
-  --title "v0.0.4 - Feature summary" \
-  --notes "## What's Changed
-- Feature 1
-- Bug fix 2"
+python release.py
 ```
+
+The script will:
+
+1. Display the current version
+2. Prompt for the new version
+3. Update `pyproject.toml`
+4. Commit and push changes
+5. Create a GitHub release with release notes
 
 The GitHub Actions workflow will automatically build, test, and publish to PyPI.
 
