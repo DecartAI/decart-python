@@ -32,21 +32,29 @@ class ModelDefinition(DecartBaseModel):
 
 
 class TextToVideoInput(BaseModel):
-    prompt: str = Field(..., min_length=1)
+    prompt: str = Field(..., min_length=1, max_length=1000)
     seed: Optional[int] = None
     resolution: Optional[str] = None
     orientation: Optional[str] = None
 
 
 class ImageToVideoInput(DecartBaseModel):
-    prompt: str = Field(..., min_length=1)
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
     data: FileInput
     seed: Optional[int] = None
     resolution: Optional[str] = None
 
 
 class VideoToVideoInput(DecartBaseModel):
-    prompt: str = Field(..., min_length=1)
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
     data: FileInput
     seed: Optional[int] = None
     resolution: Optional[str] = None
@@ -55,7 +63,11 @@ class VideoToVideoInput(DecartBaseModel):
 
 
 class FirstLastFrameInput(DecartBaseModel):
-    prompt: str = Field(..., min_length=1)
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
     start: FileInput
     end: FileInput
     seed: Optional[int] = None
@@ -70,14 +82,22 @@ class ImageToMotionVideoInput(DecartBaseModel):
 
 
 class TextToImageInput(BaseModel):
-    prompt: str = Field(..., min_length=1)
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
     seed: Optional[int] = None
     resolution: Optional[str] = None
     orientation: Optional[str] = None
 
 
 class ImageToImageInput(DecartBaseModel):
-    prompt: str = Field(..., min_length=1)
+    prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
     data: FileInput
     seed: Optional[int] = None
     resolution: Optional[str] = None

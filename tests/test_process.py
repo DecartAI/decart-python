@@ -88,6 +88,22 @@ async def test_process_video_to_video() -> None:
 
 
 @pytest.mark.asyncio
+async def test_process_max_prompt_length() -> None:
+    client = DecartClient(api_key="test-key")
+    prompt = "a" * 1001
+    with pytest.raises(DecartSDKError) as exception:
+        await client.process(
+            {
+                "model": models.image("lucy-pro-t2i"),
+                "prompt": prompt,
+            }
+        )
+    assert f"Invalid inputs for lucy-pro-t2i: 1 validation error for TextToImageInput" in str(
+        exception
+    )
+
+
+@pytest.mark.asyncio
 async def test_process_image_to_motion_video() -> None:
     client = DecartClient(api_key="test-key")
 
