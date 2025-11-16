@@ -98,7 +98,7 @@ async def test_process_max_prompt_length() -> None:
                 "prompt": prompt,
             }
         )
-    assert f"Invalid inputs for lucy-pro-t2i: 1 validation error for TextToImageInput" in str(
+    assert "Invalid inputs for lucy-pro-t2i: 1 validation error for TextToImageInput" in str(
         exception
     )
 
