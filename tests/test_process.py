@@ -88,6 +88,39 @@ async def test_process_video_to_video() -> None:
 
 
 @pytest.mark.asyncio
+async def test_process_video_to_video_fast() -> None:
+    client = DecartClient(api_key="test-key")
+
+    with patch("aiohttp.ClientSession") as mock_session_cls:
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.read = AsyncMock(return_value=b"fake video data")
+
+        mock_session = MagicMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.post = MagicMock()
+        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        mock_session_cls.return_value = mock_session
+
+        result = await client.process(
+            {
+                "model": models.video("lucy-fast-v2v"),
+                "prompt": "Change the car to a motorcycle",
+                "data": b"fake input video",
+                "resolution": "480p",
+                "enhance_prompt": True,
+                "num_inference_steps": 50,
+                "seed": 42,
+            }
+        )
+
+        assert result == b"fake video data"
+
+
+@pytest.mark.asyncio
 async def test_process_max_prompt_length() -> None:
     client = DecartClient(api_key="test-key")
     prompt = "a" * 1001
