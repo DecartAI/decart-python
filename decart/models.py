@@ -8,6 +8,7 @@ RealTimeModels = Literal["mirage", "mirage_v2", "lucy_v2v_720p_rt"]
 VideoModels = Literal[
     "lucy-dev-i2v",
     "lucy-dev-v2v",
+    "lucy-fast-v2v",
     "lucy-pro-t2v",
     "lucy-pro-i2v",
     "lucy-pro-v2v",
@@ -143,6 +144,14 @@ _MODELS = {
         "lucy-dev-v2v": ModelDefinition(
             name="lucy-dev-v2v",
             url_path="/v1/generate/lucy-dev-v2v",
+            fps=25,
+            width=1280,
+            height=704,
+            input_schema=VideoToVideoInput,
+        ),
+        "lucy-fast-v2v": ModelDefinition(
+            name="lucy-fast-v2v",
+            url_path="/v1/generate/lucy-fast-v2v",
             fps=25,
             width=1280,
             height=704,
