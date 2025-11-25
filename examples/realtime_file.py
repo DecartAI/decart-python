@@ -85,9 +85,7 @@ async def main():
                 options=RealtimeConnectOptions(
                     model=model,
                     on_remote_stream=on_remote_stream,
-                    initial_state=ModelState(
-                        prompt=Prompt(text="Lego World", enrich=True), mirror=False
-                    ),
+                    initial_state=ModelState(prompt=Prompt(text="Lego World", enrich=True)),
                 ),
             )
 

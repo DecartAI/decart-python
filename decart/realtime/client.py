@@ -4,7 +4,7 @@ import uuid
 from aiortc import MediaStreamTrack
 
 from .webrtc_manager import WebRTCManager, WebRTCConfiguration
-from .messages import PromptMessage, SwitchCameraMessage
+from .messages import PromptMessage
 from .types import ConnectionState, RealtimeConnectOptions
 from ..errors import DecartSDKError, InvalidInputError, WebRTCError
 
@@ -59,8 +59,6 @@ class RealtimeClient:
                         options.initial_state.prompt.text,
                         enrich=options.initial_state.prompt.enrich,
                     )
-                if options.initial_state.mirror is not None:
-                    await client.set_mirror(options.initial_state.mirror)
         except Exception as e:
             raise WebRTCError(str(e), cause=e)
 
@@ -84,12 +82,6 @@ class RealtimeClient:
         if not prompt or not prompt.strip():
             raise InvalidInputError("Prompt cannot be empty")
         await self._manager.send_message(PromptMessage(type="prompt", prompt=prompt))
-
-    async def set_mirror(self, enabled: bool) -> None:
-        rotate_y = 2 if enabled else 0
-        await self._manager.send_message(
-            SwitchCameraMessage(type="switch_camera", rotateY=rotate_y)
-        )
 
     def is_connected(self) -> bool:
         return self._manager.is_connected()

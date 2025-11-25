@@ -20,7 +20,6 @@ class Prompt(BaseModel):
 
 class ModelState(BaseModel):
     prompt: Optional[Prompt] = None
-    mirror: bool = Field(default=False)
 
 
 class MotionTrajectoryInput(BaseModel):

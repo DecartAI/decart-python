@@ -69,15 +69,8 @@ class PromptMessage(BaseModel):
     prompt: str
 
 
-class SwitchCameraMessage(BaseModel):
-    """Switch camera/mirror message."""
-
-    type: Literal["switch_camera"]
-    rotateY: int
-
-
 # Outgoing message union (no discriminator needed - we know what we're sending)
-OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage, SwitchCameraMessage]
+OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage]
 
 
 def parse_incoming_message(data: dict) -> IncomingMessage:
