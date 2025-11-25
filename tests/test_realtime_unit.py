@@ -65,7 +65,7 @@ async def test_realtime_client_creation_with_mock():
             options=RealtimeConnectOptions(
                 model=models.realtime("mirage"),
                 on_remote_stream=lambda t: None,
-                initial_state=ModelState(prompt=Prompt(text="Test", enrich=True), mirror=False),
+                initial_state=ModelState(prompt=Prompt(text="Test", enrich=True)),
             ),
         )
 
@@ -105,39 +105,6 @@ async def test_realtime_set_prompt_with_mock():
         call_args = mock_manager.send_message.call_args[0][0]
         assert call_args.type == "prompt"
         assert call_args.prompt == "New prompt"
-
-
-@pytest.mark.asyncio
-async def test_realtime_set_mirror_with_mock():
-    """Test set_mirror with mocked WebRTC"""
-    client = DecartClient(api_key="test-key")
-
-    with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
-        mock_manager = AsyncMock()
-        mock_manager.connect = AsyncMock(return_value=True)
-        mock_manager.send_message = AsyncMock()
-        mock_manager_class.return_value = mock_manager
-
-        mock_track = MagicMock()
-
-        from decart.realtime.types import RealtimeConnectOptions
-
-        realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
-            api_key=client.api_key,
-            local_track=mock_track,
-            options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
-                on_remote_stream=lambda t: None,
-            ),
-        )
-
-        await realtime_client.set_mirror(True)
-
-        mock_manager.send_message.assert_called_once()
-        call_args = mock_manager.send_message.call_args[0][0]
-        assert call_args.type == "switch_camera"
-        assert call_args.rotateY == 2
 
 
 @pytest.mark.asyncio
