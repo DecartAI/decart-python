@@ -126,7 +126,11 @@ async def main():
                 await asyncio.sleep(5)
 
                 print("\n🎨 Changing style to 'Cyberpunk city'...")
-                await realtime_client.set_prompt("Cyberpunk city")
+                try:
+                    await realtime_client.set_prompt("Cyberpunk city")
+                    print("✓ Prompt set successfully")
+                except Exception as e:
+                    print(f"⚠️ Failed to set prompt: {e}")
 
                 await asyncio.sleep(5)
 

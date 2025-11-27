@@ -44,6 +44,8 @@ def test_realtime_models_available():
 @pytest.mark.asyncio
 async def test_realtime_client_creation_with_mock():
     """Test client creation with mocked WebRTC"""
+    import asyncio
+
     client = DecartClient(api_key="test-key")
 
     with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
@@ -51,6 +53,16 @@ async def test_realtime_client_creation_with_mock():
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager.is_connected = MagicMock(return_value=True)
         mock_manager.get_connection_state = MagicMock(return_value="connected")
+        mock_manager.send_message = AsyncMock()
+
+        prompt_event = asyncio.Event()
+        prompt_result = {"success": True, "error": None}
+        prompt_event.set()
+
+        mock_manager.register_prompt_wait = MagicMock(
+            return_value=(prompt_event, prompt_result)
+        )
+        mock_manager.unregister_prompt_wait = MagicMock()
         mock_manager_class.return_value = mock_manager
 
         mock_track = MagicMock()
@@ -76,13 +88,24 @@ async def test_realtime_client_creation_with_mock():
 
 @pytest.mark.asyncio
 async def test_realtime_set_prompt_with_mock():
-    """Test set_prompt with mocked WebRTC"""
+    """Test set_prompt with mocked WebRTC and prompt_ack"""
+    import asyncio
+
     client = DecartClient(api_key="test-key")
 
     with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
         mock_manager.send_message = AsyncMock()
+
+        prompt_event = asyncio.Event()
+        prompt_result = {"success": True, "error": None}
+
+        def register_prompt_wait(prompt):
+            return prompt_event, prompt_result
+
+        mock_manager.register_prompt_wait = MagicMock(side_effect=register_prompt_wait)
+        mock_manager.unregister_prompt_wait = MagicMock()
         mock_manager_class.return_value = mock_manager
 
         mock_track = MagicMock()
@@ -99,12 +122,19 @@ async def test_realtime_set_prompt_with_mock():
             ),
         )
 
+        async def set_event():
+            await asyncio.sleep(0.01)
+            prompt_event.set()
+
+        asyncio.create_task(set_event())
         await realtime_client.set_prompt("New prompt")
 
-        mock_manager.send_message.assert_called_once()
+        mock_manager.send_message.assert_called()
         call_args = mock_manager.send_message.call_args[0][0]
         assert call_args.type == "prompt"
         assert call_args.prompt == "New prompt"
+        assert call_args.enhance_prompt is True
+        mock_manager.unregister_prompt_wait.assert_called_with("New prompt")
 
 
 @pytest.mark.asyncio
@@ -152,3 +182,99 @@ async def test_realtime_events():
         realtime_client._emit_error(test_error)
         assert len(errors) == 1
         assert errors[0].message == "Test error"
+
+
+@pytest.mark.asyncio
+async def test_realtime_set_prompt_timeout():
+    """Test set_prompt raises on timeout"""
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        prompt_event = asyncio.Event()
+        prompt_result = {"success": False, "error": None}
+
+        def register_prompt_wait(prompt):
+            return prompt_event, prompt_result
+
+        mock_manager.register_prompt_wait = MagicMock(side_effect=register_prompt_wait)
+        mock_manager.unregister_prompt_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        from decart.errors import DecartSDKError
+
+        with pytest.raises(DecartSDKError) as exc_info:
+            await realtime_client.set_prompt("New prompt", max_timeout=0.01)
+
+        assert "timed out" in str(exc_info.value)
+        mock_manager.unregister_prompt_wait.assert_called_with("New prompt")
+
+
+@pytest.mark.asyncio
+async def test_realtime_set_prompt_server_error():
+    """Test set_prompt raises on server error"""
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with patch("decart.realtime.client.WebRTCManager") as mock_manager_class:
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        prompt_event = asyncio.Event()
+        prompt_result = {"success": False, "error": "Server rejected prompt"}
+
+        def register_prompt_wait(prompt):
+            return prompt_event, prompt_result
+
+        mock_manager.register_prompt_wait = MagicMock(side_effect=register_prompt_wait)
+        mock_manager.unregister_prompt_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        async def set_event():
+            await asyncio.sleep(0.01)
+            prompt_event.set()
+
+        asyncio.create_task(set_event())
+
+        from decart.errors import DecartSDKError
+
+        with pytest.raises(DecartSDKError) as exc_info:
+            await realtime_client.set_prompt("New prompt")
+
+        assert "Server rejected prompt" in str(exc_info.value)
+        mock_manager.unregister_prompt_wait.assert_called_with("New prompt")
