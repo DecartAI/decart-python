@@ -1,4 +1,4 @@
-from typing import Literal, Optional, Callable, Union
+from typing import Literal, Callable, Union
 from pydantic import BaseModel
 
 
