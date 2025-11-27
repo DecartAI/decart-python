@@ -178,9 +178,7 @@ class QueueClient:
             QueueStatusError: If status check fails
             QueueResultError: If result retrieval fails
         """
-        on_status_change: Optional[OnStatusChangeCallback] = options.pop(
-            "on_status_change", None
-        )
+        on_status_change: Optional[OnStatusChangeCallback] = options.pop("on_status_change", None)
 
         # Submit the job
         job = await self.submit(options)
