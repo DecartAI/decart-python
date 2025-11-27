@@ -62,3 +62,21 @@ class ProcessingError(DecartSDKError):
     """Raised when processing fails."""
 
     pass
+
+
+class QueueSubmitError(DecartSDKError):
+    """Raised when queue job submission fails."""
+
+    pass
+
+
+class QueueStatusError(DecartSDKError):
+    """Raised when getting queue job status fails."""
+
+    pass
+
+
+class QueueResultError(DecartSDKError):
+    """Raised when getting queue job result fails."""
+
+    pass

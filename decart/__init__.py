@@ -7,9 +7,19 @@ from .errors import (
     ModelNotFoundError,
     ProcessingError,
     WebRTCError,
+    QueueSubmitError,
+    QueueStatusError,
+    QueueResultError,
 )
 from .models import models, ModelDefinition
 from .types import FileInput, ModelState, Prompt
+from .queue import (
+    QueueClient,
+    JobStatus,
+    JobSubmitResponse,
+    JobStatusResponse,
+    QueueJobResult,
+)
 
 try:
     from .realtime import (
@@ -36,11 +46,19 @@ __all__ = [
     "ModelNotFoundError",
     "ProcessingError",
     "WebRTCError",
+    "QueueSubmitError",
+    "QueueStatusError",
+    "QueueResultError",
     "models",
     "ModelDefinition",
     "FileInput",
     "ModelState",
     "Prompt",
+    "QueueClient",
+    "JobStatus",
+    "JobSubmitResponse",
+    "JobStatusResponse",
+    "QueueJobResult",
 ]
 
 if REALTIME_AVAILABLE:

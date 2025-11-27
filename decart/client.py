@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from .errors import InvalidAPIKeyError, InvalidBaseURLError, InvalidInputError
 from .models import ModelDefinition
 from .process.request import send_request
+from .queue.client import QueueClient
 
 try:
     from .realtime.client import RealtimeClient
@@ -49,6 +50,30 @@ class DecartClient:
         self.base_url = base_url
         self.integration = integration
         self._session: Optional[aiohttp.ClientSession] = None
+        self._queue: Optional[QueueClient] = None
+
+    @property
+    def queue(self) -> QueueClient:
+        """
+        Queue client for async job-based video and image generation.
+
+        Example:
+            ```python
+            # Submit and poll automatically
+            result = await client.queue.submit_and_poll({
+                "model": models.video("lucy-pro-t2v"),
+                "prompt": "A cat playing piano",
+            })
+
+            # Or submit and poll manually
+            job = await client.queue.submit({...})
+            status = await client.queue.status(job.job_id)
+            data = await client.queue.result(job.job_id)
+            ```
+        """
+        if self._queue is None:
+            self._queue = QueueClient(self)
+        return self._queue
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create the aiohttp session."""
