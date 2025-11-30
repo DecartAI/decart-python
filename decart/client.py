@@ -1,3 +1,4 @@
+import os
 from typing import Any, Optional
 import aiohttp
 from pydantic import ValidationError
@@ -20,13 +21,17 @@ class DecartClient:
     Decart API client for video and image generation/transformation.
 
     Args:
-        api_key: Your Decart API key
+        api_key: Your Decart API key. Defaults to the DECART_API_KEY environment variable.
         base_url: API base URL (defaults to production)
         integration: Optional integration identifier (e.g., "langchain/0.1.0")
 
     Example:
         ```python
+        # Option 1: Explicit API key
         client = DecartClient(api_key="your-key")
+
+        # Option 2: Using DECART_API_KEY environment variable
+        client = DecartClient()
 
         # Image generation (sync) - use process()
         image = await client.process({
@@ -44,17 +49,19 @@ class DecartClient:
 
     def __init__(
         self,
-        api_key: str,
+        api_key: Optional[str] = None,
         base_url: str = "https://api.decart.ai",
         integration: Optional[str] = None,
     ) -> None:
-        if not api_key or not api_key.strip():
+        resolved_api_key = api_key or os.environ.get("DECART_API_KEY", "").strip() or None
+
+        if not resolved_api_key:
             raise InvalidAPIKeyError()
 
         if not base_url.startswith(("http://", "https://")):
             raise InvalidBaseURLError(base_url)
 
-        self.api_key = api_key
+        self.api_key = resolved_api_key
         self.base_url = base_url
         self.integration = integration
         self._session: Optional[aiohttp.ClientSession] = None

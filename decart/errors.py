@@ -26,7 +26,9 @@ class InvalidAPIKeyError(DecartSDKError):
     """Raised when API key is invalid or missing."""
 
     def __init__(self) -> None:
-        super().__init__("API key is required and must be a non-empty string")
+        super().__init__(
+            "Missing API key. Pass `api_key` to DecartClient() or set the DECART_API_KEY environment variable."
+        )
 
 
 class InvalidBaseURLError(DecartSDKError):
