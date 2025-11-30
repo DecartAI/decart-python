@@ -2,6 +2,7 @@
 Video generation example using the Queue API.
 Video models only support async queue processing.
 """
+
 import asyncio
 import os
 from decart import DecartClient, models

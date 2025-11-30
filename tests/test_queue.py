@@ -3,6 +3,7 @@ Tests for the queue API.
 Note: queue API only supports video models.
 Image models must use the process API.
 """
+
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from decart import DecartClient, models, DecartSDKError
@@ -114,10 +115,12 @@ async def test_queue_submit_and_poll_completed() -> None:
     """Test submit_and_poll returns completed result."""
     client = DecartClient(api_key="test-key")
 
-    with patch("decart.queue.client.submit_job") as mock_submit, \
-         patch("decart.queue.client.get_job_status") as mock_status, \
-         patch("decart.queue.client.get_job_content") as mock_content, \
-         patch("asyncio.sleep", new_callable=AsyncMock):
+    with (
+        patch("decart.queue.client.submit_job") as mock_submit,
+        patch("decart.queue.client.get_job_status") as mock_status,
+        patch("decart.queue.client.get_job_content") as mock_content,
+        patch("asyncio.sleep", new_callable=AsyncMock),
+    ):
 
         mock_submit.return_value = MagicMock(job_id="job-123", status="pending")
         mock_status.return_value = MagicMock(job_id="job-123", status="completed")
@@ -139,9 +142,11 @@ async def test_queue_submit_and_poll_failed() -> None:
     """Test submit_and_poll returns failed result."""
     client = DecartClient(api_key="test-key")
 
-    with patch("decart.queue.client.submit_job") as mock_submit, \
-         patch("decart.queue.client.get_job_status") as mock_status, \
-         patch("asyncio.sleep", new_callable=AsyncMock):
+    with (
+        patch("decart.queue.client.submit_job") as mock_submit,
+        patch("decart.queue.client.get_job_status") as mock_status,
+        patch("asyncio.sleep", new_callable=AsyncMock),
+    ):
 
         mock_submit.return_value = MagicMock(job_id="job-123", status="pending")
         mock_status.return_value = MagicMock(job_id="job-123", status="failed")
@@ -166,10 +171,12 @@ async def test_queue_submit_and_poll_with_callback() -> None:
     def on_status_change(job):
         status_changes.append(job.status)
 
-    with patch("decart.queue.client.submit_job") as mock_submit, \
-         patch("decart.queue.client.get_job_status") as mock_status, \
-         patch("decart.queue.client.get_job_content") as mock_content, \
-         patch("asyncio.sleep", new_callable=AsyncMock):
+    with (
+        patch("decart.queue.client.submit_job") as mock_submit,
+        patch("decart.queue.client.get_job_status") as mock_status,
+        patch("decart.queue.client.get_job_content") as mock_content,
+        patch("asyncio.sleep", new_callable=AsyncMock),
+    ):
 
         mock_submit.return_value = MagicMock(job_id="job-123", status="pending")
         mock_status.side_effect = [

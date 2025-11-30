@@ -3,6 +3,7 @@ Tests for the process API.
 Note: process() only supports image models (t2i, i2i).
 Video models must use the queue API.
 """
+
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
