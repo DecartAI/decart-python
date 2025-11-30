@@ -220,8 +220,10 @@ async def test_realtime_set_prompt_timeout():
 
         from decart.errors import DecartSDKError
 
-        with pytest.raises(DecartSDKError) as exc_info:
-            await realtime_client.set_prompt("New prompt", max_timeout=0.01)
+        # Mock asyncio.wait_for to immediately raise TimeoutError
+        with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
+            with pytest.raises(DecartSDKError) as exc_info:
+                await realtime_client.set_prompt("New prompt")
 
         assert "timed out" in str(exc_info.value)
         mock_manager.unregister_prompt_wait.assert_called_with("New prompt")

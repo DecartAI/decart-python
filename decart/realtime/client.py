@@ -79,11 +79,9 @@ class RealtimeClient:
             except Exception as e:
                 logger.exception(f"Error in error callback: {e}")
 
-    async def set_prompt(self, prompt: str, enrich: bool = True, max_timeout: float = 15.0) -> None:
+    async def set_prompt(self, prompt: str, enrich: bool = True) -> None:
         if not prompt or not prompt.strip():
             raise InvalidInputError("Prompt cannot be empty")
-        if max_timeout <= 0 or max_timeout > 60:
-            raise InvalidInputError("max_timeout must be between 0 and 60 seconds")
 
         event, result = self._manager.register_prompt_wait(prompt)
 
@@ -93,7 +91,7 @@ class RealtimeClient:
             )
 
             try:
-                await asyncio.wait_for(event.wait(), timeout=max_timeout)
+                await asyncio.wait_for(event.wait(), timeout=15.0)
             except asyncio.TimeoutError:
                 raise DecartSDKError("Prompt acknowledgment timed out")
 
