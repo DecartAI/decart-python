@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 
 class RealtimeLipsyncClient:
-
     DECART_LIPSYNC_ENDPOINT = "/router/lipsync/ws"
     VIDEO_FPS = 25
 

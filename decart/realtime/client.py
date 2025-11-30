@@ -1,4 +1,5 @@
 from typing import Callable, Optional
+import asyncio
 import logging
 import uuid
 from aiortc import MediaStreamTrack
@@ -81,7 +82,23 @@ class RealtimeClient:
     async def set_prompt(self, prompt: str, enrich: bool = True) -> None:
         if not prompt or not prompt.strip():
             raise InvalidInputError("Prompt cannot be empty")
-        await self._manager.send_message(PromptMessage(type="prompt", prompt=prompt))
+
+        event, result = self._manager.register_prompt_wait(prompt)
+
+        try:
+            await self._manager.send_message(
+                PromptMessage(type="prompt", prompt=prompt, enhance_prompt=enrich)
+            )
+
+            try:
+                await asyncio.wait_for(event.wait(), timeout=15.0)
+            except asyncio.TimeoutError:
+                raise DecartSDKError("Prompt acknowledgment timed out")
+
+            if not result["success"]:
+                raise DecartSDKError(result["error"] or "Prompt failed")
+        finally:
+            self._manager.unregister_prompt_wait(prompt)
 
     def is_connected(self) -> bool:
         return self._manager.is_connected()
