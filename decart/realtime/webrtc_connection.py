@@ -21,6 +21,7 @@ from .messages import (
     OfferMessage,
     IceCandidateMessage,
     IceCandidatePayload,
+    PromptAckMessage,
     OutgoingMessage,
 )
 from .types import ConnectionState
@@ -36,7 +37,6 @@ class WebRTCConnection:
         on_error: Optional[Callable[[Exception], None]] = None,
         customize_offer: Optional[Callable] = None,
     ):
-
         self._pc: Optional[RTCPeerConnection] = None
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self._session: Optional[aiohttp.ClientSession] = None
@@ -47,6 +47,7 @@ class WebRTCConnection:
         self._customize_offer = customize_offer
         self._ws_task: Optional[asyncio.Task] = None
         self._ice_candidates_queue: list[RTCIceCandidate] = []
+        self._pending_prompts: dict[str, tuple[asyncio.Event, dict]] = {}
 
     async def connect(
         self,
@@ -176,6 +177,8 @@ class WebRTCConnection:
             await self._handle_ice_candidate(message.candidate)
         elif message.type == "session_id":
             logger.debug(f"Session ID: {message.session_id}")
+        elif message.type == "prompt_ack":
+            self._handle_prompt_ack(message)
 
     async def _handle_answer(self, sdp: str) -> None:
         logger.debug("Received answer from server")
@@ -206,6 +209,23 @@ class WebRTCConnection:
         else:
             logger.debug("Queuing ICE candidate (no remote description yet)")
             self._ice_candidates_queue.append(candidate)
+
+    def _handle_prompt_ack(self, message: PromptAckMessage) -> None:
+        logger.debug(f"Received prompt_ack for: {message.prompt}, success: {message.success}")
+        if message.prompt in self._pending_prompts:
+            event, result = self._pending_prompts[message.prompt]
+            result["success"] = message.success
+            result["error"] = message.error
+            event.set()
+
+    def register_prompt_wait(self, prompt: str) -> tuple[asyncio.Event, dict]:
+        event = asyncio.Event()
+        result: dict = {"success": False, "error": None}
+        self._pending_prompts[prompt] = (event, result)
+        return event, result
+
+    def unregister_prompt_wait(self, prompt: str) -> None:
+        self._pending_prompts.pop(prompt, None)
 
     async def _send_message(self, message: OutgoingMessage) -> None:
         if not self._ws or self._ws.closed:

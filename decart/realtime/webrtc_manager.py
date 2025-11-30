@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Optional, Callable
 from dataclasses import dataclass
@@ -84,3 +85,9 @@ class WebRTCManager:
 
     def get_connection_state(self) -> ConnectionState:
         return self._connection.state
+
+    def register_prompt_wait(self, prompt: str) -> tuple[asyncio.Event, dict]:
+        return self._connection.register_prompt_wait(prompt)
+
+    def unregister_prompt_wait(self, prompt: str) -> None:
+        self._connection.unregister_prompt_wait(prompt)

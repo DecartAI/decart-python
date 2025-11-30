@@ -1,4 +1,4 @@
-from typing import Literal, Union, Annotated
+from typing import Literal, Optional, Union, Annotated
 from pydantic import BaseModel, Field, TypeAdapter
 
 try:
@@ -42,9 +42,18 @@ class SessionIdMessage(BaseModel):
     server_ip: str
 
 
+class PromptAckMessage(BaseModel):
+    """Acknowledgment for prompt update from server."""
+
+    type: Literal["prompt_ack"]
+    prompt: str
+    success: bool
+    error: Optional[str] = None
+
+
 # Discriminated union for incoming messages
 IncomingMessage = Annotated[
-    Union[AnswerMessage, IceCandidateMessage, SessionIdMessage],
+    Union[AnswerMessage, IceCandidateMessage, SessionIdMessage, PromptAckMessage],
     Field(discriminator="type"),
 ]
 
@@ -67,6 +76,7 @@ class PromptMessage(BaseModel):
 
     type: Literal["prompt"]
     prompt: str
+    enhance_prompt: bool = True
 
 
 # Outgoing message union (no discriminator needed - we know what we're sending)
