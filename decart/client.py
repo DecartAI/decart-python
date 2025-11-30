@@ -1,10 +1,8 @@
 from typing import Any, Optional
-import asyncio
 import aiohttp
 from pydantic import ValidationError
 from .errors import InvalidAPIKeyError, InvalidBaseURLError, InvalidInputError
 from .models import ImageModelDefinition, _MODELS
-from .types import FileInput
 from .process.request import send_request
 from .queue.client import QueueClient
 
