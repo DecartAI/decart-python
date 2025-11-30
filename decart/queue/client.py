@@ -4,7 +4,7 @@ from typing import Any, Optional, TYPE_CHECKING
 import aiohttp
 from pydantic import ValidationError
 
-from ..models import ModelDefinition
+from ..models import VideoModelDefinition, _MODELS
 from ..errors import InvalidInputError
 from .request import submit_job, get_job_status, get_job_content
 from .types import (
@@ -25,7 +25,8 @@ INITIAL_DELAY = 0.5  # seconds
 
 class QueueClient:
     """
-    Queue client for async job-based video and image generation.
+    Queue client for async job-based video generation.
+    Only video models support the queue API.
 
     Jobs are submitted and processed asynchronously, allowing you to
     poll for status and retrieve results when ready.
@@ -59,23 +60,35 @@ class QueueClient:
 
     async def submit(self, options: dict[str, Any]) -> JobSubmitResponse:
         """
-        Submit a job to the queue for async processing.
+        Submit a video generation job to the queue for async processing.
+        Only video models are supported.
         Returns immediately with job_id and initial status.
 
         Args:
             options: Submit options including model and inputs
+                - model: VideoModelDefinition from models.video()
+                - prompt: Text prompt for generation
+                - Additional model-specific inputs
 
         Returns:
             JobSubmitResponse with job_id and status
 
         Raises:
-            InvalidInputError: If inputs are invalid
+            InvalidInputError: If inputs are invalid or model is not a video model
             QueueSubmitError: If submission fails
         """
         if "model" not in options:
             raise InvalidInputError("model is required")
 
-        model: ModelDefinition = options["model"]
+        model: VideoModelDefinition = options["model"]
+
+        # Validate that this is a video model (check against registry)
+        if model.name not in _MODELS["video"]:
+            raise InvalidInputError(
+                f"Model '{model.name}' is not supported by queue API. "
+                f"Only video models support async queue processing. "
+                f"For image models, use client.process() instead."
+            )
 
         inputs = {k: v for k, v in options.items() if k not in ("model", "cancel_token")}
 

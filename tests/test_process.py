@@ -1,18 +1,24 @@
+"""
+Tests for the process API.
+Note: process() only supports image models (t2i, i2i).
+Video models must use the queue API.
+"""
+
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
 from decart import DecartClient, models, DecartSDKError
-from decart.types import MotionTrajectoryInput
 
 
 @pytest.mark.asyncio
-async def test_process_text_to_video() -> None:
+async def test_process_text_to_image() -> None:
+    """Test text-to-image generation with process API."""
     client = DecartClient(api_key="test-key")
 
     with patch("aiohttp.ClientSession") as mock_session_cls:
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.read = AsyncMock(return_value=b"fake video data")
+        mock_response.read = AsyncMock(return_value=b"fake image data")
 
         mock_session = MagicMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
@@ -25,12 +31,60 @@ async def test_process_text_to_video() -> None:
 
         result = await client.process(
             {
+                "model": models.image("lucy-pro-t2i"),
+                "prompt": "A cat walking",
+            }
+        )
+
+        assert result == b"fake image data"
+
+
+@pytest.mark.asyncio
+async def test_process_image_to_image() -> None:
+    """Test image-to-image transformation with process API."""
+    client = DecartClient(api_key="test-key")
+
+    with patch("aiohttp.ClientSession") as mock_session_cls:
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.read = AsyncMock(return_value=b"fake image data")
+
+        mock_session = MagicMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.post = MagicMock()
+        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        mock_session_cls.return_value = mock_session
+
+        result = await client.process(
+            {
+                "model": models.image("lucy-pro-i2i"),
+                "prompt": "Oil painting style",
+                "data": b"fake input image",
+                "enhance_prompt": True,
+            }
+        )
+
+        assert result == b"fake image data"
+
+
+@pytest.mark.asyncio
+async def test_process_rejects_video_models() -> None:
+    """Test that process() rejects video models with helpful error message."""
+    client = DecartClient(api_key="test-key")
+
+    with pytest.raises(DecartSDKError) as exc_info:
+        await client.process(
+            {
                 "model": models.video("lucy-pro-t2v"),
                 "prompt": "A cat walking",
             }
         )
 
-        assert result == b"fake video data"
+    assert "not supported by process()" in str(exc_info.value)
+    assert "queue" in str(exc_info.value).lower()
 
 
 @pytest.mark.asyncio
@@ -47,77 +101,16 @@ async def test_process_missing_model() -> None:
 
 @pytest.mark.asyncio
 async def test_process_missing_required_field() -> None:
+    """Test that missing required fields raise an error."""
     client = DecartClient(api_key="test-key")
 
     with pytest.raises(DecartSDKError):
         await client.process(
             {
-                "model": models.video("lucy-pro-i2v"),
+                "model": models.image("lucy-pro-i2i"),
+                # Missing 'data' field which is required for i2i
             }
         )
-
-
-@pytest.mark.asyncio
-async def test_process_video_to_video() -> None:
-    client = DecartClient(api_key="test-key")
-
-    with patch("aiohttp.ClientSession") as mock_session_cls:
-        mock_response = MagicMock()
-        mock_response.ok = True
-        mock_response.read = AsyncMock(return_value=b"fake video data")
-
-        mock_session = MagicMock()
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-        mock_session.post = MagicMock()
-        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session_cls.return_value = mock_session
-
-        result = await client.process(
-            {
-                "model": models.video("lucy-pro-v2v"),
-                "prompt": "Anime style",
-                "data": b"fake input video",
-                "enhance_prompt": True,
-            }
-        )
-
-        assert result == b"fake video data"
-
-
-@pytest.mark.asyncio
-async def test_process_video_to_video_fast() -> None:
-    client = DecartClient(api_key="test-key")
-
-    with patch("aiohttp.ClientSession") as mock_session_cls:
-        mock_response = MagicMock()
-        mock_response.ok = True
-        mock_response.read = AsyncMock(return_value=b"fake video data")
-
-        mock_session = MagicMock()
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-        mock_session.post = MagicMock()
-        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session_cls.return_value = mock_session
-
-        result = await client.process(
-            {
-                "model": models.video("lucy-fast-v2v"),
-                "prompt": "Change the car to a motorcycle",
-                "data": b"fake input video",
-                "resolution": "480p",
-                "enhance_prompt": True,
-                "num_inference_steps": 50,
-                "seed": 42,
-            }
-        )
-
-        assert result == b"fake video data"
 
 
 @pytest.mark.asyncio
@@ -137,61 +130,8 @@ async def test_process_max_prompt_length() -> None:
 
 
 @pytest.mark.asyncio
-async def test_process_image_to_motion_video() -> None:
-    client = DecartClient(api_key="test-key")
-
-    with patch("aiohttp.ClientSession") as mock_session_cls:
-        mock_response = MagicMock()
-        mock_response.ok = True
-        mock_response.read = AsyncMock(return_value=b"fake video data")
-
-        mock_session = MagicMock()
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-        mock_session.post = MagicMock()
-        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session_cls.return_value = mock_session
-
-        result = await client.process(
-            {
-                "model": models.video("lucy-motion"),
-                "data": b"fake input image",
-                "trajectory": [
-                    MotionTrajectoryInput(frame=0, x=0, y=0),
-                    MotionTrajectoryInput(frame=1, x=0.5, y=0.5),
-                    MotionTrajectoryInput(frame=2, x=1, y=1),
-                    MotionTrajectoryInput(frame=3, x=1.5, y=1.5),
-                    MotionTrajectoryInput(frame=4, x=2, y=2),
-                ],
-            }
-        )
-
-        assert result == b"fake video data"
-
-
-@pytest.mark.asyncio
-async def test_process_image_to_motion_video_invalid_trajectory() -> None:
-    client = DecartClient(api_key="test-key")
-
-    with pytest.raises(DecartSDKError) as exception:
-        await client.process(
-            {
-                "model": models.video("lucy-motion"),
-                "data": b"fake input image",
-                "trajectory": [
-                    MotionTrajectoryInput(frame=0, x=0, y=0),
-                ],
-            }
-        )
-    assert "Invalid inputs for lucy-motion: 1 validation error for ImageToMotionVideoInput" in str(
-        exception
-    )
-
-
-@pytest.mark.asyncio
 async def test_process_with_cancellation() -> None:
+    """Test that process() respects cancellation token."""
     client = DecartClient(api_key="test-key")
     cancel_token = asyncio.Event()
 
@@ -200,8 +140,8 @@ async def test_process_with_cancellation() -> None:
     with pytest.raises(asyncio.CancelledError):
         await client.process(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A video that will be cancelled",
+                "model": models.image("lucy-pro-t2i"),
+                "prompt": "An image that will be cancelled",
                 "cancel_token": cancel_token,
             }
         )
@@ -215,7 +155,7 @@ async def test_process_includes_user_agent_header() -> None:
     with patch("aiohttp.ClientSession") as mock_session_cls:
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.read = AsyncMock(return_value=b"fake video data")
+        mock_response.read = AsyncMock(return_value=b"fake image data")
 
         mock_session = MagicMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
@@ -228,7 +168,7 @@ async def test_process_includes_user_agent_header() -> None:
 
         await client.process(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.image("lucy-pro-t2i"),
                 "prompt": "Test prompt",
             }
         )
@@ -251,7 +191,7 @@ async def test_process_includes_integration_in_user_agent() -> None:
     with patch("aiohttp.ClientSession") as mock_session_cls:
         mock_response = MagicMock()
         mock_response.ok = True
-        mock_response.read = AsyncMock(return_value=b"fake video data")
+        mock_response.read = AsyncMock(return_value=b"fake image data")
 
         mock_session = MagicMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
@@ -264,7 +204,7 @@ async def test_process_includes_integration_in_user_agent() -> None:
 
         await client.process(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.image("lucy-pro-t2i"),
                 "prompt": "Test prompt",
             }
         )

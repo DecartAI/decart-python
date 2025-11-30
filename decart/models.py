@@ -1,4 +1,4 @@
-from typing import Literal, Optional, List
+from typing import Literal, Optional, List, Generic, TypeVar
 from pydantic import BaseModel, Field, ConfigDict
 from .errors import ModelNotFoundError
 from .types import FileInput, MotionTrajectoryInput
@@ -17,18 +17,32 @@ VideoModels = Literal[
 ImageModels = Literal["lucy-pro-t2i", "lucy-pro-i2i"]
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
 
+# Type variable for model name
+ModelT = TypeVar("ModelT", bound=str)
+
 
 class DecartBaseModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-class ModelDefinition(DecartBaseModel):
-    name: str
+class ModelDefinition(DecartBaseModel, Generic[ModelT]):
+    name: ModelT
     url_path: str
     fps: int = Field(ge=1)
     width: int = Field(ge=1)
     height: int = Field(ge=1)
     input_schema: type[BaseModel]
+
+
+# Type aliases for model definitions that support specific APIs
+ImageModelDefinition = ModelDefinition[ImageModels]
+"""Type alias for model definitions that support synchronous processing (process API)."""
+
+VideoModelDefinition = ModelDefinition[VideoModels]
+"""Type alias for model definitions that support queue processing (queue API)."""
+
+RealTimeModelDefinition = ModelDefinition[RealTimeModels]
+"""Type alias for model definitions that support realtime streaming."""
 
 
 class TextToVideoInput(BaseModel):
@@ -212,23 +226,45 @@ _MODELS = {
 
 class Models:
     @staticmethod
-    def realtime(model: RealTimeModels) -> ModelDefinition:
+    def realtime(model: RealTimeModels) -> RealTimeModelDefinition:
+        """Get a realtime model definition for WebRTC streaming."""
         try:
-            return _MODELS["realtime"][model]
+            return _MODELS["realtime"][model]  # type: ignore[return-value]
         except KeyError:
             raise ModelNotFoundError(model)
 
     @staticmethod
-    def video(model: VideoModels) -> ModelDefinition:
+    def video(model: VideoModels) -> VideoModelDefinition:
+        """
+        Get a video model definition.
+        Video models only support the queue API.
+
+        Available models:
+            - "lucy-pro-t2v" - Text-to-video
+            - "lucy-pro-i2v" - Image-to-video
+            - "lucy-pro-v2v" - Video-to-video
+            - "lucy-pro-flf2v" - First-last-frame-to-video
+            - "lucy-dev-i2v" - Image-to-video (Dev quality)
+            - "lucy-fast-v2v" - Video-to-video (Fast quality)
+            - "lucy-motion" - Image-to-motion-video
+        """
         try:
-            return _MODELS["video"][model]
+            return _MODELS["video"][model]  # type: ignore[return-value]
         except KeyError:
             raise ModelNotFoundError(model)
 
     @staticmethod
-    def image(model: ImageModels) -> ModelDefinition:
+    def image(model: ImageModels) -> ImageModelDefinition:
+        """
+        Get an image model definition.
+        Image models only support the process (sync) API.
+
+        Available models:
+            - "lucy-pro-t2i" - Text-to-image
+            - "lucy-pro-i2i" - Image-to-image
+        """
         try:
-            return _MODELS["image"][model]
+            return _MODELS["image"][model]  # type: ignore[return-value]
         except KeyError:
             raise ModelNotFoundError(model)
 

@@ -2,7 +2,7 @@ from typing import Any, Optional
 import aiohttp
 from pydantic import ValidationError
 from .errors import InvalidAPIKeyError, InvalidBaseURLError, InvalidInputError
-from .models import ModelDefinition
+from .models import ImageModelDefinition, _MODELS
 from .process.request import send_request
 from .queue.client import QueueClient
 
@@ -27,7 +27,15 @@ class DecartClient:
     Example:
         ```python
         client = DecartClient(api_key="your-key")
-        result = await client.process({
+
+        # Image generation (sync) - use process()
+        image = await client.process({
+            "model": models.image("lucy-pro-t2i"),
+            "prompt": "A serene lake at sunset",
+        })
+
+        # Video generation (async) - use queue
+        result = await client.queue.submit_and_poll({
             "model": models.video("lucy-pro-t2v"),
             "prompt": "A serene lake at sunset",
         })
@@ -55,7 +63,8 @@ class DecartClient:
     @property
     def queue(self) -> QueueClient:
         """
-        Queue client for async job-based video and image generation.
+        Queue client for async job-based video generation.
+        Only video models support the queue API.
 
         Example:
             ```python
@@ -97,22 +106,38 @@ class DecartClient:
 
     async def process(self, options: dict[str, Any]) -> bytes:
         """
-        Process video or image generation/transformation.
+        Process image generation/transformation synchronously.
+        Only image models support the process API.
+
+        For video generation, use the queue API instead:
+            result = await client.queue.submit_and_poll({...})
 
         Args:
             options: Processing options including model and inputs
+                - model: ImageModelDefinition from models.image()
+                - prompt: Text prompt for generation
+                - Additional model-specific inputs
 
         Returns:
-            Generated/transformed media as bytes
+            Generated/transformed image as bytes
 
         Raises:
-            InvalidInputError: If inputs are invalid
+            InvalidInputError: If inputs are invalid or model is not an image model
             ProcessingError: If processing fails
         """
         if "model" not in options:
             raise InvalidInputError("model is required")
 
-        model: ModelDefinition = options["model"]
+        model: ImageModelDefinition = options["model"]
+
+        # Validate that this is an image model (check against registry)
+        if model.name not in _MODELS["image"]:
+            raise InvalidInputError(
+                f"Model '{model.name}' is not supported by process(). "
+                f"Only image models support sync processing. "
+                f"For video models, use client.queue.submit_and_poll() instead."
+            )
+
         cancel_token = options.get("cancel_token")
 
         inputs = {k: v for k, v in options.items() if k not in ("model", "cancel_token")}
