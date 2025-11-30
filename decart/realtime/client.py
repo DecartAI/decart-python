@@ -79,9 +79,7 @@ class RealtimeClient:
             except Exception as e:
                 logger.exception(f"Error in error callback: {e}")
 
-    async def set_prompt(
-        self, prompt: str, enrich: bool = True, max_timeout: float = 15.0
-    ) -> None:
+    async def set_prompt(self, prompt: str, enrich: bool = True, max_timeout: float = 15.0) -> None:
         if not prompt or not prompt.strip():
             raise InvalidInputError("Prompt cannot be empty")
         if max_timeout <= 0 or max_timeout > 60:

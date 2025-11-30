@@ -59,9 +59,7 @@ async def test_realtime_client_creation_with_mock():
         prompt_result = {"success": True, "error": None}
         prompt_event.set()
 
-        mock_manager.register_prompt_wait = MagicMock(
-            return_value=(prompt_event, prompt_result)
-        )
+        mock_manager.register_prompt_wait = MagicMock(return_value=(prompt_event, prompt_result))
         mock_manager.unregister_prompt_wait = MagicMock()
         mock_manager_class.return_value = mock_manager
 

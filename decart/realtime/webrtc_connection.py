@@ -37,7 +37,6 @@ class WebRTCConnection:
         on_error: Optional[Callable[[Exception], None]] = None,
         customize_offer: Optional[Callable] = None,
     ):
-
         self._pc: Optional[RTCPeerConnection] = None
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self._session: Optional[aiohttp.ClientSession] = None

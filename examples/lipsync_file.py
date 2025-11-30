@@ -72,7 +72,6 @@ async def process_lipsync(video_path: str, audio_path: str, output_path: str):
         )
         for i in range(frame_count):
             try:
-
                 video_frame, audio_frame = await client.get_synced_output(timeout=1.0)
                 bgr_frame = cv2.cvtColor(video_frame, cv2.COLOR_RGB2BGR)
                 out.write(bgr_frame)
