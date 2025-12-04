@@ -45,22 +45,46 @@ async def main():
 asyncio.run(main())
 ```
 
-### Video Transformation
+### Async Processing (Queue API)
+
+For video generation jobs, use the queue API to submit jobs and poll for results:
 
 ```python
 async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
-    # Transform a video file
-    with open("input.mp4", "rb") as video_file:
-        result = await client.process({
-            "model": models.video("lucy-pro-v2v"),
-            "prompt": "Anime style with vibrant colors",
-            "data": video_file,
-            "enhance_prompt": True,
-        })
+    # Submit and poll automatically
+    result = await client.queue.submit_and_poll({
+        "model": models.video("lucy-pro-t2v"),
+        "prompt": "A cat playing piano",
+        "on_status_change": lambda job: print(f"Status: {job.status}"),
+    })
 
-    # Save the result
-    with open("output.mp4", "wb") as f:
-        f.write(result)
+    if result.status == "completed":
+        with open("output.mp4", "wb") as f:
+            f.write(result.data)
+    else:
+        print(f"Job failed: {result.error}")
+```
+
+Or manage the polling manually:
+
+```python
+async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
+    # Submit the job
+    job = await client.queue.submit({
+        "model": models.video("lucy-pro-t2v"),
+        "prompt": "A cat playing piano",
+    })
+    print(f"Job ID: {job.job_id}")
+
+    # Poll for status
+    status = await client.queue.status(job.job_id)
+    print(f"Status: {status.status}")
+
+    # Get result when completed
+    if status.status == "completed":
+        data = await client.queue.result(job.job_id)
+        with open("output.mp4", "wb") as f:
+            f.write(data)
 ```
 
 ## Development
