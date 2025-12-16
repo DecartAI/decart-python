@@ -17,14 +17,9 @@ class TokensClient:
 
     Example:
         ```python
-        # Server-side: Create a client token
-        server_client = DecartClient(api_key=os.getenv("DECART_API_KEY"))
-        token = await server_client.tokens.create()
+        client = DecartClient(api_key=os.getenv("DECART_API_KEY"))
+        token = await client.tokens.create()
         # Returns: CreateTokenResponse(api_key="ek_...", expires_at="...")
-
-        # Client-side: Use the client token
-        client = DecartClient(api_key=token.api_key)
-        realtime_client = await client.realtime.connect(...)
         ```
     """
 
