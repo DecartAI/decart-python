@@ -6,6 +6,7 @@ from .errors import InvalidAPIKeyError, InvalidBaseURLError, InvalidInputError
 from .models import ImageModelDefinition, _MODELS
 from .process.request import send_request
 from .queue.client import QueueClient
+from .tokens.client import TokensClient
 
 try:
     from .realtime.client import RealtimeClient
@@ -66,6 +67,7 @@ class DecartClient:
         self.integration = integration
         self._session: Optional[aiohttp.ClientSession] = None
         self._queue: Optional[QueueClient] = None
+        self._tokens: Optional[TokensClient] = None
 
     @property
     def queue(self) -> QueueClient:
@@ -90,6 +92,23 @@ class DecartClient:
         if self._queue is None:
             self._queue = QueueClient(self)
         return self._queue
+
+    @property
+    def tokens(self) -> TokensClient:
+        """
+        Client for creating client tokens.
+        Client tokens are short-lived API keys safe for client-side use.
+
+        Example:
+            ```python
+            client = DecartClient(api_key=os.getenv("DECART_API_KEY"))
+            token = await client.tokens.create()
+            # Returns: CreateTokenResponse(api_key="ek_...", expires_at="...")
+            ```
+        """
+        if self._tokens is None:
+            self._tokens = TokensClient(self)
+        return self._tokens
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create the aiohttp session."""

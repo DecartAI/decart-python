@@ -82,3 +82,9 @@ class QueueResultError(DecartSDKError):
     """Raised when getting queue job result fails."""
 
     pass
+
+
+class TokenCreateError(DecartSDKError):
+    """Raised when token creation fails."""
+
+    pass

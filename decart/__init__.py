@@ -10,6 +10,7 @@ from .errors import (
     QueueSubmitError,
     QueueStatusError,
     QueueResultError,
+    TokenCreateError,
 )
 from .models import models, ModelDefinition
 from .types import FileInput, ModelState, Prompt
@@ -19,6 +20,10 @@ from .queue import (
     JobSubmitResponse,
     JobStatusResponse,
     QueueJobResult,
+)
+from .tokens import (
+    TokensClient,
+    CreateTokenResponse,
 )
 
 try:
@@ -59,6 +64,9 @@ __all__ = [
     "JobSubmitResponse",
     "JobStatusResponse",
     "QueueJobResult",
+    "TokensClient",
+    "CreateTokenResponse",
+    "TokenCreateError",
 ]
 
 if REALTIME_AVAILABLE:
