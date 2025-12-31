@@ -22,6 +22,8 @@ from .messages import (
     IceCandidateMessage,
     IceCandidatePayload,
     PromptAckMessage,
+    ImageSetMessage,
+    SetAvatarImageMessage,
     OutgoingMessage,
 )
 from .types import ConnectionState
@@ -48,13 +50,16 @@ class WebRTCConnection:
         self._ws_task: Optional[asyncio.Task] = None
         self._ice_candidates_queue: list[RTCIceCandidate] = []
         self._pending_prompts: dict[str, tuple[asyncio.Event, dict]] = {}
+        self._pending_image_set: Optional[tuple[asyncio.Event, dict]] = None
 
     async def connect(
         self,
         url: str,
-        local_track: MediaStreamTrack,
+        local_track: Optional[MediaStreamTrack],
         timeout: float = 30,
         integration: Optional[str] = None,
+        is_avatar_live: bool = False,
+        avatar_image_base64: Optional[str] = None,
     ) -> None:
         try:
             await self._set_state("connecting")
@@ -71,7 +76,11 @@ class WebRTCConnection:
 
             self._ws_task = asyncio.create_task(self._receive_messages())
 
-            await self._setup_peer_connection(local_track)
+            # For avatar-live, send avatar image before WebRTC handshake
+            if is_avatar_live and avatar_image_base64:
+                await self._send_avatar_image_and_wait(avatar_image_base64)
+
+            await self._setup_peer_connection(local_track, is_avatar_live=is_avatar_live)
 
             await self._create_and_send_offer()
 
@@ -90,7 +99,34 @@ class WebRTCConnection:
                 self._on_error(e)
             raise WebRTCError(str(e), cause=e)
 
-    async def _setup_peer_connection(self, local_track: MediaStreamTrack) -> None:
+    async def _send_avatar_image_and_wait(
+        self, image_base64: str, timeout: float = 15.0
+    ) -> None:
+        """Send avatar image and wait for acknowledgment."""
+        event, result = self.register_image_set_wait()
+
+        try:
+            await self._send_message(
+                SetAvatarImageMessage(type="set_image", image_data=image_base64)
+            )
+
+            try:
+                await asyncio.wait_for(event.wait(), timeout=timeout)
+            except asyncio.TimeoutError:
+                raise WebRTCError("Avatar image acknowledgment timed out")
+
+            if not result["success"]:
+                raise WebRTCError(
+                    f"Failed to set avatar image: {result.get('status', 'unknown error')}"
+                )
+        finally:
+            self.unregister_image_set_wait()
+
+    async def _setup_peer_connection(
+        self,
+        local_track: Optional[MediaStreamTrack],
+        is_avatar_live: bool = False,
+    ) -> None:
         config = RTCConfiguration(iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])])
 
         self._pc = RTCPeerConnection(configuration=config)
@@ -128,8 +164,15 @@ class WebRTCConnection:
         async def on_ice_connection_state_change():
             logger.debug(f"ICE connection state: {self._pc.iceConnectionState}")
 
-        self._pc.addTrack(local_track)
-        logger.debug("Added local track to peer connection")
+        # For avatar-live, add recv-only video transceiver
+        if is_avatar_live:
+            self._pc.addTransceiver("video", direction="recvonly")
+            logger.debug("Added video transceiver (recvonly) for avatar-live")
+
+        # Add local audio track if provided
+        if local_track:
+            self._pc.addTrack(local_track)
+            logger.debug("Added local track to peer connection")
 
     async def _create_and_send_offer(self) -> None:
         logger.debug("Creating offer...")
@@ -179,6 +222,8 @@ class WebRTCConnection:
             logger.debug(f"Session ID: {message.session_id}")
         elif message.type == "prompt_ack":
             self._handle_prompt_ack(message)
+        elif message.type == "image_set":
+            self._handle_image_set(message)
 
     async def _handle_answer(self, sdp: str) -> None:
         logger.debug("Received answer from server")
@@ -217,6 +262,23 @@ class WebRTCConnection:
             result["success"] = message.success
             result["error"] = message.error
             event.set()
+
+    def _handle_image_set(self, message: ImageSetMessage) -> None:
+        logger.debug(f"Received image_set: status={message.status}")
+        if self._pending_image_set:
+            event, result = self._pending_image_set
+            result["status"] = message.status
+            result["success"] = message.status == "success"
+            event.set()
+
+    def register_image_set_wait(self) -> tuple[asyncio.Event, dict]:
+        event = asyncio.Event()
+        result: dict = {"success": False, "status": None}
+        self._pending_image_set = (event, result)
+        return event, result
+
+    def unregister_image_set_wait(self) -> None:
+        self._pending_image_set = None
 
     def register_prompt_wait(self, prompt: str) -> tuple[asyncio.Event, dict]:
         event = asyncio.Event()

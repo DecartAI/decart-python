@@ -31,6 +31,7 @@ class WebRTCConfiguration:
     initial_state: Optional[ModelState] = None
     customize_offer: Optional[Callable] = None
     integration: Optional[str] = None
+    is_avatar_live: bool = False
 
 
 def _is_retryable_error(exception: Exception) -> bool:
@@ -52,12 +53,18 @@ class WebRTCManager:
         before_sleep=before_sleep_log(logger, logging.WARNING),
         reraise=True,
     )
-    async def connect(self, local_track: MediaStreamTrack) -> bool:
+    async def connect(
+        self,
+        local_track: Optional[MediaStreamTrack],
+        avatar_image_base64: Optional[str] = None,
+    ) -> bool:
         try:
             await self._connection.connect(
                 url=self._config.webrtc_url,
                 local_track=local_track,
                 integration=self._config.integration,
+                is_avatar_live=self._config.is_avatar_live,
+                avatar_image_base64=avatar_image_base64,
             )
             return True
         except Exception as e:
@@ -91,3 +98,9 @@ class WebRTCManager:
 
     def unregister_prompt_wait(self, prompt: str) -> None:
         self._connection.unregister_prompt_wait(prompt)
+
+    def register_image_set_wait(self) -> tuple[asyncio.Event, dict]:
+        return self._connection.register_image_set_wait()
+
+    def unregister_image_set_wait(self) -> None:
+        self._connection.unregister_image_set_wait()

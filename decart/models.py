@@ -1,10 +1,10 @@
 from typing import Literal, Optional, List, Generic, TypeVar
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 from .errors import ModelNotFoundError
 from .types import FileInput, MotionTrajectoryInput
 
 
-RealTimeModels = Literal["mirage", "mirage_v2", "lucy_v2v_720p_rt"]
+RealTimeModels = Literal["mirage", "mirage_v2", "lucy_v2v_720p_rt", "avatar-live"]
 VideoModels = Literal[
     "lucy-dev-i2v",
     "lucy-fast-v2v",
@@ -13,6 +13,7 @@ VideoModels = Literal[
     "lucy-pro-v2v",
     "lucy-pro-flf2v",
     "lucy-motion",
+    "lucy-restyle-v2v",
 ]
 ImageModels = Literal["lucy-pro-t2i", "lucy-pro-i2i"]
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
@@ -95,6 +96,38 @@ class ImageToMotionVideoInput(DecartBaseModel):
     resolution: Optional[str] = None
 
 
+class VideoRestyleInput(DecartBaseModel):
+    """Input for lucy-restyle-v2v model.
+
+    Must provide either `prompt` OR `reference_image`, but not both.
+    `enhance_prompt` is only valid when using `prompt`, not `reference_image`.
+    """
+
+    prompt: Optional[str] = Field(default=None, min_length=1, max_length=1000)
+    reference_image: Optional[FileInput] = None
+    data: FileInput
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
+    enhance_prompt: Optional[bool] = None
+
+    @model_validator(mode="after")
+    def validate_prompt_or_reference_image(self) -> "VideoRestyleInput":
+        has_prompt = self.prompt is not None
+        has_reference_image = self.reference_image is not None
+
+        if has_prompt == has_reference_image:
+            raise ValueError(
+                "Must provide either 'prompt' or 'reference_image', but not both"
+            )
+
+        if has_reference_image and self.enhance_prompt is not None:
+            raise ValueError(
+                "'enhance_prompt' is only valid when using 'prompt', not 'reference_image'"
+            )
+
+        return self
+
+
 class TextToImageInput(BaseModel):
     prompt: str = Field(
         ...,
@@ -142,6 +175,14 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
+            input_schema=BaseModel,
+        ),
+        "avatar-live": ModelDefinition(
+            name="avatar-live",
+            url_path="/v1/avatar-live/stream",
+            fps=25,
+            width=1280,
+            height=720,
             input_schema=BaseModel,
         ),
     },
@@ -202,6 +243,14 @@ _MODELS = {
             height=704,
             input_schema=ImageToMotionVideoInput,
         ),
+        "lucy-restyle-v2v": ModelDefinition(
+            name="lucy-restyle-v2v",
+            url_path="/v1/generate/lucy-restyle-v2v",
+            fps=25,
+            width=1280,
+            height=704,
+            input_schema=VideoRestyleInput,
+        ),
     },
     "image": {
         "lucy-pro-t2i": ModelDefinition(
@@ -247,6 +296,7 @@ class Models:
             - "lucy-dev-i2v" - Image-to-video (Dev quality)
             - "lucy-fast-v2v" - Video-to-video (Fast quality)
             - "lucy-motion" - Image-to-motion-video
+            - "lucy-restyle-v2v" - Video-to-video with prompt or reference image
         """
         try:
             return _MODELS["video"][model]  # type: ignore[return-value]

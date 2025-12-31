@@ -12,7 +12,7 @@ from .errors import (
     QueueResultError,
     TokenCreateError,
 )
-from .models import models, ModelDefinition
+from .models import models, ModelDefinition, VideoRestyleInput
 from .types import FileInput, ModelState, Prompt
 from .queue import (
     QueueClient,
@@ -31,6 +31,7 @@ try:
         RealtimeClient,
         RealtimeConnectOptions,
         ConnectionState,
+        AvatarOptions,
     )
 
     REALTIME_AVAILABLE = True
@@ -39,6 +40,7 @@ except ImportError:
     RealtimeClient = None  # type: ignore
     RealtimeConnectOptions = None  # type: ignore
     ConnectionState = None  # type: ignore
+    AvatarOptions = None  # type: ignore
 
 __version__ = "0.0.1"
 
@@ -56,6 +58,7 @@ __all__ = [
     "QueueResultError",
     "models",
     "ModelDefinition",
+    "VideoRestyleInput",
     "FileInput",
     "ModelState",
     "Prompt",
@@ -75,5 +78,6 @@ if REALTIME_AVAILABLE:
             "RealtimeClient",
             "RealtimeConnectOptions",
             "ConnectionState",
+            "AvatarOptions",
         ]
     )

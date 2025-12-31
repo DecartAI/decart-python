@@ -51,9 +51,22 @@ class PromptAckMessage(BaseModel):
     error: Optional[str] = None
 
 
+class ImageSetMessage(BaseModel):
+    """Acknowledgment for avatar image set from server."""
+
+    type: Literal["image_set"]
+    status: str
+
+
 # Discriminated union for incoming messages
 IncomingMessage = Annotated[
-    Union[AnswerMessage, IceCandidateMessage, SessionIdMessage, PromptAckMessage],
+    Union[
+        AnswerMessage,
+        IceCandidateMessage,
+        SessionIdMessage,
+        PromptAckMessage,
+        ImageSetMessage,
+    ],
     Field(discriminator="type"),
 ]
 
@@ -79,8 +92,17 @@ class PromptMessage(BaseModel):
     enhance_prompt: bool = True
 
 
+class SetAvatarImageMessage(BaseModel):
+    """Set avatar image message."""
+
+    type: Literal["set_image"]
+    image_data: str  # Base64-encoded image
+
+
 # Outgoing message union (no discriminator needed - we know what we're sending)
-OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage]
+OutgoingMessage = Union[
+    OfferMessage, IceCandidateMessage, PromptMessage, SetAvatarImageMessage
+]
 
 
 def parse_incoming_message(data: dict) -> IncomingMessage:
