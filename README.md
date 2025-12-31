@@ -132,6 +132,28 @@ uv run python examples/realtime_synthetic.py
 uv lock --upgrade
 ```
 
+### Test UI
+
+The SDK includes an interactive test UI built with Gradio for quickly testing all SDK features without writing code.
+
+```bash
+# Install Gradio
+pip install gradio
+
+# Run the test UI
+python test_ui.py
+```
+
+Then open http://localhost:7860 in your browser.
+
+The UI provides tabs for:
+- **Image Generation** - Text-to-image and image-to-image transformations
+- **Video Generation** - Text-to-video, image-to-video, and video-to-video
+- **Video Restyle** - Restyle videos using text prompts or reference images
+- **Tokens** - Create short-lived client tokens
+
+Enter your API key at the top of the interface to start testing.
+
 ### Publishing a New Version
 
 The package is automatically published to PyPI when you create a GitHub release.
