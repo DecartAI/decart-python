@@ -125,7 +125,7 @@ async def main():
             print(f"\n❌ Job failed: {result.error}")
             sys.exit(1)
 
-        print(f"\n✅ Job completed!")
+        print("\n✅ Job completed!")
         print(f"💾 Saving to {output_path}...")
 
         with open(output_path, "wb") as f:

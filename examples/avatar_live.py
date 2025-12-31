@@ -89,7 +89,7 @@ async def main():
 
         frame_count = 0
         recorder = None
-        output_file = Path(f"output_avatar_live.mp4")
+        output_file = Path("output_avatar_live.mp4")
 
         def on_remote_stream(track):
             nonlocal frame_count, recorder
