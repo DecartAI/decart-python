@@ -30,33 +30,20 @@ async def main():
     )
     parser.add_argument("video", help="Path to input video file")
     parser.add_argument(
-        "--prompt", "-p",
-        help="Text prompt describing the style (e.g., 'anime style', 'oil painting')"
+        "--prompt",
+        "-p",
+        help="Text prompt describing the style (e.g., 'anime style', 'oil painting')",
     )
-    parser.add_argument(
-        "--reference", "-r",
-        help="Path to reference image for style transfer"
-    )
-    parser.add_argument(
-        "--output", "-o",
-        help="Output file path (default: output_restyle.mp4)"
-    )
-    parser.add_argument(
-        "--seed", "-s",
-        type=int,
-        help="Random seed for reproducibility"
-    )
+    parser.add_argument("--reference", "-r", help="Path to reference image for style transfer")
+    parser.add_argument("--output", "-o", help="Output file path (default: output_restyle.mp4)")
+    parser.add_argument("--seed", "-s", type=int, help="Random seed for reproducibility")
     parser.add_argument(
         "--enhance",
         action="store_true",
         default=True,
-        help="Enhance the prompt (only with --prompt, default: True)"
+        help="Enhance the prompt (only with --prompt, default: True)",
     )
-    parser.add_argument(
-        "--no-enhance",
-        action="store_true",
-        help="Disable prompt enhancement"
-    )
+    parser.add_argument("--no-enhance", action="store_true", help="Disable prompt enhancement")
 
     args = parser.parse_args()
 
