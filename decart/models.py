@@ -116,9 +116,7 @@ class VideoRestyleInput(DecartBaseModel):
         has_reference_image = self.reference_image is not None
 
         if has_prompt == has_reference_image:
-            raise ValueError(
-                "Must provide either 'prompt' or 'reference_image', but not both"
-            )
+            raise ValueError("Must provide either 'prompt' or 'reference_image', but not both")
 
         if has_reference_image and self.enhance_prompt is not None:
             raise ValueError(

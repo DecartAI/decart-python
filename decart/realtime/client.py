@@ -167,9 +167,7 @@ class RealtimeClient:
                 raise DecartSDKError("Image set acknowledgment timed out")
 
             if not result["success"]:
-                raise DecartSDKError(
-                    result.get("status") or "Failed to set avatar image"
-                )
+                raise DecartSDKError(result.get("status") or "Failed to set avatar image")
         finally:
             self._manager.unregister_image_set_wait()
 

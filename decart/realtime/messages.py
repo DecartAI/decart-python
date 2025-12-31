@@ -100,9 +100,7 @@ class SetAvatarImageMessage(BaseModel):
 
 
 # Outgoing message union (no discriminator needed - we know what we're sending)
-OutgoingMessage = Union[
-    OfferMessage, IceCandidateMessage, PromptMessage, SetAvatarImageMessage
-]
+OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage, SetAvatarImageMessage]
 
 
 def parse_incoming_message(data: dict) -> IncomingMessage:

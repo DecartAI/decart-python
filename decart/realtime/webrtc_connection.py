@@ -99,9 +99,7 @@ class WebRTCConnection:
                 self._on_error(e)
             raise WebRTCError(str(e), cause=e)
 
-    async def _send_avatar_image_and_wait(
-        self, image_base64: str, timeout: float = 15.0
-    ) -> None:
+    async def _send_avatar_image_and_wait(self, image_base64: str, timeout: float = 15.0) -> None:
         """Send avatar image and wait for acknowledgment."""
         event, result = self.register_image_set_wait()
 
