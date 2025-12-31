@@ -296,7 +296,6 @@ def test_avatar_live_model_available():
 @pytest.mark.asyncio
 async def test_avatar_live_connect_with_avatar_image():
     """Test avatar-live connection with avatar image option"""
-    import asyncio
 
     client = DecartClient(api_key="test-key")
 
