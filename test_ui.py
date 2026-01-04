@@ -606,7 +606,7 @@ def create_ui():
 if __name__ == "__main__":
     demo = create_ui()
     demo.launch(
-        server_name="127.0.0.1", #localhost only
+        server_name="127.0.0.1",  # localhost only
         server_port=7860,
         share=False,
     )

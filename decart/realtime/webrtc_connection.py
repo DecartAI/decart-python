@@ -26,7 +26,6 @@ from .messages import (
     SetImageAckMessage,
     SetAvatarImageMessage,
     ErrorMessage,
-    ReadyMessage,
     IceRestartMessage,
     OutgoingMessage,
 )
@@ -129,9 +128,7 @@ class WebRTCConnection:
         finally:
             self.unregister_image_set_wait()
 
-    async def _send_initial_prompt_and_wait(
-        self, prompt: dict, timeout: float = 15.0
-    ) -> None:
+    async def _send_initial_prompt_and_wait(self, prompt: dict, timeout: float = 15.0) -> None:
         """Send initial prompt and wait for acknowledgment before WebRTC handshake."""
         prompt_text = prompt.get("text", "")
         enhance = prompt.get("enhance", True)
@@ -140,9 +137,7 @@ class WebRTCConnection:
 
         try:
             await self._send_message(
-                PromptMessage(
-                    type="prompt", prompt=prompt_text, enhance_prompt=enhance
-                )
+                PromptMessage(type="prompt", prompt=prompt_text, enhance_prompt=enhance)
             )
 
             try:
