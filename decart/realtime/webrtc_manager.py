@@ -57,6 +57,7 @@ class WebRTCManager:
         self,
         local_track: Optional[MediaStreamTrack],
         avatar_image_base64: Optional[str] = None,
+        initial_prompt: Optional[dict] = None,
     ) -> bool:
         try:
             await self._connection.connect(
@@ -65,6 +66,7 @@ class WebRTCManager:
                 integration=self._config.integration,
                 is_avatar_live=self._config.is_avatar_live,
                 avatar_image_base64=avatar_image_base64,
+                initial_prompt=initial_prompt,
             )
             return True
         except Exception as e:

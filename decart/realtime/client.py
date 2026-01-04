@@ -83,8 +83,21 @@ class RealtimeClient:
                 )
                 avatar_image_base64 = base64.b64encode(image_bytes).decode("utf-8")
 
-            await manager.connect(local_track, avatar_image_base64=avatar_image_base64)
+            # Prepare initial prompt if provided
+            initial_prompt: Optional[dict] = None
+            if options.initial_prompt:
+                initial_prompt = {
+                    "text": options.initial_prompt.text,
+                    "enhance": options.initial_prompt.enhance,
+                }
 
+            await manager.connect(
+                local_track,
+                avatar_image_base64=avatar_image_base64,
+                initial_prompt=initial_prompt,
+            )
+
+            # Handle initial_state.prompt for backward compatibility (after WebRTC connection)
             if options.initial_state:
                 if options.initial_state.prompt:
                     await client.set_prompt(
@@ -167,7 +180,7 @@ class RealtimeClient:
                 raise DecartSDKError("Image set acknowledgment timed out")
 
             if not result["success"]:
-                raise DecartSDKError(result.get("status") or "Failed to set avatar image")
+                raise DecartSDKError(result.get("error") or "Failed to set avatar image")
         finally:
             self._manager.unregister_image_set_wait()
 

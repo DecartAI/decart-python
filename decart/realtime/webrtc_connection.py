@@ -21,9 +21,13 @@ from .messages import (
     OfferMessage,
     IceCandidateMessage,
     IceCandidatePayload,
+    PromptMessage,
     PromptAckMessage,
-    ImageSetMessage,
+    SetImageAckMessage,
     SetAvatarImageMessage,
+    ErrorMessage,
+    ReadyMessage,
+    IceRestartMessage,
     OutgoingMessage,
 )
 from .types import ConnectionState
@@ -60,6 +64,7 @@ class WebRTCConnection:
         integration: Optional[str] = None,
         is_avatar_live: bool = False,
         avatar_image_base64: Optional[str] = None,
+        initial_prompt: Optional[dict] = None,
     ) -> None:
         try:
             await self._set_state("connecting")
@@ -79,6 +84,10 @@ class WebRTCConnection:
             # For avatar-live, send avatar image before WebRTC handshake
             if is_avatar_live and avatar_image_base64:
                 await self._send_avatar_image_and_wait(avatar_image_base64)
+
+            # Send initial prompt before WebRTC handshake (if provided)
+            if initial_prompt:
+                await self._send_initial_prompt_and_wait(initial_prompt)
 
             await self._setup_peer_connection(local_track, is_avatar_live=is_avatar_live)
 
@@ -115,10 +124,38 @@ class WebRTCConnection:
 
             if not result["success"]:
                 raise WebRTCError(
-                    f"Failed to set avatar image: {result.get('status', 'unknown error')}"
+                    f"Failed to set avatar image: {result.get('error', 'unknown error')}"
                 )
         finally:
             self.unregister_image_set_wait()
+
+    async def _send_initial_prompt_and_wait(
+        self, prompt: dict, timeout: float = 15.0
+    ) -> None:
+        """Send initial prompt and wait for acknowledgment before WebRTC handshake."""
+        prompt_text = prompt.get("text", "")
+        enhance = prompt.get("enhance", True)
+
+        event, result = self.register_prompt_wait(prompt_text)
+
+        try:
+            await self._send_message(
+                PromptMessage(
+                    type="prompt", prompt=prompt_text, enhance_prompt=enhance
+                )
+            )
+
+            try:
+                await asyncio.wait_for(event.wait(), timeout=timeout)
+            except asyncio.TimeoutError:
+                raise WebRTCError("Initial prompt acknowledgment timed out")
+
+            if not result["success"]:
+                raise WebRTCError(
+                    f"Failed to send initial prompt: {result.get('error', 'unknown error')}"
+                )
+        finally:
+            self.unregister_prompt_wait(prompt_text)
 
     async def _setup_peer_connection(
         self,
@@ -220,8 +257,14 @@ class WebRTCConnection:
             logger.debug(f"Session ID: {message.session_id}")
         elif message.type == "prompt_ack":
             self._handle_prompt_ack(message)
-        elif message.type == "image_set":
-            self._handle_image_set(message)
+        elif message.type == "set_image_ack":
+            self._handle_set_image_ack(message)
+        elif message.type == "error":
+            self._handle_error(message)
+        elif message.type == "ready":
+            logger.debug("Received ready signal from server")
+        elif message.type == "ice-restart":
+            await self._handle_ice_restart(message)
 
     async def _handle_answer(self, sdp: str) -> None:
         logger.debug("Received answer from server")
@@ -261,17 +304,68 @@ class WebRTCConnection:
             result["error"] = message.error
             event.set()
 
-    def _handle_image_set(self, message: ImageSetMessage) -> None:
-        logger.debug(f"Received image_set: status={message.status}")
+    def _handle_set_image_ack(self, message: SetImageAckMessage) -> None:
+        logger.debug(f"Received set_image_ack: success={message.success}, error={message.error}")
         if self._pending_image_set:
             event, result = self._pending_image_set
-            result["status"] = message.status
-            result["success"] = message.status == "success"
+            result["success"] = message.success
+            result["error"] = message.error
             event.set()
+
+    def _handle_error(self, message: ErrorMessage) -> None:
+        logger.error(f"Received error from server: {message.error}")
+        error = WebRTCError(message.error)
+        if self._on_error:
+            self._on_error(error)
+
+    async def _handle_ice_restart(self, message: IceRestartMessage) -> None:
+        logger.info("Received ICE restart request from server")
+        turn_config = message.turn_config
+        # Re-setup peer connection with TURN server
+        await self._setup_peer_connection_with_turn(turn_config)
+
+    async def _setup_peer_connection_with_turn(self, turn_config) -> None:
+        """Re-setup peer connection with TURN server for ICE restart."""
+        from aiortc import RTCConfiguration, RTCIceServer
+
+        ice_servers = [
+            RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
+            RTCIceServer(
+                urls=[turn_config.server_url],
+                username=turn_config.username,
+                credential=turn_config.credential,
+            ),
+        ]
+        config = RTCConfiguration(iceServers=ice_servers)
+
+        # Close existing peer connection
+        if self._pc:
+            await self._pc.close()
+
+        self._pc = RTCPeerConnection(configuration=config)
+        logger.debug("Re-created peer connection with TURN server for ICE restart")
+
+        # Re-register callbacks
+        @self._pc.on("track")
+        def on_track(track: MediaStreamTrack):
+            logger.debug(f"Received remote track: {track.kind}")
+            if self._on_remote_stream:
+                self._on_remote_stream(track)
+
+        @self._pc.on("connectionstatechange")
+        async def on_connection_state_change():
+            logger.debug(f"Peer connection state: {self._pc.connectionState}")
+            if self._pc.connectionState == "connected":
+                await self._set_state("connected")
+            elif self._pc.connectionState in ["failed", "closed"]:
+                await self._set_state("disconnected")
+
+        # Re-create and send offer
+        await self._create_and_send_offer()
 
     def register_image_set_wait(self) -> tuple[asyncio.Event, dict]:
         event = asyncio.Event()
-        result: dict = {"success": False, "status": None}
+        result: dict = {"success": False, "error": None}
         self._pending_image_set = (event, result)
         return event, result
 

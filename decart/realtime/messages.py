@@ -51,11 +51,40 @@ class PromptAckMessage(BaseModel):
     error: Optional[str] = None
 
 
-class ImageSetMessage(BaseModel):
+class SetImageAckMessage(BaseModel):
     """Acknowledgment for avatar image set from server."""
 
-    type: Literal["image_set"]
-    status: str
+    type: Literal["set_image_ack"]
+    success: bool
+    error: Optional[str] = None
+
+
+class ErrorMessage(BaseModel):
+    """Error message from server."""
+
+    type: Literal["error"]
+    error: str
+
+
+class ReadyMessage(BaseModel):
+    """Server ready signal."""
+
+    type: Literal["ready"]
+
+
+class TurnConfig(BaseModel):
+    """TURN server configuration."""
+
+    username: str
+    credential: str
+    server_url: str
+
+
+class IceRestartMessage(BaseModel):
+    """ICE restart message with TURN config."""
+
+    type: Literal["ice-restart"]
+    turn_config: TurnConfig
 
 
 # Discriminated union for incoming messages
@@ -65,7 +94,10 @@ IncomingMessage = Annotated[
         IceCandidateMessage,
         SessionIdMessage,
         PromptAckMessage,
-        ImageSetMessage,
+        SetImageAckMessage,
+        ErrorMessage,
+        ReadyMessage,
+        IceRestartMessage,
     ],
     Field(discriminator="type"),
 ]

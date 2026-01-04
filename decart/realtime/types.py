@@ -21,9 +21,22 @@ class AvatarOptions:
 
 
 @dataclass
+class InitialPromptOptions:
+    """Options for initial prompt sent before WebRTC handshake."""
+
+    text: str
+    """The prompt text to send."""
+
+    enhance: bool = True
+    """Whether to enhance the prompt. Defaults to True."""
+
+
+@dataclass
 class RealtimeConnectOptions:
     model: ModelDefinition
     on_remote_stream: Callable[[MediaStreamTrack], None]
     initial_state: Optional[ModelState] = None
     customize_offer: Optional[Callable] = None
     avatar: Optional[AvatarOptions] = None
+    initial_prompt: Optional[InitialPromptOptions] = None
+    """Initial prompt to send before WebRTC handshake (optional)."""
