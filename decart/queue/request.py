@@ -24,7 +24,7 @@ async def submit_job(
 
     for key, value in inputs.items():
         if value is not None:
-            if key in ("data", "start", "end"):
+            if key in ("data", "start", "end", "reference_image"):
                 content, content_type = await file_input_to_bytes(value, session)
                 form_data.add_field(key, content, content_type=content_type)
             else:

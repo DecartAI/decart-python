@@ -17,6 +17,14 @@ def test_realtime_models() -> None:
     assert model.height == 704
     assert model.url_path == "/v1/stream"
 
+    # avatar-live model
+    model = models.realtime("avatar-live")
+    assert model.name == "avatar-live"
+    assert model.fps == 25
+    assert model.width == 1280
+    assert model.height == 720
+    assert model.url_path == "/v1/avatar-live/stream"
+
 
 def test_video_models() -> None:
     model = models.video("lucy-pro-t2v")
@@ -25,6 +33,11 @@ def test_video_models() -> None:
 
     model = models.video("lucy-pro-v2v")
     assert model.name == "lucy-pro-v2v"
+
+    # lucy-restyle-v2v model
+    model = models.video("lucy-restyle-v2v")
+    assert model.name == "lucy-restyle-v2v"
+    assert model.url_path == "/v1/generate/lucy-restyle-v2v"
 
 
 def test_image_models() -> None:

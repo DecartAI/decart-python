@@ -51,9 +51,54 @@ class PromptAckMessage(BaseModel):
     error: Optional[str] = None
 
 
+class SetImageAckMessage(BaseModel):
+    """Acknowledgment for avatar image set from server."""
+
+    type: Literal["set_image_ack"]
+    success: bool
+    error: Optional[str] = None
+
+
+class ErrorMessage(BaseModel):
+    """Error message from server."""
+
+    type: Literal["error"]
+    error: str
+
+
+class ReadyMessage(BaseModel):
+    """Server ready signal."""
+
+    type: Literal["ready"]
+
+
+class TurnConfig(BaseModel):
+    """TURN server configuration."""
+
+    username: str
+    credential: str
+    server_url: str
+
+
+class IceRestartMessage(BaseModel):
+    """ICE restart message with TURN config."""
+
+    type: Literal["ice-restart"]
+    turn_config: TurnConfig
+
+
 # Discriminated union for incoming messages
 IncomingMessage = Annotated[
-    Union[AnswerMessage, IceCandidateMessage, SessionIdMessage, PromptAckMessage],
+    Union[
+        AnswerMessage,
+        IceCandidateMessage,
+        SessionIdMessage,
+        PromptAckMessage,
+        SetImageAckMessage,
+        ErrorMessage,
+        ReadyMessage,
+        IceRestartMessage,
+    ],
     Field(discriminator="type"),
 ]
 
@@ -79,8 +124,15 @@ class PromptMessage(BaseModel):
     enhance_prompt: bool = True
 
 
+class SetAvatarImageMessage(BaseModel):
+    """Set avatar image message."""
+
+    type: Literal["set_image"]
+    image_data: str  # Base64-encoded image
+
+
 # Outgoing message union (no discriminator needed - we know what we're sending)
-OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage]
+OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage, SetAvatarImageMessage]
 
 
 def parse_incoming_message(data: dict) -> IncomingMessage:

@@ -261,3 +261,101 @@ async def test_queue_includes_user_agent_header() -> None:
 
         assert "User-Agent" in headers
         assert headers["User-Agent"].startswith("decart-python-sdk/")
+
+
+# Tests for lucy-restyle-v2v with reference_image
+
+
+@pytest.mark.asyncio
+async def test_queue_restyle_with_prompt() -> None:
+    """Test lucy-restyle-v2v submission with text prompt."""
+    client = DecartClient(api_key="test-key")
+
+    with patch("decart.queue.client.submit_job") as mock_submit:
+        mock_submit.return_value = MagicMock(job_id="job-789", status="pending")
+
+        job = await client.queue.submit(
+            {
+                "model": models.video("lucy-restyle-v2v"),
+                "prompt": "Make it look like anime",
+                "data": b"fake video data",
+                "enhance_prompt": True,
+            }
+        )
+
+        assert job.job_id == "job-789"
+        assert job.status == "pending"
+        mock_submit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_queue_restyle_with_reference_image() -> None:
+    """Test lucy-restyle-v2v submission with reference image."""
+    client = DecartClient(api_key="test-key")
+
+    with patch("decart.queue.client.submit_job") as mock_submit:
+        mock_submit.return_value = MagicMock(job_id="job-890", status="pending")
+
+        job = await client.queue.submit(
+            {
+                "model": models.video("lucy-restyle-v2v"),
+                "reference_image": b"fake image data",
+                "data": b"fake video data",
+            }
+        )
+
+        assert job.job_id == "job-890"
+        assert job.status == "pending"
+        mock_submit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_queue_restyle_rejects_both_prompt_and_reference_image() -> None:
+    """Test that lucy-restyle-v2v rejects both prompt and reference_image."""
+    client = DecartClient(api_key="test-key")
+
+    with pytest.raises(DecartSDKError) as exc_info:
+        await client.queue.submit(
+            {
+                "model": models.video("lucy-restyle-v2v"),
+                "prompt": "Make it anime",
+                "reference_image": b"fake image data",
+                "data": b"fake video data",
+            }
+        )
+
+    assert "either 'prompt' or 'reference_image'" in str(exc_info.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_queue_restyle_rejects_neither_prompt_nor_reference_image() -> None:
+    """Test that lucy-restyle-v2v rejects when neither prompt nor reference_image provided."""
+    client = DecartClient(api_key="test-key")
+
+    with pytest.raises(DecartSDKError) as exc_info:
+        await client.queue.submit(
+            {
+                "model": models.video("lucy-restyle-v2v"),
+                "data": b"fake video data",
+            }
+        )
+
+    assert "either 'prompt' or 'reference_image'" in str(exc_info.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_queue_restyle_rejects_enhance_prompt_with_reference_image() -> None:
+    """Test that enhance_prompt is only valid with text prompt, not reference_image."""
+    client = DecartClient(api_key="test-key")
+
+    with pytest.raises(DecartSDKError) as exc_info:
+        await client.queue.submit(
+            {
+                "model": models.video("lucy-restyle-v2v"),
+                "reference_image": b"fake image data",
+                "data": b"fake video data",
+                "enhance_prompt": True,
+            }
+        )
+
+    assert "enhance_prompt" in str(exc_info.value).lower()
