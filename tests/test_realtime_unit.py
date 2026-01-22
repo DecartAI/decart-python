@@ -39,6 +39,17 @@ def test_realtime_models_available():
 
     model2 = models.realtime("lucy_v2v_720p_rt")
     assert model2.name == "lucy_v2v_720p_rt"
+    assert model2.fps == 25
+    assert model2.width == 1280
+    assert model2.height == 704
+    assert model2.url_path == "/v1/stream"
+
+    model2 = models.realtime("lucy_v2v_14b_rt")
+    assert model2.name == "lucy_v2v_14b_rt"
+    assert model2.fps == 15
+    assert model2.width == 1280
+    assert model2.height == 704
+    assert model2.url_path == "/v1/stream"
 
 
 @pytest.mark.asyncio

@@ -4,7 +4,9 @@ from .errors import ModelNotFoundError
 from .types import FileInput, MotionTrajectoryInput
 
 
-RealTimeModels = Literal["mirage", "mirage_v2", "lucy_v2v_720p_rt", "avatar-live"]
+RealTimeModels = Literal[
+    "mirage", "mirage_v2", "lucy_v2v_720p_rt", "lucy_v2v_14b_rt", "avatar-live"
+]
 VideoModels = Literal[
     "lucy-dev-i2v",
     "lucy-fast-v2v",
@@ -171,6 +173,14 @@ _MODELS = {
             name="lucy_v2v_720p_rt",
             url_path="/v1/stream",
             fps=25,
+            width=1280,
+            height=704,
+            input_schema=BaseModel,
+        ),
+        "lucy_v2v_14b_rt": ModelDefinition(
+            name="lucy_v2v_14b_rt",
+            url_path="/v1/stream",
+            fps=15,
             width=1280,
             height=704,
             input_schema=BaseModel,
