@@ -180,9 +180,9 @@ _MODELS = {
         "lucy_v2v_14b_rt": ModelDefinition(
             name="lucy_v2v_14b_rt",
             url_path="/v1/stream",
-            fps=15,
+            fps=20,
             width=1280,
-            height=704,
+            height=720,
             input_schema=BaseModel,
         ),
         "avatar-live": ModelDefinition(
