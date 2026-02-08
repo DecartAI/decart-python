@@ -87,6 +87,12 @@ class IceRestartMessage(BaseModel):
     turn_config: TurnConfig
 
 
+class SetAckMessage(BaseModel):
+    type: Literal["set_ack"]
+    success: bool
+    error: Optional[str] = None
+
+
 # Discriminated union for incoming messages
 IncomingMessage = Annotated[
     Union[
@@ -95,6 +101,7 @@ IncomingMessage = Annotated[
         SessionIdMessage,
         PromptAckMessage,
         SetImageAckMessage,
+        SetAckMessage,
         ErrorMessage,
         ReadyMessage,
         IceRestartMessage,
@@ -131,8 +138,16 @@ class SetAvatarImageMessage(BaseModel):
     image_data: str  # Base64-encoded image
 
 
-# Outgoing message union (no discriminator needed - we know what we're sending)
-OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage, SetAvatarImageMessage]
+class SetParamsMessage(BaseModel):
+    type: Literal["set"] = "set"
+    prompt: Optional[str] = None
+    enhance_prompt: Optional[bool] = None
+    image_data: Optional[str] = None
+
+
+OutgoingMessage = Union[
+    OfferMessage, IceCandidateMessage, PromptMessage, SetAvatarImageMessage, SetParamsMessage
+]
 
 
 def parse_incoming_message(data: dict) -> IncomingMessage:
@@ -161,4 +176,6 @@ def message_to_json(message: OutgoingMessage) -> str:
     Returns:
         JSON string
     """
+    if isinstance(message, SetParamsMessage):
+        return message.model_dump_json(exclude_unset=True)
     return message.model_dump_json()

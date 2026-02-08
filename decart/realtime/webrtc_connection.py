@@ -25,6 +25,8 @@ from .messages import (
     PromptAckMessage,
     SetImageAckMessage,
     SetAvatarImageMessage,
+    SetAckMessage,
+    SetParamsMessage,
     ErrorMessage,
     IceRestartMessage,
     OutgoingMessage,
@@ -54,6 +56,7 @@ class WebRTCConnection:
         self._ice_candidates_queue: list[RTCIceCandidate] = []
         self._pending_prompts: dict[str, tuple[asyncio.Event, dict]] = {}
         self._pending_image_set: Optional[tuple[asyncio.Event, dict]] = None
+        self._pending_set: Optional[tuple[asyncio.Event, dict]] = None
 
     async def connect(
         self,
@@ -254,6 +257,8 @@ class WebRTCConnection:
             self._handle_prompt_ack(message)
         elif message.type == "set_image_ack":
             self._handle_set_image_ack(message)
+        elif message.type == "set_ack":
+            self._handle_set_ack(message)
         elif message.type == "error":
             self._handle_error(message)
         elif message.type == "ready":
@@ -303,6 +308,14 @@ class WebRTCConnection:
         logger.debug(f"Received set_image_ack: success={message.success}, error={message.error}")
         if self._pending_image_set:
             event, result = self._pending_image_set
+            result["success"] = message.success
+            result["error"] = message.error
+            event.set()
+
+    def _handle_set_ack(self, message: SetAckMessage) -> None:
+        logger.debug(f"Received set_ack: success={message.success}, error={message.error}")
+        if self._pending_set:
+            event, result = self._pending_set
             result["success"] = message.success
             result["error"] = message.error
             event.set()
@@ -366,6 +379,15 @@ class WebRTCConnection:
 
     def unregister_image_set_wait(self) -> None:
         self._pending_image_set = None
+
+    def register_set_wait(self) -> tuple[asyncio.Event, dict]:
+        event = asyncio.Event()
+        result: dict = {"success": False, "error": None}
+        self._pending_set = (event, result)
+        return event, result
+
+    def unregister_set_wait(self) -> None:
+        self._pending_set = None
 
     def register_prompt_wait(self, prompt: str) -> tuple[asyncio.Event, dict]:
         event = asyncio.Event()

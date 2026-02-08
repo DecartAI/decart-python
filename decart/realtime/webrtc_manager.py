@@ -106,3 +106,9 @@ class WebRTCManager:
 
     def unregister_image_set_wait(self) -> None:
         self._connection.unregister_image_set_wait()
+
+    def register_set_wait(self) -> tuple[asyncio.Event, dict]:
+        return self._connection.register_set_wait()
+
+    def unregister_set_wait(self) -> None:
+        self._connection.unregister_set_wait()
