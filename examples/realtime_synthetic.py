@@ -127,7 +127,7 @@ async def main():
 
                 print("\n🎨 Changing style to 'Cyberpunk city'...")
                 try:
-                    await realtime_client.set_prompt("Cyberpunk city")
+                    await realtime_client.set(prompt="Cyberpunk city")
                     print("✓ Prompt set successfully")
                 except Exception as e:
                     print(f"⚠️ Failed to set prompt: {e}")

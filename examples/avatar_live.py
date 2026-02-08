@@ -145,6 +145,10 @@ async def main():
             # print("Updating avatar image...")
             # await realtime_client.set_image(Path("new_avatar.png"))
             # print("✓ Avatar image updated!")
+            #
+            # Or use the unified set() method:
+            # await realtime_client.set(image=Path("new_avatar.png"))
+            # await realtime_client.set(prompt="A friendly greeting", image=Path("new_avatar.png"))
 
             try:
                 while True:
