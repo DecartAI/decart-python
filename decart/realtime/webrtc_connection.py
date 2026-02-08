@@ -26,7 +26,6 @@ from .messages import (
     SetImageAckMessage,
     SetAvatarImageMessage,
     SetAckMessage,
-    SetParamsMessage,
     ErrorMessage,
     IceRestartMessage,
     OutgoingMessage,
