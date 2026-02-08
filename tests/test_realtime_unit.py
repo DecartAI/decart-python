@@ -605,3 +605,489 @@ async def test_connect_with_initial_prompt():
         call_kwargs = mock_manager.connect.call_args[1]
         assert "initial_prompt" in call_kwargs
         assert call_kwargs["initial_prompt"] == {"text": "Test prompt", "enhance": False}
+
+
+# Tests for the unified set() method
+
+
+@pytest.mark.asyncio
+async def test_set_prompt_only():
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        set_event = asyncio.Event()
+        set_result = {"success": True, "error": None}
+
+        mock_manager.register_set_wait = MagicMock(return_value=(set_event, set_result))
+        mock_manager.unregister_set_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        async def fire():
+            await asyncio.sleep(0.01)
+            set_event.set()
+
+        asyncio.create_task(fire())
+        await realtime_client.set(prompt="A cat")
+
+        mock_manager.send_message.assert_called()
+        message = mock_manager.send_message.call_args[0][0]
+        assert message.type == "set"
+        assert message.prompt == "A cat"
+        assert "image_data" not in message.model_fields_set
+        assert "enhance_prompt" not in message.model_fields_set
+        mock_manager.unregister_set_wait.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_set_prompt_with_enhance():
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        set_event = asyncio.Event()
+        set_result = {"success": True, "error": None}
+
+        mock_manager.register_set_wait = MagicMock(return_value=(set_event, set_result))
+        mock_manager.unregister_set_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        async def fire():
+            await asyncio.sleep(0.01)
+            set_event.set()
+
+        asyncio.create_task(fire())
+        await realtime_client.set(prompt="A cat", enhance=True)
+
+        message = mock_manager.send_message.call_args[0][0]
+        assert message.type == "set"
+        assert message.prompt == "A cat"
+        assert message.enhance_prompt is True
+
+
+@pytest.mark.asyncio
+async def test_set_image_only():
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.file_input_to_bytes") as mock_file_input,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        set_event = asyncio.Event()
+        set_result = {"success": True, "error": None}
+
+        mock_manager.register_set_wait = MagicMock(return_value=(set_event, set_result))
+        mock_manager.unregister_set_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_file_input.return_value = (b"fake image data", "image/png")
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        async def fire():
+            await asyncio.sleep(0.01)
+            set_event.set()
+
+        asyncio.create_task(fire())
+        await realtime_client.set(image=b"fake image data")
+
+        message = mock_manager.send_message.call_args[0][0]
+        assert message.type == "set"
+        assert isinstance(message.image_data, str)
+        assert "prompt" not in message.model_fields_set
+        mock_file_input.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_set_prompt_and_image():
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.file_input_to_bytes") as mock_file_input,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        set_event = asyncio.Event()
+        set_result = {"success": True, "error": None}
+
+        mock_manager.register_set_wait = MagicMock(return_value=(set_event, set_result))
+        mock_manager.unregister_set_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_file_input.return_value = (b"fake", "image/png")
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        async def fire():
+            await asyncio.sleep(0.01)
+            set_event.set()
+
+        asyncio.create_task(fire())
+        await realtime_client.set(prompt="A cat", image=b"fake")
+
+        message = mock_manager.send_message.call_args[0][0]
+        assert message.type == "set"
+        assert message.prompt == "A cat"
+        assert isinstance(message.image_data, str)
+
+
+@pytest.mark.asyncio
+async def test_set_image_none_clears():
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        set_event = asyncio.Event()
+        set_result = {"success": True, "error": None}
+
+        mock_manager.register_set_wait = MagicMock(return_value=(set_event, set_result))
+        mock_manager.unregister_set_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        async def fire():
+            await asyncio.sleep(0.01)
+            set_event.set()
+
+        asyncio.create_task(fire())
+        await realtime_client.set(image=None)
+
+        message = mock_manager.send_message.call_args[0][0]
+        assert message.type == "set"
+        assert "image_data" in message.model_fields_set
+        assert message.image_data is None
+
+
+@pytest.mark.asyncio
+async def test_set_rejects_empty():
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.errors import InvalidInputError
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        with pytest.raises(InvalidInputError) as exc_info:
+            await realtime_client.set()
+
+        assert "at least one" in str(exc_info.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_set_rejects_empty_prompt():
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.errors import InvalidInputError
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        with pytest.raises(InvalidInputError):
+            await realtime_client.set(prompt="  ")
+
+
+@pytest.mark.asyncio
+async def test_set_timeout():
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        set_event = asyncio.Event()
+        set_result = {"success": False, "error": None}
+
+        mock_manager.register_set_wait = MagicMock(return_value=(set_event, set_result))
+        mock_manager.unregister_set_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.errors import DecartSDKError
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
+            with pytest.raises(DecartSDKError) as exc_info:
+                await realtime_client.set(prompt="A cat")
+
+        assert "timed out" in str(exc_info.value).lower()
+        mock_manager.unregister_set_wait.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_set_server_error():
+    import asyncio
+
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.send_message = AsyncMock()
+
+        set_event = asyncio.Event()
+        set_result = {"success": False, "error": "Server error"}
+
+        mock_manager.register_set_wait = MagicMock(return_value=(set_event, set_result))
+        mock_manager.unregister_set_wait = MagicMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.errors import DecartSDKError
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy_2_rt"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        async def fire():
+            await asyncio.sleep(0.01)
+            set_event.set()
+
+        asyncio.create_task(fire())
+
+        with pytest.raises(DecartSDKError) as exc_info:
+            await realtime_client.set(prompt="A cat")
+
+        assert "Server error" in str(exc_info.value)
+        mock_manager.unregister_set_wait.assert_called_once()
+
+
+def test_set_message_serialization():
+    import json
+    from decart.realtime.messages import SetParamsMessage
+
+    msg = SetParamsMessage(prompt="Hello")
+    raw = json.loads(msg.model_dump_json(exclude_unset=True))
+    assert "prompt" in raw
+    assert raw["prompt"] == "Hello"
+    assert "image_data" not in raw
+    assert "enhance_prompt" not in raw
+
+    msg2 = SetParamsMessage(image_data=None)
+    raw2 = json.loads(msg2.model_dump_json(exclude_unset=True))
+    assert "image_data" in raw2
+    assert raw2["image_data"] is None
+
+
+def test_set_ack_message_parsing():
+    from decart.realtime.messages import SetAckMessage, parse_incoming_message
+
+    result = parse_incoming_message({"type": "set_ack", "success": True, "error": None})
+    assert isinstance(result, SetAckMessage)
+    assert result.success is True
+    assert result.error is None
+
+    result2 = parse_incoming_message({"type": "set_ack", "success": False, "error": "fail"})
+    assert isinstance(result2, SetAckMessage)
+    assert result2.success is False
+    assert result2.error == "fail"
