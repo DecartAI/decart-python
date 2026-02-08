@@ -1,17 +1,27 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 import asyncio
 import base64
 import logging
 import uuid
+import enum
 import aiohttp
 from aiortc import MediaStreamTrack
 
 from .webrtc_manager import WebRTCManager, WebRTCConfiguration
-from .messages import PromptMessage, SetAvatarImageMessage
+from .messages import PromptMessage, SetAvatarImageMessage, SetParamsMessage
 from .types import ConnectionState, RealtimeConnectOptions
 from ..types import FileInput
 from ..errors import DecartSDKError, InvalidInputError, WebRTCError
 from ..process.request import file_input_to_bytes
+
+
+class _Unset(enum.Enum):
+    """Sentinel to distinguish 'not provided' from None (which means 'clear')."""
+
+    UNSET = "UNSET"
+
+
+UNSET = _Unset.UNSET
 
 logger = logging.getLogger(__name__)
 
@@ -183,6 +193,54 @@ class RealtimeClient:
                 raise DecartSDKError(result.get("error") or "Failed to set avatar image")
         finally:
             self._manager.unregister_image_set_wait()
+
+    async def set(
+        self,
+        *,
+        prompt: Optional[str] = None,
+        enhance: Optional[bool] = None,
+        image: Union[FileInput, None, _Unset] = UNSET,
+    ) -> None:
+        image_provided = image is not UNSET
+
+        if prompt is None and not image_provided:
+            raise InvalidInputError("At least one of 'prompt' or 'image' must be provided")
+
+        fields: dict = {"type": "set"}
+
+        if prompt is not None:
+            if not prompt.strip():
+                raise InvalidInputError("Prompt cannot be empty")
+            fields["prompt"] = prompt
+
+        if enhance is not None:
+            fields["enhance_prompt"] = enhance
+
+        if image_provided:
+            if image is None:
+                fields["image_data"] = None
+            else:
+                if not self._http_session:
+                    raise InvalidInputError("HTTP session not available")
+                image_bytes, _ = await file_input_to_bytes(image, self._http_session)
+                fields["image_data"] = base64.b64encode(image_bytes).decode("utf-8")
+
+        message = SetParamsMessage(**fields)
+
+        event, result = self._manager.register_set_wait()
+
+        try:
+            await self._manager.send_message(message)
+
+            try:
+                await asyncio.wait_for(event.wait(), timeout=30.0)
+            except asyncio.TimeoutError:
+                raise DecartSDKError("Set acknowledgment timed out")
+
+            if not result["success"]:
+                raise DecartSDKError(result.get("error") or "Set failed")
+        finally:
+            self._manager.unregister_set_wait()
 
     def is_connected(self) -> bool:
         return self._manager.is_connected()
