@@ -29,6 +29,7 @@ from .tokens import (
 try:
     from .realtime import (
         RealtimeClient,
+        SetInput,
         RealtimeConnectOptions,
         ConnectionState,
         AvatarOptions,
@@ -38,6 +39,7 @@ try:
 except ImportError:
     REALTIME_AVAILABLE = False
     RealtimeClient = None  # type: ignore
+    SetInput = None  # type: ignore
     RealtimeConnectOptions = None  # type: ignore
     ConnectionState = None  # type: ignore
     AvatarOptions = None  # type: ignore
@@ -76,6 +78,7 @@ if REALTIME_AVAILABLE:
     __all__.extend(
         [
             "RealtimeClient",
+            "SetInput",
             "RealtimeConnectOptions",
             "ConnectionState",
             "AvatarOptions",
