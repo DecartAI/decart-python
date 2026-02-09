@@ -355,7 +355,6 @@ async def test_avatar_live_connect_with_avatar_image():
 @pytest.mark.asyncio
 async def test_avatar_live_set_image():
     """Test set_image method for avatar-live"""
-    import asyncio
 
     client = DecartClient(api_key="test-key")
 
@@ -366,15 +365,7 @@ async def test_avatar_live_set_image():
     ):
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
-        mock_manager.send_message = AsyncMock()
-
-        image_set_event = asyncio.Event()
-        image_set_result = {"success": True, "error": None}
-
-        mock_manager.register_image_set_wait = MagicMock(
-            return_value=(image_set_event, image_set_result)
-        )
-        mock_manager.unregister_image_set_wait = MagicMock()
+        mock_manager.set_image = AsyncMock()
         mock_manager_class.return_value = mock_manager
 
         mock_file_input.return_value = (b"new image data", "image/png")
@@ -398,18 +389,11 @@ async def test_avatar_live_set_image():
             ),
         )
 
-        async def set_event():
-            await asyncio.sleep(0.01)
-            image_set_event.set()
-
-        asyncio.create_task(set_event())
         await realtime_client.set_image(b"new avatar image")
 
-        mock_manager.send_message.assert_called()
-        call_args = mock_manager.send_message.call_args[0][0]
-        assert call_args.type == "set_image"
-        assert call_args.image_data is not None
-        mock_manager.unregister_image_set_wait.assert_called_once()
+        mock_manager.set_image.assert_called_once()
+        image_base64_arg = mock_manager.set_image.call_args[0][0]
+        assert image_base64_arg is not None
 
 
 @pytest.mark.asyncio
@@ -453,7 +437,6 @@ async def test_set_image_only_for_avatar_live():
 @pytest.mark.asyncio
 async def test_avatar_live_set_image_timeout():
     """Test set_image raises on timeout"""
-    import asyncio
 
     client = DecartClient(api_key="test-key")
 
@@ -462,17 +445,11 @@ async def test_avatar_live_set_image_timeout():
         patch("decart.realtime.client.file_input_to_bytes") as mock_file_input,
         patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
     ):
+        from decart.errors import DecartSDKError
+
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
-        mock_manager.send_message = AsyncMock()
-
-        image_set_event = asyncio.Event()
-        image_set_result = {"success": False, "error": None}
-
-        mock_manager.register_image_set_wait = MagicMock(
-            return_value=(image_set_event, image_set_result)
-        )
-        mock_manager.unregister_image_set_wait = MagicMock()
+        mock_manager.set_image = AsyncMock(side_effect=DecartSDKError("Image send timed out"))
         mock_manager_class.return_value = mock_manager
 
         mock_file_input.return_value = (b"image data", "image/png")
@@ -485,7 +462,6 @@ async def test_avatar_live_set_image_timeout():
         mock_track = MagicMock()
 
         from decart.realtime.types import RealtimeConnectOptions
-        from decart.errors import DecartSDKError
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
@@ -497,18 +473,15 @@ async def test_avatar_live_set_image_timeout():
             ),
         )
 
-        with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
-            with pytest.raises(DecartSDKError) as exc_info:
-                await realtime_client.set_image(b"test image")
+        with pytest.raises(DecartSDKError) as exc_info:
+            await realtime_client.set_image(b"test image")
 
         assert "timed out" in str(exc_info.value).lower()
-        mock_manager.unregister_image_set_wait.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_avatar_live_set_image_server_error():
     """Test set_image raises on server error"""
-    import asyncio
 
     client = DecartClient(api_key="test-key")
 
@@ -517,17 +490,11 @@ async def test_avatar_live_set_image_server_error():
         patch("decart.realtime.client.file_input_to_bytes") as mock_file_input,
         patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
     ):
+        from decart.errors import DecartSDKError
+
         mock_manager = AsyncMock()
         mock_manager.connect = AsyncMock(return_value=True)
-        mock_manager.send_message = AsyncMock()
-
-        image_set_event = asyncio.Event()
-        image_set_result = {"success": False, "error": "Invalid image format"}
-
-        mock_manager.register_image_set_wait = MagicMock(
-            return_value=(image_set_event, image_set_result)
-        )
-        mock_manager.unregister_image_set_wait = MagicMock()
+        mock_manager.set_image = AsyncMock(side_effect=DecartSDKError("Invalid image format"))
         mock_manager_class.return_value = mock_manager
 
         mock_file_input.return_value = (b"image data", "image/png")
@@ -540,7 +507,6 @@ async def test_avatar_live_set_image_server_error():
         mock_track = MagicMock()
 
         from decart.realtime.types import RealtimeConnectOptions
-        from decart.errors import DecartSDKError
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
@@ -552,17 +518,331 @@ async def test_avatar_live_set_image_server_error():
             ),
         )
 
-        async def set_event():
-            await asyncio.sleep(0.01)
-            image_set_event.set()
-
-        asyncio.create_task(set_event())
-
         with pytest.raises(DecartSDKError) as exc_info:
             await realtime_client.set_image(b"test image")
 
         assert "Invalid image format" in str(exc_info.value)
-        mock_manager.unregister_image_set_wait.assert_called_once()
+
+
+# Tests for set() method
+
+
+@pytest.mark.asyncio
+async def test_set_rejects_when_neither_prompt_nor_image():
+    """Test set() raises when neither prompt nor image is provided"""
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.realtime.client import SetInput
+        from decart.errors import InvalidInputError
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        with pytest.raises(InvalidInputError, match="At least one of"):
+            await realtime_client.set(SetInput())
+
+
+@pytest.mark.asyncio
+async def test_set_rejects_empty_prompt():
+    """Test set() raises when prompt is empty string"""
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.realtime.client import SetInput
+        from decart.errors import InvalidInputError
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        with pytest.raises(InvalidInputError, match="Prompt cannot be empty"):
+            await realtime_client.set(SetInput(prompt=""))
+
+
+@pytest.mark.asyncio
+async def test_set_sends_prompt_only():
+    """Test set() sends prompt-only via set_image with null image"""
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.set_image = AsyncMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.realtime.client import SetInput
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        await realtime_client.set(SetInput(prompt="a cat"))
+
+        mock_manager.set_image.assert_called_once_with(
+            None,
+            {
+                "prompt": "a cat",
+                "enhance": True,
+                "timeout": 30.0,
+            },
+        )
+
+
+@pytest.mark.asyncio
+async def test_set_sends_prompt_with_enhance():
+    """Test set() sends prompt with enhance flag"""
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.set_image = AsyncMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.realtime.client import SetInput
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        await realtime_client.set(SetInput(prompt="a cat", enhance=False))
+
+        mock_manager.set_image.assert_called_once_with(
+            None,
+            {
+                "prompt": "a cat",
+                "enhance": False,
+                "timeout": 30.0,
+            },
+        )
+
+
+@pytest.mark.asyncio
+async def test_set_sends_image_only():
+    """Test set() sends image-only via set_image"""
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+        patch("decart.realtime.client._image_to_base64") as mock_image_to_base64,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.set_image = AsyncMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_image_to_base64.return_value = "convertedbase64"
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.realtime.client import SetInput
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        await realtime_client.set(SetInput(image="rawbase64data"))
+
+        mock_image_to_base64.assert_called_once_with("rawbase64data", mock_session)
+        mock_manager.set_image.assert_called_once_with(
+            "convertedbase64",
+            {
+                "prompt": None,
+                "enhance": True,
+                "timeout": 30.0,
+            },
+        )
+
+
+@pytest.mark.asyncio
+async def test_set_sends_prompt_and_image():
+    """Test set() sends prompt and image together"""
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+        patch("decart.realtime.client._image_to_base64") as mock_image_to_base64,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.set_image = AsyncMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_image_to_base64.return_value = "convertedbase64"
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.realtime.client import SetInput
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        await realtime_client.set(SetInput(prompt="a cat", enhance=False, image="rawbase64"))
+
+        mock_manager.set_image.assert_called_once_with(
+            "convertedbase64",
+            {
+                "prompt": "a cat",
+                "enhance": False,
+                "timeout": 30.0,
+            },
+        )
+
+
+@pytest.mark.asyncio
+async def test_set_converts_bytes_image():
+    """Test set() converts bytes image to base64"""
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+        patch("decart.realtime.client._image_to_base64") as mock_image_to_base64,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.set_image = AsyncMock()
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        mock_image_to_base64.return_value = "blobbase64"
+
+        mock_track = MagicMock()
+
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.realtime.client import SetInput
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.base_url,
+            api_key=client.api_key,
+            local_track=mock_track,
+            options=RealtimeConnectOptions(
+                model=models.realtime("mirage"),
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        test_bytes = b"test-image-data"
+        await realtime_client.set(SetInput(image=test_bytes))
+
+        mock_image_to_base64.assert_called_once_with(test_bytes, mock_session)
+        mock_manager.set_image.assert_called_once_with(
+            "blobbase64",
+            {
+                "prompt": None,
+                "enhance": True,
+                "timeout": 30.0,
+            },
+        )
 
 
 @pytest.mark.asyncio

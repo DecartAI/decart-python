@@ -128,7 +128,9 @@ class SetAvatarImageMessage(BaseModel):
     """Set avatar image message."""
 
     type: Literal["set_image"]
-    image_data: str  # Base64-encoded image
+    image_data: Optional[str] = None
+    prompt: Optional[str] = None
+    enhance_prompt: Optional[bool] = None
 
 
 # Outgoing message union (no discriminator needed - we know what we're sending)
@@ -161,4 +163,4 @@ def message_to_json(message: OutgoingMessage) -> str:
     Returns:
         JSON string
     """
-    return message.model_dump_json()
+    return message.model_dump_json(exclude_none=True)

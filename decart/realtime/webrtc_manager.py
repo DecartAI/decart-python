@@ -60,9 +60,11 @@ class WebRTCManager:
         initial_prompt: Optional[dict] = None,
     ) -> bool:
         try:
+            timeout = 60 * 5  # 5 minutes
             await self._connection.connect(
                 url=self._config.webrtc_url,
                 local_track=local_track,
+                timeout=timeout,
                 integration=self._config.integration,
                 is_avatar_live=self._config.is_avatar_live,
                 avatar_image_base64=avatar_image_base64,
@@ -82,6 +84,44 @@ class WebRTCManager:
             on_error=self._config.on_error,
             customize_offer=self._config.customize_offer,
         )
+
+    async def set_image(
+        self,
+        image_base64: Optional[str],
+        options: Optional[dict] = None,
+    ) -> None:
+        from .messages import SetAvatarImageMessage
+
+        opts = options or {}
+        timeout = opts.get("timeout", 30.0)
+
+        event, result = self._connection.register_image_set_wait()
+
+        try:
+            message = SetAvatarImageMessage(
+                type="set_image",
+                image_data=image_base64,
+            )
+            if opts.get("prompt") is not None:
+                message.prompt = opts["prompt"]
+            if opts.get("enhance") is not None:
+                message.enhance_prompt = opts["enhance"]
+
+            await self._connection.send(message)
+
+            try:
+                await asyncio.wait_for(event.wait(), timeout=timeout)
+            except asyncio.TimeoutError:
+                from ..errors import DecartSDKError
+
+                raise DecartSDKError("Image send timed out")
+
+            if not result["success"]:
+                from ..errors import DecartSDKError
+
+                raise DecartSDKError(result.get("error") or "Failed to set image")
+        finally:
+            self._connection.unregister_image_set_wait()
 
     async def send_message(self, message: OutgoingMessage) -> None:
         await self._connection.send(message)

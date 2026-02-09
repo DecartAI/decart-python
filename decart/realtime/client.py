@@ -1,19 +1,60 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 import asyncio
 import base64
 import logging
 import uuid
+from pathlib import Path
+from urllib.parse import urlparse
 import aiohttp
 from aiortc import MediaStreamTrack
+from pydantic import BaseModel
 
 from .webrtc_manager import WebRTCManager, WebRTCConfiguration
-from .messages import PromptMessage, SetAvatarImageMessage
+from .messages import PromptMessage
 from .types import ConnectionState, RealtimeConnectOptions
 from ..types import FileInput
 from ..errors import DecartSDKError, InvalidInputError, WebRTCError
 from ..process.request import file_input_to_bytes
 
 logger = logging.getLogger(__name__)
+
+PROMPT_TIMEOUT_S = 15.0
+UPDATE_TIMEOUT_S = 30.0
+
+
+class SetInput(BaseModel):
+    prompt: Optional[str] = None
+    enhance: bool = True
+    image: Optional[Union[bytes, str]] = None
+
+
+async def _image_to_base64(
+    image: Union[bytes, str],
+    http_session: aiohttp.ClientSession,
+) -> str:
+    if isinstance(image, bytes):
+        return base64.b64encode(image).decode("utf-8")
+
+    if isinstance(image, str):
+        parsed = urlparse(image)
+
+        if parsed.scheme == "data":
+            return image.split(",", 1)[1]
+
+        if parsed.scheme in ("http", "https"):
+            async with http_session.get(image) as resp:
+                resp.raise_for_status()
+                data = await resp.read()
+                return base64.b64encode(data).decode("utf-8")
+
+        if Path(image).exists():
+            image_bytes, _ = await file_input_to_bytes(image, http_session)
+            return base64.b64encode(image_bytes).decode("utf-8")
+
+        return image
+
+    image_bytes, _ = await file_input_to_bytes(image, http_session)
+    return base64.b64encode(image_bytes).decode("utf-8")
 
 
 class RealtimeClient:
@@ -124,6 +165,28 @@ class RealtimeClient:
             except Exception as e:
                 logger.exception(f"Error in error callback: {e}")
 
+    async def set(self, input: SetInput) -> None:
+        if input.prompt is None and input.image is None:
+            raise InvalidInputError("At least one of 'prompt' or 'image' must be provided")
+
+        if input.prompt is not None and not input.prompt.strip():
+            raise InvalidInputError("Prompt cannot be empty")
+
+        image_base64: Optional[str] = None
+        if input.image is not None:
+            if not self._http_session:
+                raise InvalidInputError("HTTP session not available")
+            image_base64 = await _image_to_base64(input.image, self._http_session)
+
+        await self._manager.set_image(
+            image_base64,
+            {
+                "prompt": input.prompt,
+                "enhance": input.enhance,
+                "timeout": UPDATE_TIMEOUT_S,
+            },
+        )
+
     async def set_prompt(self, prompt: str, enrich: bool = True) -> None:
         if not prompt or not prompt.strip():
             raise InvalidInputError("Prompt cannot be empty")
@@ -136,7 +199,7 @@ class RealtimeClient:
             )
 
             try:
-                await asyncio.wait_for(event.wait(), timeout=15.0)
+                await asyncio.wait_for(event.wait(), timeout=PROMPT_TIMEOUT_S)
             except asyncio.TimeoutError:
                 raise DecartSDKError("Prompt acknowledgment timed out")
 
@@ -146,43 +209,16 @@ class RealtimeClient:
             self._manager.unregister_prompt_wait(prompt)
 
     async def set_image(self, image: FileInput) -> None:
-        """Set or update the avatar image.
-
-        Only available for avatar-live model.
-
-        Args:
-            image: The image to set. Can be bytes, Path, URL string, or file-like object.
-
-        Raises:
-            InvalidInputError: If not using avatar-live model or image is invalid.
-            DecartSDKError: If the server fails to acknowledge the image.
-        """
         if not self._is_avatar_live:
             raise InvalidInputError("set_image() is only available for avatar-live model")
 
         if not self._http_session:
             raise InvalidInputError("HTTP session not available")
 
-        # Convert image to base64
         image_bytes, _ = await file_input_to_bytes(image, self._http_session)
         image_base64 = base64.b64encode(image_bytes).decode("utf-8")
 
-        event, result = self._manager.register_image_set_wait()
-
-        try:
-            await self._manager.send_message(
-                SetAvatarImageMessage(type="set_image", image_data=image_base64)
-            )
-
-            try:
-                await asyncio.wait_for(event.wait(), timeout=15.0)
-            except asyncio.TimeoutError:
-                raise DecartSDKError("Image set acknowledgment timed out")
-
-            if not result["success"]:
-                raise DecartSDKError(result.get("error") or "Failed to set avatar image")
-        finally:
-            self._manager.unregister_image_set_wait()
+        await self._manager.set_image(image_base64)
 
     def is_connected(self) -> bool:
         return self._manager.is_connected()
