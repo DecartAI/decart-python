@@ -30,6 +30,10 @@ try:
     from .realtime import (
         RealtimeClient,
         SetInput,
+        SubscribeClient,
+        SubscribeOptions,
+        encode_subscribe_token,
+        decode_subscribe_token,
         RealtimeConnectOptions,
         ConnectionState,
         AvatarOptions,
@@ -40,6 +44,10 @@ except ImportError:
     REALTIME_AVAILABLE = False
     RealtimeClient = None  # type: ignore
     SetInput = None  # type: ignore
+    SubscribeClient = None  # type: ignore
+    SubscribeOptions = None  # type: ignore
+    encode_subscribe_token = None  # type: ignore
+    decode_subscribe_token = None  # type: ignore
     RealtimeConnectOptions = None  # type: ignore
     ConnectionState = None  # type: ignore
     AvatarOptions = None  # type: ignore
@@ -79,6 +87,10 @@ if REALTIME_AVAILABLE:
         [
             "RealtimeClient",
             "SetInput",
+            "SubscribeClient",
+            "SubscribeOptions",
+            "encode_subscribe_token",
+            "decode_subscribe_token",
             "RealtimeConnectOptions",
             "ConnectionState",
             "AvatarOptions",

@@ -9,7 +9,7 @@ except ImportError:
     MediaStreamTrack = None  # type: ignore
 
 
-ConnectionState = Literal["connecting", "connected", "disconnected"]
+ConnectionState = Literal["connecting", "connected", "generating", "disconnected", "reconnecting"]
 
 
 @dataclass

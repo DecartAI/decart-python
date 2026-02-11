@@ -15,7 +15,7 @@ FileInput = Union[HasRead, bytes, str, Path]
 
 class Prompt(BaseModel):
     text: str = Field(..., min_length=1)
-    enrich: bool = Field(default=True)
+    enhance: bool = Field(default=True)
 
 
 class ModelState(BaseModel):

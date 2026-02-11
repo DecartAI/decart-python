@@ -87,6 +87,12 @@ class IceRestartMessage(BaseModel):
     turn_config: TurnConfig
 
 
+class GenerationStartedMessage(BaseModel):
+    """Server signals that generation has started."""
+
+    type: Literal["generation_started"]
+
+
 # Discriminated union for incoming messages
 IncomingMessage = Annotated[
     Union[
@@ -98,6 +104,7 @@ IncomingMessage = Annotated[
         ErrorMessage,
         ReadyMessage,
         IceRestartMessage,
+        GenerationStartedMessage,
     ],
     Field(discriminator="type"),
 ]
