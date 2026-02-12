@@ -9,7 +9,7 @@ from aiortc import MediaStreamTrack
 from pydantic import BaseModel
 
 from .webrtc_manager import WebRTCManager, WebRTCConfiguration
-from .messages import PromptMessage, SessionIdMessage
+from .messages import PromptMessage, SessionIdMessage, GenerationTickMessage
 from .subscribe import (
     SubscribeClient,
     SubscribeOptions,
@@ -73,6 +73,7 @@ class RealtimeClient:
         self._is_avatar_live = is_avatar_live
         self._connection_callbacks: list[Callable[[ConnectionState], None]] = []
         self._error_callbacks: list[Callable[[DecartSDKError], None]] = []
+        self._generation_tick_callbacks: list[Callable[[GenerationTickMessage], None]] = []
         self._session_id: Optional[str] = None
         self._subscribe_token: Optional[str] = None
         self._buffering = True
@@ -134,6 +135,7 @@ class RealtimeClient:
         config.on_connection_state_change = client._emit_connection_change
         config.on_error = lambda error: client._emit_error(WebRTCError(str(error), cause=error))
         config.on_session_id = client._handle_session_id
+        config.on_generation_tick = client._emit_generation_tick
 
         try:
             # For avatar-live, convert and send avatar image before WebRTC connection
@@ -226,6 +228,8 @@ class RealtimeClient:
                 self._dispatch_connection_change(data)  # type: ignore[arg-type]
             elif event == "error":
                 self._dispatch_error(data)  # type: ignore[arg-type]
+            elif event == "generation_tick":
+                self._dispatch_generation_tick(data)  # type: ignore[arg-type]
         self._buffer.clear()
 
     def _dispatch_connection_change(self, state: ConnectionState) -> None:
@@ -253,6 +257,19 @@ class RealtimeClient:
             self._buffer.append(("error", error))
         else:
             self._dispatch_error(error)
+
+    def _dispatch_generation_tick(self, message: GenerationTickMessage) -> None:
+        for callback in list(self._generation_tick_callbacks):
+            try:
+                callback(message)
+            except Exception as e:
+                logger.exception(f"Error in generation_tick callback: {e}")
+
+    def _emit_generation_tick(self, message: GenerationTickMessage) -> None:
+        if self._buffering:
+            self._buffer.append(("generation_tick", message))
+        else:
+            self._dispatch_generation_tick(message)
 
     async def set(self, input: SetInput) -> None:
         if input.prompt is None and input.image is None:
@@ -350,6 +367,8 @@ class RealtimeClient:
             self._connection_callbacks.append(callback)
         elif event == "error":
             self._error_callbacks.append(callback)
+        elif event == "generation_tick":
+            self._generation_tick_callbacks.append(callback)
 
     def off(self, event: str, callback: Callable) -> None:
         if event == "connection_change":
@@ -360,5 +379,10 @@ class RealtimeClient:
         elif event == "error":
             try:
                 self._error_callbacks.remove(callback)
+            except ValueError:
+                pass
+        elif event == "generation_tick":
+            try:
+                self._generation_tick_callbacks.remove(callback)
             except ValueError:
                 pass

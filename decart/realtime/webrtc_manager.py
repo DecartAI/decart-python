@@ -12,7 +12,7 @@ from tenacity import (
 )
 
 from .webrtc_connection import WebRTCConnection
-from .messages import OutgoingMessage, SessionIdMessage
+from .messages import OutgoingMessage, SessionIdMessage, GenerationTickMessage
 from .types import ConnectionState
 from ..types import ModelState
 
@@ -44,6 +44,7 @@ class WebRTCConfiguration:
     on_connection_state_change: Optional[Callable[[ConnectionState], None]] = None
     on_error: Optional[Callable[[Exception], None]] = None
     on_session_id: Optional[Callable[[SessionIdMessage], None]] = None
+    on_generation_tick: Optional[Callable[[GenerationTickMessage], None]] = None
     initial_state: Optional[ModelState] = None
     customize_offer: Optional[Callable] = None
     integration: Optional[str] = None
@@ -208,6 +209,7 @@ class WebRTCManager:
             on_state_change=self._handle_connection_state_change,
             on_error=self._config.on_error,
             on_session_id=self._config.on_session_id,
+            on_generation_tick=self._config.on_generation_tick,
             customize_offer=self._config.customize_offer,
         )
 
