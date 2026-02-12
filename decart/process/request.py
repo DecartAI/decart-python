@@ -91,8 +91,9 @@ async def send_request(
         if value is not None:
             if key in ("data", "start", "end"):
                 content, content_type = await file_input_to_bytes(value, session)
-                if len(content) > MAX_FILE_SIZE:
-                    raise FileTooLargeError(len(content), MAX_FILE_SIZE, key)
+                limit = model.max_file_size or MAX_FILE_SIZE
+                if len(content) > limit:
+                    raise FileTooLargeError(len(content), limit, key)
                 form_data.add_field(key, content, content_type=content_type)
             else:
                 form_data.add_field(key, str(value))
