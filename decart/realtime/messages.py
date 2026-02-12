@@ -93,6 +93,21 @@ class GenerationStartedMessage(BaseModel):
     type: Literal["generation_started"]
 
 
+class GenerationTickMessage(BaseModel):
+    """Periodic billing update during generation."""
+
+    type: Literal["generation_tick"]
+    seconds: int
+
+
+class GenerationEndedMessage(BaseModel):
+    """Server signals that generation has ended. Not exposed publicly."""
+
+    type: Literal["generation_ended"]
+    seconds: int
+    reason: str
+
+
 # Discriminated union for incoming messages
 IncomingMessage = Annotated[
     Union[
@@ -105,6 +120,8 @@ IncomingMessage = Annotated[
         ReadyMessage,
         IceRestartMessage,
         GenerationStartedMessage,
+        GenerationTickMessage,
+        GenerationEndedMessage,
     ],
     Field(discriminator="type"),
 ]

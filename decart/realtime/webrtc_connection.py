@@ -28,6 +28,7 @@ from .messages import (
     ErrorMessage,
     IceRestartMessage,
     SessionIdMessage,
+    GenerationTickMessage,
     OutgoingMessage,
 )
 from .types import ConnectionState
@@ -42,6 +43,7 @@ class WebRTCConnection:
         on_state_change: Optional[Callable[[ConnectionState], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
         on_session_id: Optional[Callable[[SessionIdMessage], None]] = None,
+        on_generation_tick: Optional[Callable[[GenerationTickMessage], None]] = None,
         customize_offer: Optional[Callable] = None,
     ):
         self._pc: Optional[RTCPeerConnection] = None
@@ -52,6 +54,7 @@ class WebRTCConnection:
         self._on_state_change = on_state_change
         self._on_error = on_error
         self._on_session_id = on_session_id
+        self._on_generation_tick = on_generation_tick
         self._customize_offer = customize_offer
         self._ws_task: Optional[asyncio.Task] = None
         self._ice_candidates_queue: list[RTCIceCandidate] = []
@@ -264,6 +267,14 @@ class WebRTCConnection:
             self._handle_set_image_ack(message)
         elif message.type == "generation_started":
             await self._set_state("generating")
+        elif message.type == "generation_tick":
+            if self._on_generation_tick:
+                self._on_generation_tick(message)
+        elif message.type == "generation_ended":
+            # Parsed but intentionally not exposed — unreliable (won't arrive on
+            # client disconnect/network drop), overlaps with connection_change
+            # "disconnected", and insufficient_credits is already covered by error event.
+            logger.debug(f"Generation ended: reason={message.reason}, seconds={message.seconds}")
         elif message.type == "error":
             self._handle_error(message)
         elif message.type == "ready":
