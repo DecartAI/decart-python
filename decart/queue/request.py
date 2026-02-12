@@ -2,7 +2,13 @@ import aiohttp
 from typing import Any, Optional
 
 from ..models import ModelDefinition
-from ..errors import QueueSubmitError, QueueStatusError, QueueResultError
+from ..errors import (
+    QueueSubmitError,
+    QueueStatusError,
+    QueueResultError,
+    FileTooLargeError,
+    MAX_FILE_SIZE,
+)
 from .._user_agent import build_user_agent
 from ..process.request import file_input_to_bytes
 from .types import JobSubmitResponse, JobStatusResponse
@@ -26,6 +32,8 @@ async def submit_job(
         if value is not None:
             if key in ("data", "start", "end", "reference_image"):
                 content, content_type = await file_input_to_bytes(value, session)
+                if len(content) > MAX_FILE_SIZE:
+                    raise FileTooLargeError(len(content), MAX_FILE_SIZE, key)
                 form_data.add_field(key, content, content_type=content_type)
             else:
                 form_data.add_field(key, str(value))

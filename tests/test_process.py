@@ -219,3 +219,52 @@ async def test_process_includes_integration_in_user_agent() -> None:
         assert "lang/py" in headers["User-Agent"]
         assert "langchain/0.1.0" in headers["User-Agent"]
         assert headers["User-Agent"].endswith(" langchain/0.1.0")
+
+
+@pytest.mark.asyncio
+async def test_process_rejects_file_exceeding_20mb() -> None:
+    """Test that files exceeding 20MB are rejected before upload."""
+    client = DecartClient(api_key="test-key")
+
+    large_data = b"x" * (21 * 1024 * 1024)
+
+    with pytest.raises(DecartSDKError, match="exceeds the maximum allowed size of 20MB"):
+        await client.process(
+            {
+                "model": models.image("lucy-pro-i2i"),
+                "prompt": "test",
+                "data": large_data,
+            }
+        )
+
+
+@pytest.mark.asyncio
+async def test_process_accepts_file_at_20mb_limit() -> None:
+    """Test that files at exactly 20MB are accepted."""
+    client = DecartClient(api_key="test-key")
+
+    exact_data = b"x" * (20 * 1024 * 1024)
+
+    with patch("aiohttp.ClientSession") as mock_session_cls:
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.read = AsyncMock(return_value=b"fake image data")
+
+        mock_session = MagicMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.post = MagicMock()
+        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        mock_session_cls.return_value = mock_session
+
+        result = await client.process(
+            {
+                "model": models.image("lucy-pro-i2i"),
+                "prompt": "test",
+                "data": exact_data,
+            }
+        )
+
+        assert result == b"fake image data"

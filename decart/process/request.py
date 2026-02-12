@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Optional
 from ..types import FileInput
 from ..models import ModelDefinition
-from ..errors import InvalidInputError, ProcessingError
+from ..errors import InvalidInputError, ProcessingError, FileTooLargeError, MAX_FILE_SIZE
 from .._user_agent import build_user_agent
 
 
@@ -91,6 +91,8 @@ async def send_request(
         if value is not None:
             if key in ("data", "start", "end"):
                 content, content_type = await file_input_to_bytes(value, session)
+                if len(content) > MAX_FILE_SIZE:
+                    raise FileTooLargeError(len(content), MAX_FILE_SIZE, key)
                 form_data.add_field(key, content, content_type=content_type)
             else:
                 form_data.add_field(key, str(value))
