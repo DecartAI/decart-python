@@ -93,7 +93,7 @@ class QueueClient:
         inputs = {k: v for k, v in options.items() if k not in ("model", "cancel_token")}
 
         # File fields that need special handling
-        FILE_FIELDS = {"data", "start", "end"}
+        FILE_FIELDS = {"data", "start", "end", "reference_image"}
 
         # Separate file inputs from regular inputs
         file_inputs = {k: v for k, v in inputs.items() if k in FILE_FIELDS}

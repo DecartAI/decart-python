@@ -121,7 +121,6 @@ async def test_queue_submit_and_poll_completed() -> None:
         patch("decart.queue.client.get_job_content") as mock_content,
         patch("asyncio.sleep", new_callable=AsyncMock),
     ):
-
         mock_submit.return_value = MagicMock(job_id="job-123", status="pending")
         mock_status.return_value = MagicMock(job_id="job-123", status="completed")
         mock_content.return_value = b"fake video data"
@@ -147,7 +146,6 @@ async def test_queue_submit_and_poll_failed() -> None:
         patch("decart.queue.client.get_job_status") as mock_status,
         patch("asyncio.sleep", new_callable=AsyncMock),
     ):
-
         mock_submit.return_value = MagicMock(job_id="job-123", status="pending")
         mock_status.return_value = MagicMock(job_id="job-123", status="failed")
 
@@ -177,7 +175,6 @@ async def test_queue_submit_and_poll_with_callback() -> None:
         patch("decart.queue.client.get_job_content") as mock_content,
         patch("asyncio.sleep", new_callable=AsyncMock),
     ):
-
         mock_submit.return_value = MagicMock(job_id="job-123", status="pending")
         mock_status.side_effect = [
             MagicMock(job_id="job-123", status="processing"),
@@ -359,3 +356,59 @@ async def test_queue_restyle_rejects_enhance_prompt_with_reference_image() -> No
         )
 
     assert "enhance_prompt" in str(exc_info.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_queue_rejects_file_exceeding_20mb() -> None:
+    """Test that files exceeding 20MB are rejected before upload."""
+    client = DecartClient(api_key="test-key")
+
+    large_data = b"x" * (21 * 1024 * 1024)
+
+    with pytest.raises(DecartSDKError, match="exceeds the maximum allowed size of 20MB"):
+        await client.queue.submit(
+            {
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "test",
+                "data": large_data,
+            }
+        )
+
+
+@pytest.mark.asyncio
+async def test_queue_accepts_over_20mb_for_restyle() -> None:
+    """Test that lucy-restyle-v2v accepts files over 20MB (up to 100MB)."""
+    client = DecartClient(api_key="test-key")
+
+    data_50mb = b"x" * (50 * 1024 * 1024)
+
+    with patch("decart.queue.client.submit_job") as mock_submit:
+        mock_submit.return_value = MagicMock(job_id="job-restyle", status="pending")
+
+        job = await client.queue.submit(
+            {
+                "model": models.video("lucy-restyle-v2v"),
+                "prompt": "Restyle this",
+                "data": data_50mb,
+            }
+        )
+
+        assert job.job_id == "job-restyle"
+        mock_submit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_queue_rejects_file_exceeding_100mb_for_restyle() -> None:
+    """Test that lucy-restyle-v2v rejects files over 100MB."""
+    client = DecartClient(api_key="test-key")
+
+    data_101mb = b"x" * (101 * 1024 * 1024)
+
+    with pytest.raises(DecartSDKError, match="exceeds the maximum allowed size of 100MB"):
+        await client.queue.submit(
+            {
+                "model": models.video("lucy-restyle-v2v"),
+                "prompt": "Restyle this",
+                "data": data_101mb,
+            }
+        )

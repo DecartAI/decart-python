@@ -11,6 +11,8 @@ from .errors import (
     QueueStatusError,
     QueueResultError,
     TokenCreateError,
+    FileTooLargeError,
+    MAX_FILE_SIZE,
 )
 from .models import models, ModelDefinition, VideoRestyleInput
 from .types import FileInput, ModelState, Prompt
@@ -66,6 +68,8 @@ __all__ = [
     "QueueSubmitError",
     "QueueStatusError",
     "QueueResultError",
+    "FileTooLargeError",
+    "MAX_FILE_SIZE",
     "models",
     "ModelDefinition",
     "VideoRestyleInput",
