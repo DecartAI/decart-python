@@ -38,7 +38,6 @@ async def main() -> None:
                     "prompt": "Anime style with vibrant colors",
                     "data": video_file,
                     "enhance_prompt": True,
-                    "num_inference_steps": 50,
                     "on_status_change": lambda job: print(f"  Status: {job.status}"),
                 }
             )

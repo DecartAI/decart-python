@@ -74,7 +74,6 @@ class VideoToVideoInput(DecartBaseModel):
     seed: Optional[int] = None
     resolution: Optional[str] = None
     enhance_prompt: Optional[bool] = None
-    num_inference_steps: Optional[int] = None
 
 
 class FirstLastFrameInput(DecartBaseModel):
