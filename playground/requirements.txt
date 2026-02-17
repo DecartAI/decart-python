@@ -1,0 +1,10 @@
+opencv - python >= 4.8
+
+# The Decart SDK with realtime support is also required.
+# Install ONE of the following:
+#
+#   From local source (development):
+#     pip install -e ..[realtime]
+#
+#   From PyPI (published version):
+#     pip install decart[realtime]
