@@ -36,7 +36,6 @@ try:
         decode_subscribe_token,
         RealtimeConnectOptions,
         ConnectionState,
-        AvatarOptions,
     )
 
     REALTIME_AVAILABLE = True
@@ -50,7 +49,6 @@ except ImportError:
     decode_subscribe_token = None  # type: ignore
     RealtimeConnectOptions = None  # type: ignore
     ConnectionState = None  # type: ignore
-    AvatarOptions = None  # type: ignore
 
 __version__ = "0.0.1"
 
@@ -93,6 +91,5 @@ if REALTIME_AVAILABLE:
             "decode_subscribe_token",
             "RealtimeConnectOptions",
             "ConnectionState",
-            "AvatarOptions",
         ]
     )
