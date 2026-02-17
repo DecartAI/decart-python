@@ -18,6 +18,7 @@ from .subscribe import (
 )
 from .types import ConnectionState, RealtimeConnectOptions
 from ..types import FileInput
+from ..models import RealTimeModels
 from ..errors import DecartSDKError, InvalidInputError, WebRTCError
 from ..process.request import file_input_to_bytes
 
@@ -34,9 +35,13 @@ class SetInput(BaseModel):
 
 
 async def _image_to_base64(
-    image: Union[bytes, str],
+    image: Union[bytes, str, Path],
     http_session: aiohttp.ClientSession,
 ) -> str:
+    if isinstance(image, Path):
+        image_bytes, _ = await file_input_to_bytes(image, http_session)
+        return base64.b64encode(image_bytes).decode("utf-8")
+
     if isinstance(image, bytes):
         return base64.b64encode(image).decode("utf-8")
 
@@ -56,9 +61,8 @@ async def _image_to_base64(
             image_bytes, _ = await file_input_to_bytes(image, http_session)
             return base64.b64encode(image_bytes).decode("utf-8")
 
-        raise InvalidInputError(
-            "Invalid image input: string is not a data URI, URL, or valid file path"
-        )
+        # Non-URL, non-file string — treat as raw base64 (matches TS SDK behavior)
+        return image
 
 
 class RealtimeClient:
@@ -66,11 +70,11 @@ class RealtimeClient:
         self,
         manager: WebRTCManager,
         http_session: Optional[aiohttp.ClientSession] = None,
-        is_avatar_live: bool = False,
+        model_name: Optional[str] = None,
     ):
         self._manager = manager
         self._http_session = http_session
-        self._is_avatar_live = is_avatar_live
+        self._model_name = model_name
         self._connection_callbacks: list[Callable[[ConnectionState], None]] = []
         self._error_callbacks: list[Callable[[DecartSDKError], None]] = []
         self._generation_tick_callbacks: list[Callable[[GenerationTickMessage], None]] = []
@@ -105,7 +109,7 @@ class RealtimeClient:
         ws_url = f"{base_url}{options.model.url_path}"
         ws_url += f"?api_key={quote(api_key)}&model={quote(options.model.name)}"
 
-        is_avatar_live = options.model.name == "avatar-live"
+        model_name: RealTimeModels = options.model.name  # type: ignore[assignment]
 
         config = WebRTCConfiguration(
             webrtc_url=ws_url,
@@ -119,7 +123,7 @@ class RealtimeClient:
             initial_state=options.initial_state,
             customize_offer=options.customize_offer,
             integration=integration,
-            is_avatar_live=is_avatar_live,
+            model_name=model_name,
         )
 
         # Create HTTP session for file conversions
@@ -129,7 +133,7 @@ class RealtimeClient:
         client = cls(
             manager=manager,
             http_session=http_session,
-            is_avatar_live=is_avatar_live,
+            model_name=model_name,
         )
 
         config.on_connection_state_change = client._emit_connection_change
@@ -138,35 +142,22 @@ class RealtimeClient:
         config.on_generation_tick = client._emit_generation_tick
 
         try:
-            # For avatar-live, convert and send avatar image before WebRTC connection
-            avatar_image_base64: Optional[str] = None
-            if is_avatar_live and options.avatar:
-                image_bytes, _ = await file_input_to_bytes(
-                    options.avatar.avatar_image, http_session
-                )
-                avatar_image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+            initial_image: Optional[str] = None
+            if options.initial_state and options.initial_state.image:
+                initial_image = await _image_to_base64(options.initial_state.image, http_session)
 
-            # Prepare initial prompt if provided
             initial_prompt: Optional[dict] = None
-            if options.initial_prompt:
+            if options.initial_state and options.initial_state.prompt:
                 initial_prompt = {
-                    "text": options.initial_prompt.text,
-                    "enhance": options.initial_prompt.enhance,
+                    "text": options.initial_state.prompt.text,
+                    "enhance": options.initial_state.prompt.enhance,
                 }
 
             await manager.connect(
                 local_track,
-                avatar_image_base64=avatar_image_base64,
+                initial_image=initial_image,
                 initial_prompt=initial_prompt,
             )
-
-            # Handle initial_state.prompt for backward compatibility (after WebRTC connection)
-            if options.initial_state:
-                if options.initial_state.prompt:
-                    await client.set_prompt(
-                        options.initial_state.prompt.text,
-                        enhance=options.initial_state.prompt.enhance,
-                    )
         except Exception as e:
             await manager.cleanup()
             await http_session.close()

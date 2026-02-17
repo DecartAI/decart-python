@@ -366,14 +366,16 @@ def test_avatar_live_model_available():
 
 
 @pytest.mark.asyncio
-async def test_avatar_live_connect_with_avatar_image():
-    """Test avatar-live connection with avatar image option"""
+async def test_avatar_live_connect_with_initial_image():
+    """Test avatar-live connection with initial_state.image option"""
 
     client = DecartClient(api_key="test-key")
 
     with (
         patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
-        patch("decart.realtime.client.file_input_to_bytes") as mock_file_input,
+        patch(
+            "decart.realtime.client._image_to_base64", new_callable=AsyncMock
+        ) as mock_image_to_b64,
         patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
     ):
         mock_manager = AsyncMock()
@@ -381,7 +383,7 @@ async def test_avatar_live_connect_with_avatar_image():
         mock_manager.is_connected = MagicMock(return_value=True)
         mock_manager_class.return_value = mock_manager
 
-        mock_file_input.return_value = (b"fake image data", "image/png")
+        mock_image_to_b64.return_value = "base64encodedimage"
 
         mock_session = MagicMock()
         mock_session.closed = False
@@ -390,7 +392,8 @@ async def test_avatar_live_connect_with_avatar_image():
 
         mock_track = MagicMock()
 
-        from decart.realtime.types import RealtimeConnectOptions, AvatarOptions
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.types import ModelState
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
@@ -399,18 +402,18 @@ async def test_avatar_live_connect_with_avatar_image():
             options=RealtimeConnectOptions(
                 model=models.realtime("avatar-live"),
                 on_remote_stream=lambda t: None,
-                avatar=AvatarOptions(avatar_image=b"fake image bytes"),
+                initial_state=ModelState(image=b"fake image bytes"),
             ),
         )
 
         assert realtime_client is not None
-        assert realtime_client._is_avatar_live is True
-        mock_file_input.assert_called_once()
-        # Verify avatar_image_base64 was passed to connect
+        assert realtime_client._model_name == "avatar-live"
+        mock_image_to_b64.assert_called_once()
+        # Verify initial_image was passed to connect
         mock_manager.connect.assert_called_once()
         call_kwargs = mock_manager.connect.call_args[1]
-        assert "avatar_image_base64" in call_kwargs
-        assert call_kwargs["avatar_image_base64"] is not None
+        assert "initial_image" in call_kwargs
+        assert call_kwargs["initial_image"] == "base64encodedimage"
 
 
 @pytest.mark.asyncio
@@ -990,7 +993,7 @@ async def test_set_converts_bytes_image():
 
 @pytest.mark.asyncio
 async def test_connect_with_initial_prompt():
-    """Test connection with initial_prompt option"""
+    """Test connection with initial_state.prompt option"""
 
     client = DecartClient(api_key="test-key")
 
@@ -1010,7 +1013,8 @@ async def test_connect_with_initial_prompt():
 
         mock_track = MagicMock()
 
-        from decart.realtime.types import RealtimeConnectOptions, InitialPromptOptions
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.types import ModelState, Prompt
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.base_url,
@@ -1019,7 +1023,7 @@ async def test_connect_with_initial_prompt():
             options=RealtimeConnectOptions(
                 model=models.realtime("mirage"),
                 on_remote_stream=lambda t: None,
-                initial_prompt=InitialPromptOptions(text="Test prompt", enhance=False),
+                initial_state=ModelState(prompt=Prompt(text="Test prompt", enhance=False)),
             ),
         )
 
@@ -1028,3 +1032,65 @@ async def test_connect_with_initial_prompt():
         call_kwargs = mock_manager.connect.call_args[1]
         assert "initial_prompt" in call_kwargs
         assert call_kwargs["initial_prompt"] == {"text": "Test prompt", "enhance": False}
+
+
+@pytest.mark.asyncio
+async def test_image_to_base64_raw_base64_string():
+    """Raw base64 string (not a URL, data URI, or file path) is returned as-is."""
+    from decart.realtime.client import _image_to_base64
+
+    mock_session = MagicMock()
+    raw = "iVBORw0KGgoAAAANSUhEUgAAAAUA"
+    result = await _image_to_base64(raw, mock_session)
+    assert result == raw
+
+
+@pytest.mark.asyncio
+async def test_image_to_base64_path_object(tmp_path):
+    """pathlib.Path input is read and base64-encoded."""
+    import base64
+    from decart.realtime.client import _image_to_base64
+
+    img = tmp_path / "test.png"
+    img.write_bytes(b"\x89PNG_FAKE_DATA")
+
+    mock_session = MagicMock()
+    result = await _image_to_base64(img, mock_session)
+    assert result == base64.b64encode(b"\x89PNG_FAKE_DATA").decode("utf-8")
+
+
+@pytest.mark.asyncio
+async def test_image_to_base64_bytes():
+    """bytes input is base64-encoded."""
+    import base64
+    from decart.realtime.client import _image_to_base64
+
+    mock_session = MagicMock()
+    data = b"raw-image-bytes"
+    result = await _image_to_base64(data, mock_session)
+    assert result == base64.b64encode(data).decode("utf-8")
+
+
+@pytest.mark.asyncio
+async def test_image_to_base64_data_uri():
+    """data: URI has its base64 payload extracted."""
+    from decart.realtime.client import _image_to_base64
+
+    mock_session = MagicMock()
+    uri = "data:image/png;base64,abc123payload"
+    result = await _image_to_base64(uri, mock_session)
+    assert result == "abc123payload"
+
+
+@pytest.mark.asyncio
+async def test_image_to_base64_file_path_string(tmp_path):
+    """String that is a valid local file path is read and base64-encoded."""
+    import base64
+    from decart.realtime.client import _image_to_base64
+
+    img = tmp_path / "avatar.png"
+    img.write_bytes(b"PNGDATA")
+
+    mock_session = MagicMock()
+    result = await _image_to_base64(str(img), mock_session)
+    assert result == base64.b64encode(b"PNGDATA").decode("utf-8")

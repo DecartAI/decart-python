@@ -73,7 +73,7 @@ async def main():
         print("Creating synthetic video track...")
         video_track = SyntheticVideoTrack()
 
-        model = models.realtime("mirage_v2")
+        model = models.realtime("lucy_2_rt")
         print(f"Using model: {model.name}")
         print(f"Model config - FPS: {model.fps}, Size: {model.width}x{model.height}")
 
@@ -111,7 +111,13 @@ async def main():
                 options=RealtimeConnectOptions(
                     model=model,
                     on_remote_stream=on_remote_stream,
-                    initial_state=ModelState(prompt=Prompt(text="Anime style", enhance=True)),
+                    initial_state=ModelState(
+                        prompt=Prompt(
+                            text="use the image as a reference",
+                            enhance=True,
+                        ),
+                        image=Path("examples/files/image.png"),
+                    ),
                 ),
             )
 

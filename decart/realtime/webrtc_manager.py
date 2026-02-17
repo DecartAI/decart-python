@@ -48,7 +48,7 @@ class WebRTCConfiguration:
     initial_state: Optional[ModelState] = None
     customize_offer: Optional[Callable] = None
     integration: Optional[str] = None
-    is_avatar_live: bool = False
+    model_name: Optional[str] = None
 
 
 def _is_permanent_error(exception: BaseException) -> bool:
@@ -155,7 +155,7 @@ class WebRTCManager:
                 local_track=self._local_track,
                 timeout=CONNECTION_TIMEOUT,
                 integration=self._config.integration,
-                is_avatar_live=self._config.is_avatar_live,
+                model_name=self._config.model_name,
             )
 
             if self._intentional_disconnect or reconnect_generation != self._reconnect_generation:
@@ -174,7 +174,7 @@ class WebRTCManager:
     async def connect(
         self,
         local_track: Optional[MediaStreamTrack],
-        avatar_image_base64: Optional[str] = None,
+        initial_image: Optional[str] = None,
         initial_prompt: Optional[dict] = None,
     ) -> bool:
         self._local_track = local_track
@@ -192,8 +192,8 @@ class WebRTCManager:
                 local_track=local_track,
                 timeout=CONNECTION_TIMEOUT,
                 integration=self._config.integration,
-                is_avatar_live=self._config.is_avatar_live,
-                avatar_image_base64=avatar_image_base64,
+                model_name=self._config.model_name,
+                initial_image=initial_image,
                 initial_prompt=initial_prompt,
             )
             return True

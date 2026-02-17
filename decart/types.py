@@ -20,6 +20,7 @@ class Prompt(BaseModel):
 
 class ModelState(BaseModel):
     prompt: Optional[Prompt] = None
+    image: Optional[Union[bytes, str, Path]] = None
 
 
 class MotionTrajectoryInput(BaseModel):

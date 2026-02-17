@@ -76,7 +76,8 @@ async def main():
 
     try:
         from decart.realtime.client import RealtimeClient
-        from decart.realtime.types import RealtimeConnectOptions, AvatarOptions
+        from decart.realtime.types import RealtimeConnectOptions
+        from decart.types import ModelState
     except ImportError:
         print("Error: Realtime API not available")
         print("Install with: pip install decart[realtime]")
@@ -120,7 +121,7 @@ async def main():
                 options=RealtimeConnectOptions(
                     model=model,
                     on_remote_stream=on_remote_stream,
-                    avatar=AvatarOptions(avatar_image=Path(avatar_image)),
+                    initial_state=ModelState(image=avatar_image),
                 ),
             )
 
