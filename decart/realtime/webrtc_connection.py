@@ -61,7 +61,7 @@ class WebRTCConnection:
         self._pending_prompts: dict[str, tuple[asyncio.Event, dict]] = {}
         self._pending_image_set: Optional[tuple[asyncio.Event, dict]] = None
         self._local_track: Optional[MediaStreamTrack] = None
-        self._is_avatar_live: bool = False
+        self._model_name: Optional[str] = None
 
     async def connect(
         self,
@@ -69,13 +69,13 @@ class WebRTCConnection:
         local_track: Optional[MediaStreamTrack],
         timeout: float,
         integration: Optional[str] = None,
-        is_avatar_live: bool = False,
-        avatar_image_base64: Optional[str] = None,
+        model_name: Optional[str] = None,
+        initial_image: Optional[str] = None,
         initial_prompt: Optional[dict] = None,
     ) -> None:
         try:
             self._local_track = local_track
-            self._is_avatar_live = is_avatar_live
+            self._model_name = model_name
 
             await self._set_state("connecting")
 
@@ -90,13 +90,16 @@ class WebRTCConnection:
 
             self._ws_task = asyncio.create_task(self._receive_messages())
 
-            if is_avatar_live and avatar_image_base64:
-                await self._send_avatar_image_and_wait(avatar_image_base64)
-
-            if initial_prompt:
+            if initial_image:
+                await self._send_initial_image_and_wait(
+                    initial_image,
+                    prompt=initial_prompt.get("text") if initial_prompt else None,
+                    enhance=initial_prompt.get("enhance") if initial_prompt else None,
+                )
+            elif initial_prompt:
                 await self._send_initial_prompt_and_wait(initial_prompt)
 
-            await self._setup_peer_connection(local_track, is_avatar_live=is_avatar_live)
+            await self._setup_peer_connection(local_track, model_name=model_name)
 
             await self._create_and_send_offer()
 
@@ -115,23 +118,32 @@ class WebRTCConnection:
                 self._on_error(e)
             raise WebRTCError(str(e), cause=e)
 
-    async def _send_avatar_image_and_wait(self, image_base64: str, timeout: float = 30.0) -> None:
-        """Send avatar image and wait for acknowledgment."""
+    async def _send_initial_image_and_wait(
+        self,
+        image_base64: str,
+        prompt: Optional[str] = None,
+        enhance: Optional[bool] = None,
+        timeout: float = 30.0,
+    ) -> None:
         event, result = self.register_image_set_wait()
 
         try:
-            await self._send_message(
-                SetAvatarImageMessage(type="set_image", image_data=image_base64)
-            )
+            message = SetAvatarImageMessage(type="set_image", image_data=image_base64)
+            if prompt is not None:
+                message.prompt = prompt
+            if enhance is not None:
+                message.enhance_prompt = enhance
+
+            await self._send_message(message)
 
             try:
                 await asyncio.wait_for(event.wait(), timeout=timeout)
             except asyncio.TimeoutError:
-                raise WebRTCError("Avatar image acknowledgment timed out")
+                raise WebRTCError("Initial image acknowledgment timed out")
 
             if not result["success"]:
                 raise WebRTCError(
-                    f"Failed to set avatar image: {result.get('error', 'unknown error')}"
+                    f"Failed to set initial image: {result.get('error', 'unknown error')}"
                 )
         finally:
             self.unregister_image_set_wait()
@@ -163,7 +175,7 @@ class WebRTCConnection:
     async def _setup_peer_connection(
         self,
         local_track: Optional[MediaStreamTrack],
-        is_avatar_live: bool = False,
+        model_name: Optional[str] = None,
     ) -> None:
         config = RTCConfiguration(iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])])
 
@@ -205,8 +217,12 @@ class WebRTCConnection:
 
         if local_track is None:
             self._pc.addTransceiver("video", direction="recvonly")
-            logger.debug("Added video transceiver (recvonly) for receive-only mode")
+            self._pc.addTransceiver("audio", direction="recvonly")
+            logger.debug("Added video+audio transceivers (recvonly) for subscribe mode")
         else:
+            if model_name == "avatar-live":
+                self._pc.addTransceiver("video", direction="recvonly")
+                logger.debug("Added video transceiver (recvonly) for avatar-live mode")
             self._pc.addTrack(local_track)
             logger.debug("Added local track to peer connection")
 
