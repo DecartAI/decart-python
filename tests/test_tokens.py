@@ -66,3 +66,51 @@ async def test_create_token_403_error() -> None:
     with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
         with pytest.raises(TokenCreateError, match="Failed to create token"):
             await client.tokens.create()
+
+
+@pytest.mark.asyncio
+async def test_create_token_with_metadata() -> None:
+    """Sends metadata as JSON body when provided."""
+    client = DecartClient(api_key="test-api-key")
+
+    mock_response = AsyncMock()
+    mock_response.ok = True
+    mock_response.json = AsyncMock(
+        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+    )
+
+    mock_session = MagicMock()
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
+        result = await client.tokens.create(metadata={"role": "viewer"})
+
+    assert result.api_key == "ek_test123"
+    assert result.expires_at == "2024-12-15T12:10:00Z"
+    call_kwargs = mock_session.post.call_args
+    assert call_kwargs.kwargs["json"] == {"metadata": {"role": "viewer"}}
+
+
+@pytest.mark.asyncio
+async def test_create_token_without_metadata_sends_null() -> None:
+    """Sends JSON body with null metadata when none provided."""
+    client = DecartClient(api_key="test-api-key")
+
+    mock_response = AsyncMock()
+    mock_response.ok = True
+    mock_response.json = AsyncMock(
+        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+    )
+
+    mock_session = MagicMock()
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
+        await client.tokens.create()
+
+    call_kwargs = mock_session.post.call_args
+    assert call_kwargs.kwargs["json"] == {}

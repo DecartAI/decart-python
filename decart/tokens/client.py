@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 
@@ -20,6 +20,9 @@ class TokensClient:
         client = DecartClient(api_key=os.getenv("DECART_API_KEY"))
         token = await client.tokens.create()
         # Returns: CreateTokenResponse(api_key="ek_...", expires_at="...")
+
+        # With metadata:
+        token = await client.tokens.create(metadata={"role": "viewer"})
         ```
     """
 
@@ -29,9 +32,16 @@ class TokensClient:
     async def _get_session(self) -> aiohttp.ClientSession:
         return await self._parent._get_session()
 
-    async def create(self) -> CreateTokenResponse:
+    async def create(
+        self,
+        *,
+        metadata: dict[str, Any] | None = None,
+    ) -> CreateTokenResponse:
         """
         Create a client token.
+
+        Args:
+            metadata: Optional custom key-value pairs to attach to the token.
 
         Returns:
             A short-lived API key safe for client-side use.
@@ -40,6 +50,9 @@ class TokensClient:
             ```python
             token = await client.tokens.create()
             # Returns: CreateTokenResponse(api_key="ek_...", expires_at="...")
+
+            # With metadata:
+            token = await client.tokens.create(metadata={"role": "viewer"})
             ```
 
         Raises:
@@ -48,12 +61,17 @@ class TokensClient:
         session = await self._get_session()
         endpoint = f"{self._parent.base_url}/v1/client/tokens"
 
+        headers = {
+            "X-API-KEY": self._parent.api_key,
+            "User-Agent": build_user_agent(self._parent.integration),
+        }
+
+        body = {"metadata": metadata} if metadata is not None else {}
+
         async with session.post(
             endpoint,
-            headers={
-                "X-API-KEY": self._parent.api_key,
-                "User-Agent": build_user_agent(self._parent.integration),
-            },
+            headers=headers,
+            json=body,
         ) as response:
             if not response.ok:
                 error_text = await response.text()
