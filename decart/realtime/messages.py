@@ -72,21 +72,6 @@ class ReadyMessage(BaseModel):
     type: Literal["ready"]
 
 
-class TurnConfig(BaseModel):
-    """TURN server configuration."""
-
-    username: str
-    credential: str
-    server_url: str
-
-
-class IceRestartMessage(BaseModel):
-    """ICE restart message with TURN config."""
-
-    type: Literal["ice-restart"]
-    turn_config: TurnConfig
-
-
 class GenerationStartedMessage(BaseModel):
     """Server signals that generation has started."""
 
@@ -118,7 +103,6 @@ IncomingMessage = Annotated[
         SetImageAckMessage,
         ErrorMessage,
         ReadyMessage,
-        IceRestartMessage,
         GenerationStartedMessage,
         GenerationTickMessage,
         GenerationEndedMessage,

@@ -26,7 +26,6 @@ from .messages import (
     SetImageAckMessage,
     SetAvatarImageMessage,
     ErrorMessage,
-    IceRestartMessage,
     SessionIdMessage,
     GenerationTickMessage,
     OutgoingMessage,
@@ -295,8 +294,6 @@ class WebRTCConnection:
             self._handle_error(message)
         elif message.type == "ready":
             logger.debug("Received ready signal from server")
-        elif message.type == "ice-restart":
-            await self._handle_ice_restart(message)
 
     async def _handle_answer(self, sdp: str) -> None:
         logger.debug("Received answer from server")
@@ -349,67 +346,6 @@ class WebRTCConnection:
         error = WebRTCError(message.error)
         if self._on_error:
             self._on_error(error)
-
-    async def _handle_ice_restart(self, message: IceRestartMessage) -> None:
-        logger.info("Received ICE restart request from server")
-        turn_config = message.turn_config
-        # Re-setup peer connection with TURN server
-        await self._setup_peer_connection_with_turn(turn_config)
-
-    async def _setup_peer_connection_with_turn(self, turn_config) -> None:
-        ice_servers = [
-            RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
-            RTCIceServer(
-                urls=[turn_config.server_url],
-                username=turn_config.username,
-                credential=turn_config.credential,
-            ),
-        ]
-        config = RTCConfiguration(iceServers=ice_servers)
-
-        if self._pc:
-            await self._pc.close()
-
-        self._pc = RTCPeerConnection(configuration=config)
-        logger.debug("Re-created peer connection with TURN server for ICE restart")
-
-        @self._pc.on("track")
-        def on_track(track: MediaStreamTrack):
-            logger.debug(f"Received remote track: {track.kind}")
-            if self._on_remote_stream:
-                self._on_remote_stream(track)
-
-        @self._pc.on("icecandidate")
-        async def on_ice_candidate(candidate: RTCIceCandidate):
-            if candidate:
-                logger.debug(f"Local ICE candidate: {candidate.candidate}")
-                await self._send_message(
-                    IceCandidateMessage(
-                        type="ice-candidate",
-                        candidate=IceCandidatePayload(
-                            candidate=candidate.candidate,
-                            sdpMLineIndex=candidate.sdpMLineIndex or 0,
-                            sdpMid=candidate.sdpMid or "",
-                        ),
-                    )
-                )
-
-        @self._pc.on("connectionstatechange")
-        async def on_connection_state_change():
-            logger.debug(f"Peer connection state: {self._pc.connectionState}")
-            if self._pc.connectionState == "connected":
-                await self._set_state("connected")
-            elif self._pc.connectionState in ["failed", "closed"]:
-                await self._set_state("disconnected")
-
-        if self._local_track is None:
-            self._pc.addTransceiver("video", direction="recvonly")
-            logger.debug("Added video transceiver (recvonly) for receive-only ICE restart")
-        else:
-            self._pc.addTrack(self._local_track)
-            logger.debug("Re-added local track to peer connection for ICE restart")
-
-        await self._create_and_send_offer()
 
     def register_image_set_wait(self) -> tuple[asyncio.Event, dict]:
         event = asyncio.Event()
