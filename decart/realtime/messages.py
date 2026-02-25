@@ -171,4 +171,9 @@ def message_to_json(message: OutgoingMessage) -> str:
     Returns:
         JSON string
     """
+    # SetAvatarImageMessage uses exclude_unset so explicitly-passed None values
+    # (e.g. image_data=None, prompt=None for passthrough) are serialized as null,
+    # while fields that were never set are omitted.
+    if isinstance(message, SetAvatarImageMessage):
+        return message.model_dump_json(exclude_unset=True)
     return message.model_dump_json(exclude_none=True)
