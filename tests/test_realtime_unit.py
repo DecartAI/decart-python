@@ -1188,7 +1188,7 @@ async def test_subscribe_mode_skips_passthrough():
         mock_manager_class.return_value = mock_manager
 
         # subscribe() passes local_track=None internally
-        from decart.realtime.subscribe import SubscribeClient, encode_subscribe_token
+        from decart.realtime.subscribe import encode_subscribe_token
 
         token = encode_subscribe_token("test-sid", "1.2.3.4", 8080)
 

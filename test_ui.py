@@ -14,7 +14,6 @@ import gradio as gr
 from pathlib import Path
 from typing import Optional
 import tempfile
-import os
 
 # Import the SDK
 from decart import DecartClient, models
@@ -297,7 +296,7 @@ async def process_video_i2v(
 
         with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
             f.write(result.data)
-            return f.name, f"Success! Generated video from image"
+            return f.name, "Success! Generated video from image"
 
     except Exception as e:
         return None, f"Error: {str(e)}"
