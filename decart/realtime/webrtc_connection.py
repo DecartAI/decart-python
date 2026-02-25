@@ -97,7 +97,9 @@ class WebRTCConnection:
                 )
             elif initial_prompt:
                 await self._send_initial_prompt_and_wait(initial_prompt)
-
+            elif local_track is not None:
+                # No image and no prompt — send passthrough (skip for subscribe mode which has no local stream)
+                await self._send_passthrough_and_wait()
             await self._setup_peer_connection(local_track, model_name=model_name)
 
             await self._create_and_send_offer()
@@ -170,6 +172,31 @@ class WebRTCConnection:
                 )
         finally:
             self.unregister_prompt_wait(prompt_text)
+
+    async def _send_passthrough_and_wait(self, timeout: float = 30.0) -> None:
+        """Send passthrough set_image (null image + null prompt) and wait for ack.
+
+        When connecting without an initial prompt or image, the server still
+        expects an explicit initial state.  Sending image_data=null + prompt=null
+        tells the server to use passthrough mode.
+        """
+        event, result = self.register_image_set_wait()
+
+        try:
+            message = SetAvatarImageMessage(type="set_image", image_data=None, prompt=None)
+            await self._send_message(message)
+
+            try:
+                await asyncio.wait_for(event.wait(), timeout=timeout)
+            except asyncio.TimeoutError:
+                raise WebRTCError("Passthrough acknowledgment timed out")
+
+            if not result["success"]:
+                raise WebRTCError(
+                    f"Failed to send passthrough: {result.get('error', 'unknown error')}"
+                )
+        finally:
+            self.unregister_image_set_wait()
 
     async def _setup_peer_connection(
         self,
@@ -344,6 +371,20 @@ class WebRTCConnection:
     def _handle_error(self, message: ErrorMessage) -> None:
         logger.error(f"Received error from server: {message.error}")
         error = WebRTCError(message.error)
+
+        # Fail-fast: resolve any pending Phase-2 waits so they surface the
+        # real server error instead of timing out after 30 s.
+        if self._pending_image_set:
+            event, result = self._pending_image_set
+            result["success"] = False
+            result["error"] = message.error
+            event.set()
+
+        for _prompt, (event, result) in list(self._pending_prompts.items()):
+            result["success"] = False
+            result["error"] = message.error
+            event.set()
+
         if self._on_error:
             self._on_error(error)
 
