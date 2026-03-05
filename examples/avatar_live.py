@@ -115,7 +115,7 @@ async def main():
 
         try:
             realtime_client = await RealtimeClient.connect(
-                base_url=client.base_url,
+                base_url=client.realtime_base_url,
                 api_key=client.api_key,
                 local_track=audio_track,  # Can be None if no audio
                 options=RealtimeConnectOptions(

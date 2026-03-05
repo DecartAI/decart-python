@@ -79,7 +79,7 @@ async def main():
             from decart.types import ModelState, Prompt
 
             realtime_client = await RealtimeClient.connect(
-                base_url=client.base_url,
+                base_url=client.realtime_base_url,
                 api_key=client.api_key,
                 local_track=player.video,
                 options=RealtimeConnectOptions(

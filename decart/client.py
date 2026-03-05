@@ -23,7 +23,8 @@ class DecartClient:
 
     Args:
         api_key: Your Decart API key. Defaults to the DECART_API_KEY environment variable.
-        base_url: API base URL (defaults to production)
+        base_url: API base URL for batch/process/queue endpoints (defaults to https://api.decart.ai)
+        realtime_base_url: WebSocket base URL for realtime streaming (defaults to wss://api3.decart.ai)
         integration: Optional integration identifier (e.g., "langchain/0.1.0")
 
     Example:
@@ -52,6 +53,7 @@ class DecartClient:
         self,
         api_key: Optional[str] = None,
         base_url: str = "https://api.decart.ai",
+        realtime_base_url: str = "wss://api3.decart.ai",
         integration: Optional[str] = None,
     ) -> None:
         resolved_api_key = api_key or os.environ.get("DECART_API_KEY", "").strip() or None
@@ -64,6 +66,7 @@ class DecartClient:
 
         self.api_key = resolved_api_key
         self.base_url = base_url
+        self.realtime_base_url = realtime_base_url
         self.integration = integration
         self._session: Optional[aiohttp.ClientSession] = None
         self._queue: Optional[QueueClient] = None
