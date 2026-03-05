@@ -29,7 +29,7 @@ class RealtimeLipsyncClient:
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://api.decart.ai",
+        base_url: str = "wss://api3.decart.ai",
         audio_sample_rate: int = 16000,
         video_fps: int = VIDEO_FPS,
         sync_latency: float = 0.0,

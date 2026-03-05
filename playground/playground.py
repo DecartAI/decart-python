@@ -321,7 +321,7 @@ async def run() -> None:
         client = DecartClient(api_key=api_key)
 
         realtime = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=local_track,
             options=RealtimeConnectOptions(

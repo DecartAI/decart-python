@@ -82,7 +82,7 @@ async def test_realtime_client_creation_with_mock():
         from decart.types import ModelState, Prompt
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -143,7 +143,7 @@ async def test_realtime_set_prompt_with_mock():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -182,7 +182,7 @@ async def test_buffered_events_delivered_after_handler_registration():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -219,7 +219,7 @@ async def test_realtime_events():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -281,7 +281,7 @@ async def test_realtime_set_prompt_timeout():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -328,7 +328,7 @@ async def test_realtime_set_prompt_server_error():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -396,7 +396,7 @@ async def test_avatar_live_connect_with_initial_image():
         from decart.types import ModelState
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -444,7 +444,7 @@ async def test_avatar_live_set_image():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -487,7 +487,7 @@ async def test_set_image_works_for_any_model():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -524,7 +524,7 @@ async def test_set_image_null_clears_image():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -565,7 +565,7 @@ async def test_set_image_with_prompt_and_enhance():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -610,7 +610,7 @@ async def test_avatar_live_set_image_timeout():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -655,7 +655,7 @@ async def test_avatar_live_set_image_server_error():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -698,7 +698,7 @@ async def test_set_rejects_when_neither_prompt_nor_image():
         from decart.errors import InvalidInputError
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -736,7 +736,7 @@ async def test_set_rejects_empty_prompt():
         from decart.errors import InvalidInputError
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -774,7 +774,7 @@ async def test_set_sends_prompt_only():
         from decart.realtime.client import SetInput
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -820,7 +820,7 @@ async def test_set_sends_prompt_with_enhance():
         from decart.realtime.client import SetInput
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -869,7 +869,7 @@ async def test_set_sends_image_only():
         from decart.realtime.client import SetInput
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -919,7 +919,7 @@ async def test_set_sends_prompt_and_image():
         from decart.realtime.client import SetInput
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -968,7 +968,7 @@ async def test_set_converts_bytes_image():
         from decart.realtime.client import SetInput
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -1017,7 +1017,7 @@ async def test_connect_with_initial_prompt():
         from decart.types import ModelState, Prompt
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -1123,7 +1123,7 @@ async def test_connect_without_initial_state_sends_passthrough():
         from decart.realtime.types import RealtimeConnectOptions
 
         realtime_client = await RealtimeClient.connect(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
@@ -1195,7 +1195,7 @@ async def test_subscribe_mode_skips_passthrough():
         from decart.realtime.subscribe import SubscribeOptions
 
         sub_client = await RealtimeClient.subscribe(
-            base_url=client.base_url,
+            base_url=client.realtime_base_url,
             api_key=client.api_key,
             options=SubscribeOptions(
                 token=token,
