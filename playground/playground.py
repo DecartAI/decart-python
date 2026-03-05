@@ -91,9 +91,9 @@ logger = logging.getLogger("playground")
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-REALTIME_MODELS = ["mirage", "mirage_v2", "lucy_v2v_720p_rt", "lucy_2_rt", "avatar-live"]
+REALTIME_MODELS = ["mirage", "mirage_v2", "lucy_v2v_720p_rt", "lucy_2_rt", "live_avatar"]
 CAMERA_MODELS = {"mirage", "mirage_v2", "lucy_v2v_720p_rt", "lucy_2_rt"}
-AVATAR_MODELS = {"avatar-live"}
+AVATAR_MODELS = {"live_avatar"}
 
 BANNER = """
 ╔══════════════════════════════════════╗
