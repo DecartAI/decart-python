@@ -63,8 +63,8 @@ async def main():
     if audio_file:
         print(f"🔊 Audio file: {audio_file}")
 
-    # Load audio if provided
     audio_track = None
+
     if audio_file:
         print("Loading audio file...")
         player = MediaPlayer(audio_file)
@@ -131,12 +131,15 @@ async def main():
             print("✓ Connected!")
             print(f"Session ID: {realtime_client.session_id}")
 
-            if audio_file:
-                print("\nPlaying audio through avatar...")
-                print("(The avatar will animate based on the audio)")
+            if audio_file and not audio_track:
+                print("\nPlaying audio via play_audio()...")
+                await realtime_client.play_audio(audio_file)
+                print("✓ Audio playback complete")
+            elif audio_file:
+                print("\nStreaming audio through avatar via MediaStreamTrack...")
             else:
-                print("\nNo audio provided - avatar will be static")
-                print("You can update the avatar image dynamically using set_image()")
+                print("\nNo audio provided - avatar will be idle")
+                print("You can play audio dynamically using play_audio()")
 
             print("\nPress Ctrl+C to stop and save the recording...")
 
