@@ -85,7 +85,7 @@ async def main():
 
     print("\nCreating Decart client...")
     async with DecartClient(api_key=api_key) as client:
-        model = models.realtime("avatar-live")
+        model = models.realtime("live_avatar")
         print(f"Using model: {model.name}")
 
         frame_count = 0

@@ -246,7 +246,7 @@ class WebRTCConnection:
             self._pc.addTransceiver("audio", direction="recvonly")
             logger.debug("Added video+audio transceivers (recvonly) for subscribe mode")
         else:
-            if model_name == "avatar-live":
+            if model_name == "live_avatar":
                 self._pc.addTransceiver("video", direction="recvonly")
                 logger.debug("Added video transceiver (recvonly) for avatar-live mode")
             self._pc.addTrack(local_track)

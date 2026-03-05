@@ -18,12 +18,12 @@ def test_realtime_models() -> None:
     assert model.url_path == "/v1/stream"
 
     # avatar-live model
-    model = models.realtime("avatar-live")
-    assert model.name == "avatar-live"
+    model = models.realtime("live_avatar")
+    assert model.name == "live_avatar"
     assert model.fps == 25
     assert model.width == 1280
     assert model.height == 720
-    assert model.url_path == "/v1/avatar-live/stream"
+    assert model.url_path == "/v1/stream"
 
 
 def test_video_models() -> None:

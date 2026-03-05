@@ -357,12 +357,12 @@ async def test_realtime_set_prompt_server_error():
 
 def test_avatar_live_model_available():
     """Test that avatar-live model is available"""
-    model = models.realtime("avatar-live")
-    assert model.name == "avatar-live"
+    model = models.realtime("live_avatar")
+    assert model.name == "live_avatar"
     assert model.fps == 25
     assert model.width == 1280
     assert model.height == 720
-    assert model.url_path == "/v1/avatar-live/stream"
+    assert model.url_path == "/v1/stream"
 
 
 @pytest.mark.asyncio
@@ -400,14 +400,14 @@ async def test_avatar_live_connect_with_initial_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("avatar-live"),
+                model=models.realtime("live_avatar"),
                 on_remote_stream=lambda t: None,
                 initial_state=ModelState(image=b"fake image bytes"),
             ),
         )
 
         assert realtime_client is not None
-        assert realtime_client._model_name == "avatar-live"
+        assert realtime_client._model_name == "live_avatar"
         mock_image_to_b64.assert_called_once()
         # Verify initial_image was passed to connect
         mock_manager.connect.assert_called_once()
@@ -448,7 +448,7 @@ async def test_avatar_live_set_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("avatar-live"),
+                model=models.realtime("live_avatar"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -614,7 +614,7 @@ async def test_avatar_live_set_image_timeout():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("avatar-live"),
+                model=models.realtime("live_avatar"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -659,7 +659,7 @@ async def test_avatar_live_set_image_server_error():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("avatar-live"),
+                model=models.realtime("live_avatar"),
                 on_remote_stream=lambda t: None,
             ),
         )
