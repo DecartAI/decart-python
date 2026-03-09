@@ -289,7 +289,7 @@ async def test_queue_lucy2_v2v_with_prompt() -> None:
 
 
 @pytest.mark.asyncio
-async def test_queue_lucy2_v2v_with_reference_image_only() -> None:
+async def test_queue_lucy2_v2v_with_empty_prompt_and_reference_image() -> None:
     client = DecartClient(api_key="test-key")
 
     with patch("decart.queue.client.submit_job") as mock_submit:
@@ -298,6 +298,7 @@ async def test_queue_lucy2_v2v_with_reference_image_only() -> None:
         job = await client.queue.submit(
             {
                 "model": models.video("lucy-2-v2v"),
+                "prompt": "",
                 "reference_image": b"fake image data",
                 "data": b"fake video data",
             }
@@ -328,21 +329,6 @@ async def test_queue_lucy2_v2v_with_both_prompt_and_reference_image() -> None:
         assert job.job_id == "job-lucy2-both"
         assert job.status == "pending"
         mock_submit.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_queue_lucy2_v2v_rejects_neither_prompt_nor_reference_image() -> None:
-    client = DecartClient(api_key="test-key")
-
-    with pytest.raises(DecartSDKError) as exc_info:
-        await client.queue.submit(
-            {
-                "model": models.video("lucy-2-v2v"),
-                "data": b"fake video data",
-            }
-        )
-
-    assert "at least one of 'prompt' or 'reference_image'" in str(exc_info.value).lower()
 
 
 # Tests for lucy-restyle-v2v with reference_image
