@@ -129,22 +129,16 @@ class VideoRestyleInput(DecartBaseModel):
 class VideoEdit2Input(DecartBaseModel):
     """Input for lucy-2-v2v model.
 
-    Must provide at least one of `prompt` or `reference_image`.
-    Both can be provided together.
+    Prompt is required but can be an empty string.
+    Optional reference_image can also be provided.
     """
 
-    prompt: Optional[str] = Field(default=None, min_length=1, max_length=1000)
+    prompt: str = Field(..., max_length=1000)
     reference_image: Optional[FileInput] = None
     data: FileInput
     seed: Optional[int] = None
     resolution: Optional[str] = None
     enhance_prompt: Optional[bool] = None
-
-    @model_validator(mode="after")
-    def validate_prompt_or_reference_image(self) -> "VideoEdit2Input":
-        if self.prompt is None and self.reference_image is None:
-            raise ValueError("Must provide at least one of 'prompt' or 'reference_image'")
-        return self
 
 
 class TextToImageInput(BaseModel):
