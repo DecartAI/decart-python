@@ -46,6 +46,15 @@ def test_image_models() -> None:
     assert model.url_path == "/v1/generate/lucy-pro-t2i"
 
 
+def test_lucy_2_v2v_model() -> None:
+    model = models.video("lucy-2-v2v")
+    assert model.name == "lucy-2-v2v"
+    assert model.url_path == "/v1/generate/lucy-2-v2v"
+    assert model.fps == 20
+    assert model.width == 1280
+    assert model.height == 720
+
+
 def test_invalid_model() -> None:
     with pytest.raises(DecartSDKError):
         models.video("invalid-model")

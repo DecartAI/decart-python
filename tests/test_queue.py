@@ -263,6 +263,88 @@ async def test_queue_includes_user_agent_header() -> None:
         assert headers["User-Agent"].startswith("decart-python-sdk/")
 
 
+# Tests for lucy-2-v2v
+
+
+@pytest.mark.asyncio
+async def test_queue_lucy2_v2v_with_prompt() -> None:
+    client = DecartClient(api_key="test-key")
+
+    with patch("decart.queue.client.submit_job") as mock_submit:
+        mock_submit.return_value = MagicMock(job_id="job-lucy2", status="pending")
+
+        job = await client.queue.submit(
+            {
+                "model": models.video("lucy-2-v2v"),
+                "prompt": "Transform the scene",
+                "data": b"fake video data",
+                "enhance_prompt": True,
+                "seed": 42,
+            }
+        )
+
+        assert job.job_id == "job-lucy2"
+        assert job.status == "pending"
+        mock_submit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_queue_lucy2_v2v_with_reference_image_only() -> None:
+    client = DecartClient(api_key="test-key")
+
+    with patch("decart.queue.client.submit_job") as mock_submit:
+        mock_submit.return_value = MagicMock(job_id="job-lucy2-ref", status="pending")
+
+        job = await client.queue.submit(
+            {
+                "model": models.video("lucy-2-v2v"),
+                "reference_image": b"fake image data",
+                "data": b"fake video data",
+            }
+        )
+
+        assert job.job_id == "job-lucy2-ref"
+        assert job.status == "pending"
+        mock_submit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_queue_lucy2_v2v_with_both_prompt_and_reference_image() -> None:
+    client = DecartClient(api_key="test-key")
+
+    with patch("decart.queue.client.submit_job") as mock_submit:
+        mock_submit.return_value = MagicMock(job_id="job-lucy2-both", status="pending")
+
+        job = await client.queue.submit(
+            {
+                "model": models.video("lucy-2-v2v"),
+                "prompt": "Transform the scene",
+                "reference_image": b"fake image data",
+                "data": b"fake video data",
+                "seed": 123,
+            }
+        )
+
+        assert job.job_id == "job-lucy2-both"
+        assert job.status == "pending"
+        mock_submit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_queue_lucy2_v2v_rejects_neither_prompt_nor_reference_image() -> None:
+    client = DecartClient(api_key="test-key")
+
+    with pytest.raises(DecartSDKError) as exc_info:
+        await client.queue.submit(
+            {
+                "model": models.video("lucy-2-v2v"),
+                "data": b"fake video data",
+            }
+        )
+
+    assert "at least one of 'prompt' or 'reference_image'" in str(exc_info.value).lower()
+
+
 # Tests for lucy-restyle-v2v with reference_image
 
 

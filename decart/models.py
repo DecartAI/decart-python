@@ -14,6 +14,7 @@ VideoModels = Literal[
     "lucy-pro-flf2v",
     "lucy-motion",
     "lucy-restyle-v2v",
+    "lucy-2-v2v",
 ]
 ImageModels = Literal["lucy-pro-t2i", "lucy-pro-i2i"]
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
@@ -122,6 +123,27 @@ class VideoRestyleInput(DecartBaseModel):
                 "'enhance_prompt' is only valid when using 'prompt', not 'reference_image'"
             )
 
+        return self
+
+
+class VideoEdit2Input(DecartBaseModel):
+    """Input for lucy-2-v2v model.
+
+    Must provide at least one of `prompt` or `reference_image`.
+    Both can be provided together.
+    """
+
+    prompt: Optional[str] = Field(default=None, min_length=1, max_length=1000)
+    reference_image: Optional[FileInput] = None
+    data: FileInput
+    seed: Optional[int] = None
+    resolution: Optional[str] = None
+    enhance_prompt: Optional[bool] = None
+
+    @model_validator(mode="after")
+    def validate_prompt_or_reference_image(self) -> "VideoEdit2Input":
+        if self.prompt is None and self.reference_image is None:
+            raise ValueError("Must provide at least one of 'prompt' or 'reference_image'")
         return self
 
 
@@ -256,6 +278,14 @@ _MODELS = {
             height=704,
             input_schema=VideoRestyleInput,
         ),
+        "lucy-2-v2v": ModelDefinition(
+            name="lucy-2-v2v",
+            url_path="/v1/generate/lucy-2-v2v",
+            fps=20,
+            width=1280,
+            height=720,
+            input_schema=VideoEdit2Input,
+        ),
     },
     "image": {
         "lucy-pro-t2i": ModelDefinition(
@@ -302,6 +332,7 @@ class Models:
             - "lucy-fast-v2v" - Video-to-video (Fast quality)
             - "lucy-motion" - Image-to-motion-video
             - "lucy-restyle-v2v" - Video-to-video with prompt or reference image
+            - "lucy-2-v2v" - Video-to-video editing (long-form, 720p)
         """
         try:
             return _MODELS["video"][model]  # type: ignore[return-value]
