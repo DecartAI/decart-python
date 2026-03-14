@@ -285,7 +285,7 @@ class WebRTCConnection:
             if self._on_error:
                 self._on_error(e)
         finally:
-            # WS loop exited (clean close or error) — signal disconnected so manager can reconnect
+            self._resolve_pending_waits("WebSocket disconnected")
             await self._set_state("disconnected")
 
     async def _handle_message(self, data: dict) -> None:
@@ -368,22 +368,23 @@ class WebRTCConnection:
             result["error"] = message.error
             event.set()
 
-    def _handle_error(self, message: ErrorMessage) -> None:
-        logger.error(f"Received error from server: {message.error}")
-        error = WebRTCError(message.error)
-
-        # Fail-fast: resolve any pending Phase-2 waits so they surface the
-        # real server error instead of timing out after 30 s.
+    def _resolve_pending_waits(self, error_message: str) -> None:
         if self._pending_image_set:
             event, result = self._pending_image_set
             result["success"] = False
-            result["error"] = message.error
+            result["error"] = error_message
             event.set()
 
         for _prompt, (event, result) in list(self._pending_prompts.items()):
             result["success"] = False
-            result["error"] = message.error
+            result["error"] = error_message
             event.set()
+
+    def _handle_error(self, message: ErrorMessage) -> None:
+        logger.error(f"Received error from server: {message.error}")
+        error = WebRTCError(message.error)
+
+        self._resolve_pending_waits(message.error)
 
         if self._on_error:
             self._on_error(error)
