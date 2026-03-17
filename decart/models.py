@@ -11,7 +11,6 @@ VideoModels = Literal[
     "lucy-pro-t2v",
     "lucy-pro-i2v",
     "lucy-pro-v2v",
-    "lucy-pro-flf2v",
     "lucy-motion",
     "lucy-restyle-v2v",
     "lucy-2-v2v",
@@ -75,18 +74,6 @@ class VideoToVideoInput(DecartBaseModel):
     seed: Optional[int] = None
     resolution: Optional[str] = None
     enhance_prompt: Optional[bool] = None
-
-
-class FirstLastFrameInput(DecartBaseModel):
-    prompt: str = Field(
-        ...,
-        min_length=1,
-        max_length=1000,
-    )
-    start: FileInput
-    end: FileInput
-    seed: Optional[int] = None
-    resolution: Optional[str] = None
 
 
 class ImageToMotionVideoInput(DecartBaseModel):
@@ -248,14 +235,6 @@ _MODELS = {
             height=704,
             input_schema=VideoToVideoInput,
         ),
-        "lucy-pro-flf2v": ModelDefinition(
-            name="lucy-pro-flf2v",
-            url_path="/v1/generate/lucy-pro-flf2v",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=FirstLastFrameInput,
-        ),
         "lucy-motion": ModelDefinition(
             name="lucy-motion",
             url_path="/v1/generate/lucy-motion",
@@ -321,7 +300,6 @@ class Models:
             - "lucy-pro-t2v" - Text-to-video
             - "lucy-pro-i2v" - Image-to-video
             - "lucy-pro-v2v" - Video-to-video
-            - "lucy-pro-flf2v" - First-last-frame-to-video
             - "lucy-dev-i2v" - Image-to-video (Dev quality)
             - "lucy-fast-v2v" - Video-to-video (Fast quality)
             - "lucy-motion" - Image-to-motion-video
