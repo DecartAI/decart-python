@@ -26,6 +26,8 @@ async def test_create_token() -> None:
 
     assert result.api_key == "ek_test123"
     assert result.expires_at == "2024-12-15T12:10:00Z"
+    assert result.permissions is None
+    assert result.constraints is None
 
 
 @pytest.mark.asyncio
@@ -114,3 +116,116 @@ async def test_create_token_without_metadata_sends_null() -> None:
 
     call_kwargs = mock_session.post.call_args
     assert call_kwargs.kwargs["json"] == {}
+
+
+@pytest.mark.asyncio
+async def test_create_token_with_expires_in() -> None:
+    """Sends expiresIn in request body."""
+    client = DecartClient(api_key="test-api-key")
+
+    mock_response = AsyncMock()
+    mock_response.ok = True
+    mock_response.json = AsyncMock(
+        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+    )
+
+    mock_session = MagicMock()
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
+        await client.tokens.create(expires_in=120)
+
+    call_kwargs = mock_session.post.call_args
+    assert call_kwargs.kwargs["json"] == {"expiresIn": 120}
+
+
+@pytest.mark.asyncio
+async def test_create_token_with_allowed_models() -> None:
+    """Sends allowedModels in request body."""
+    client = DecartClient(api_key="test-api-key")
+
+    mock_response = AsyncMock()
+    mock_response.ok = True
+    mock_response.json = AsyncMock(
+        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+    )
+
+    mock_session = MagicMock()
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
+        await client.tokens.create(allowed_models=["lucy_2_rt"])
+
+    call_kwargs = mock_session.post.call_args
+    assert call_kwargs.kwargs["json"] == {"allowedModels": ["lucy_2_rt"]}
+
+
+@pytest.mark.asyncio
+async def test_create_token_with_constraints() -> None:
+    """Sends constraints in request body."""
+    client = DecartClient(api_key="test-api-key")
+
+    mock_response = AsyncMock()
+    mock_response.ok = True
+    mock_response.json = AsyncMock(
+        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+    )
+
+    mock_session = MagicMock()
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    constraints = {"realtime": {"maxSessionDuration": 120}}
+    with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
+        await client.tokens.create(constraints=constraints)
+
+    call_kwargs = mock_session.post.call_args
+    assert call_kwargs.kwargs["json"] == {"constraints": {"realtime": {"maxSessionDuration": 120}}}
+
+
+@pytest.mark.asyncio
+async def test_create_token_with_all_v2_fields() -> None:
+    """Sends all v2 fields and parses permissions/constraints from response."""
+    client = DecartClient(api_key="test-api-key")
+
+    mock_response = AsyncMock()
+    mock_response.ok = True
+    mock_response.json = AsyncMock(
+        return_value={
+            "apiKey": "ek_test123",
+            "expiresAt": "2024-12-15T12:10:00Z",
+            "permissions": {"models": ["lucy_2_rt"]},
+            "constraints": {"realtime": {"maxSessionDuration": 120}},
+        }
+    )
+
+    mock_session = MagicMock()
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
+        result = await client.tokens.create(
+            metadata={"role": "viewer"},
+            expires_in=120,
+            allowed_models=["lucy_2_rt"],
+            constraints={"realtime": {"maxSessionDuration": 120}},
+        )
+
+    assert result.api_key == "ek_test123"
+    assert result.expires_at == "2024-12-15T12:10:00Z"
+    assert result.permissions == {"models": ["lucy_2_rt"]}
+    assert result.constraints == {"realtime": {"maxSessionDuration": 120}}
+
+    call_kwargs = mock_session.post.call_args
+    assert call_kwargs.kwargs["json"] == {
+        "metadata": {"role": "viewer"},
+        "expiresIn": 120,
+        "allowedModels": ["lucy_2_rt"],
+        "constraints": {"realtime": {"maxSessionDuration": 120}},
+    }

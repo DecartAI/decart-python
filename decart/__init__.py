@@ -24,6 +24,9 @@ from .queue import (
 from .tokens import (
     TokensClient,
     CreateTokenResponse,
+    RealtimeConstraints,
+    TokenConstraints,
+    TokenPermissions,
 )
 
 try:
@@ -77,6 +80,9 @@ __all__ = [
     "QueueJobResult",
     "TokensClient",
     "CreateTokenResponse",
+    "RealtimeConstraints",
+    "TokenConstraints",
+    "TokenPermissions",
     "TokenCreateError",
 ]
 
