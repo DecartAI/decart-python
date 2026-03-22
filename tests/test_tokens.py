@@ -185,9 +185,7 @@ async def test_create_token_with_constraints() -> None:
         await client.tokens.create(constraints=constraints)
 
     call_kwargs = mock_session.post.call_args
-    assert call_kwargs.kwargs["json"] == {
-        "constraints": {"realtime": {"maxSessionDuration": 120}}
-    }
+    assert call_kwargs.kwargs["json"] == {"constraints": {"realtime": {"maxSessionDuration": 120}}}
 
 
 @pytest.mark.asyncio
