@@ -20,7 +20,7 @@ async def test_queue_submit_video_to_video_basic() -> None:
         job = await client.queue.submit(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "A cat walking in a park",
+                "prompt": "Restyle this clip with a cinematic dusk grade",
                 "data": b"fake video data",
                 "seed": 42,
             }
@@ -61,7 +61,7 @@ async def test_queue_rejects_image_models() -> None:
         await client.queue.submit(
             {
                 "model": models.image("lucy-pro-i2i"),
-                "prompt": "A beautiful sunset",
+                "prompt": "Apply a painterly sunset color grade",
             }
         )
 
@@ -77,7 +77,7 @@ async def test_queue_missing_model() -> None:
     with pytest.raises(DecartSDKError):
         await client.queue.submit(
             {
-                "prompt": "A cat walking",
+                "prompt": "Apply a cinematic grade",
             }
         )
 
@@ -130,7 +130,7 @@ async def test_queue_submit_and_poll_completed() -> None:
         result = await client.queue.submit_and_poll(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "A serene lake",
+                "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
             }
         )
@@ -156,7 +156,7 @@ async def test_queue_submit_and_poll_failed() -> None:
         result = await client.queue.submit_and_poll(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "A serene lake",
+                "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
             }
         )
@@ -191,7 +191,7 @@ async def test_queue_submit_and_poll_with_callback() -> None:
         await client.queue.submit_and_poll(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "A serene lake",
+                "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
                 "on_status_change": on_status_change,
             }
@@ -256,7 +256,7 @@ async def test_queue_includes_user_agent_header() -> None:
         await client.queue.submit(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "Test prompt",
+                "prompt": "Apply a cinematic grade",
                 "data": b"fake video data",
             }
         )
@@ -282,7 +282,7 @@ async def test_queue_lucy2_v2v_with_prompt() -> None:
         job = await client.queue.submit(
             {
                 "model": models.video("lucy-2-v2v"),
-                "prompt": "Transform the scene",
+                "prompt": "Restyle the scene with softer contrast and warmer highlights",
                 "data": b"fake video data",
                 "enhance_prompt": True,
                 "seed": 42,

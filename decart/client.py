@@ -19,7 +19,7 @@ except ImportError:
 
 class DecartClient:
     """
-    Decart API client for video and image generation/transformation.
+    Decart API client for image editing, video editing, and realtime workflows.
 
     Args:
         api_key: Your Decart API key. Defaults to the DECART_API_KEY environment variable.
@@ -38,14 +38,14 @@ class DecartClient:
         # Image editing (sync) - use process()
         image = await client.process({
             "model": models.image("lucy-pro-i2i"),
-            "prompt": "Oil painting style",
+            "prompt": "Apply a painterly oil-on-canvas look while preserving the composition",
             "data": open("input.png", "rb"),
         })
 
         # Video editing (async) - use queue
         result = await client.queue.submit_and_poll({
             "model": models.video("lucy-pro-v2v"),
-            "prompt": "Anime style",
+            "prompt": "Restyle this footage with anime shading and vibrant neon highlights",
             "data": open("input.mp4", "rb"),
         })
         ```
@@ -77,7 +77,7 @@ class DecartClient:
     @property
     def queue(self) -> QueueClient:
         """
-        Queue client for async job-based video generation.
+        Queue client for async video editing jobs.
         Only video models support the queue API.
 
         Example:
@@ -85,7 +85,7 @@ class DecartClient:
             # Submit and poll automatically
             result = await client.queue.submit_and_poll({
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "Anime style",
+                "prompt": "Restyle this footage with anime shading and vibrant neon highlights",
                 "data": open("input.mp4", "rb"),
             })
 
@@ -138,16 +138,16 @@ class DecartClient:
 
     async def process(self, options: dict[str, Any]) -> bytes:
         """
-        Process image generation/transformation synchronously.
+        Process image editing synchronously.
         Only image models support the process API.
 
-        For video generation, use the queue API instead:
+        For video editing, use the queue API instead:
             result = await client.queue.submit_and_poll({...})
 
         Args:
             options: Processing options including model and inputs
                 - model: ImageModelDefinition from models.image()
-                - prompt: Text prompt for generation
+                - prompt: Text instructions describing the requested edit
                 - Additional model-specific inputs
 
         Returns:

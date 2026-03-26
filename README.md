@@ -35,7 +35,7 @@ async def main():
         # Edit an image
         result = await client.process({
             "model": models.image("lucy-pro-i2i"),
-            "prompt": "Oil painting style",
+            "prompt": "Apply a painterly oil-on-canvas look while preserving the composition",
             "data": open("input.png", "rb"),
         })
 
@@ -54,7 +54,7 @@ async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
     # Submit and poll automatically
     result = await client.queue.submit_and_poll({
         "model": models.video("lucy-pro-v2v"),
-        "prompt": "Anime style with vibrant colors",
+        "prompt": "Restyle this footage with anime shading and vibrant neon highlights",
         "data": open("input.mp4", "rb"),
         "on_status_change": lambda job: print(f"Status: {job.status}"),
     })
@@ -73,7 +73,7 @@ async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
     # Submit the job
     job = await client.queue.submit({
         "model": models.video("lucy-pro-v2v"),
-        "prompt": "Anime style",
+        "prompt": "Add cinematic teal-and-orange grading and gentle film grain",
         "data": open("input.mp4", "rb"),
     })
     print(f"Job ID: {job.job_id}")
@@ -149,8 +149,8 @@ python test_ui.py
 Then open http://localhost:7860 in your browser.
 
 The UI provides tabs for:
-- **Image Editing** - Image-to-image transformations
-- **Video Editing** - Video-to-video editing
+- **Image Editing** - Image-to-image edits
+- **Video Editing** - Video-to-video edits
 - **Video Restyle** - Restyle videos using text prompts or reference images
 - **Tokens** - Create short-lived client tokens
 

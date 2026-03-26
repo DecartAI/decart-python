@@ -32,7 +32,7 @@ async def test_process_image_to_image() -> None:
         result = await client.process(
             {
                 "model": models.image("lucy-pro-i2i"),
-                "prompt": "Oil painting style",
+                "prompt": "Apply an oil-painting treatment while preserving the composition",
                 "data": b"fake input image",
                 "enhance_prompt": True,
             }
@@ -50,7 +50,7 @@ async def test_process_rejects_video_models() -> None:
         await client.process(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "A cat walking",
+                "prompt": "Add cinematic teal-and-orange grading",
             }
         )
 
@@ -65,7 +65,7 @@ async def test_process_missing_model() -> None:
     with pytest.raises(DecartSDKError):
         await client.process(
             {
-                "prompt": "A cat walking",
+                "prompt": "Apply an editorial color grade",
             }
         )
 
@@ -113,7 +113,7 @@ async def test_process_with_cancellation() -> None:
         await client.process(
             {
                 "model": models.image("lucy-pro-i2i"),
-                "prompt": "An image that will be cancelled",
+                "prompt": "Apply a high-contrast editorial treatment",
                 "data": b"fake image data",
                 "cancel_token": cancel_token,
             }
@@ -142,7 +142,7 @@ async def test_process_includes_user_agent_header() -> None:
         await client.process(
             {
                 "model": models.image("lucy-pro-i2i"),
-                "prompt": "Test prompt",
+                "prompt": "Apply a soft watercolor treatment",
                 "data": b"fake image data",
             }
         )
@@ -179,7 +179,7 @@ async def test_process_includes_integration_in_user_agent() -> None:
         await client.process(
             {
                 "model": models.image("lucy-pro-i2i"),
-                "prompt": "Test prompt",
+                "prompt": "Apply a soft watercolor treatment",
                 "data": b"fake image data",
             }
         )

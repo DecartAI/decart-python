@@ -38,7 +38,7 @@ async def process_image_to_image(
     seed: Optional[int],
     strength: float,
 ) -> tuple[Optional[bytes], str]:
-    """Transform an image with a prompt."""
+    """Edit an image with text instructions."""
     try:
         if not input_image:
             return None, "Please upload an image"
@@ -56,7 +56,7 @@ async def process_image_to_image(
             options["strength"] = strength
 
         result = await client.process(options)
-        return result, f"Success! Transformed image with prompt: '{prompt[:50]}...'"
+        return result, f"Success! Edited image with instructions: '{prompt[:50]}...'"
     except Exception as e:
         return None, f"Error: {str(e)}"
 
@@ -74,7 +74,7 @@ async def process_video_v2v(
     enhance_prompt: bool,
     progress=gr.Progress(),
 ) -> tuple[Optional[str], str]:
-    """Transform a video with a prompt."""
+    """Edit a video with text instructions."""
     try:
         if not input_video:
             return None, "Please upload a video"
@@ -110,7 +110,7 @@ async def process_video_v2v(
 
         with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
             f.write(result.data)
-            return f.name, f"Success! Transformed video with prompt: '{prompt[:50]}...'"
+            return f.name, f"Success! Edited video with instructions: '{prompt[:50]}...'"
 
     except Exception as e:
         return None, f"Error: {str(e)}"
@@ -237,7 +237,7 @@ def create_ui():
                         i2i_input = gr.Image(label="Input Image", type="filepath")
                         i2i_prompt = gr.Textbox(
                             label="Prompt",
-                            placeholder="Make it look like anime",
+                            placeholder="Apply a painterly anime key-art treatment",
                             lines=2,
                         )
                         with gr.Row():
@@ -249,9 +249,9 @@ def create_ui():
                                 value=0.75,
                                 step=0.05,
                             )
-                        i2i_btn = gr.Button("Transform Image", variant="primary")
+                        i2i_btn = gr.Button("Edit Image", variant="primary")
                     with gr.Column():
-                        i2i_output = gr.Image(label="Transformed Image", type="filepath")
+                        i2i_output = gr.Image(label="Edited Image", type="filepath")
                         i2i_status = gr.Textbox(label="Status", interactive=False)
 
                 i2i_btn.click(
@@ -270,15 +270,15 @@ def create_ui():
                         v2v_input = gr.Video(label="Input Video")
                         v2v_prompt = gr.Textbox(
                             label="Prompt",
-                            placeholder="Make it look like Lego world",
+                            placeholder="Restyle this footage with toy-like miniatures and warm practical lighting",
                             lines=2,
                         )
                         with gr.Row():
                             v2v_seed = gr.Number(label="Seed (optional)", precision=0)
                             v2v_enhance = gr.Checkbox(label="Enhance Prompt", value=True)
-                        v2v_btn = gr.Button("Transform Video", variant="primary")
+                        v2v_btn = gr.Button("Edit Video", variant="primary")
                     with gr.Column():
-                        v2v_output = gr.Video(label="Transformed Video")
+                        v2v_output = gr.Video(label="Edited Video")
                         v2v_status = gr.Textbox(label="Status", interactive=False)
 
                 v2v_btn.click(
@@ -310,7 +310,7 @@ def create_ui():
                         )
                         restyle_prompt = gr.Textbox(
                             label="Prompt",
-                            placeholder="Make it look like anime",
+                            placeholder="Add anime shading with vivid neon accents",
                             lines=2,
                             visible=True,
                         )

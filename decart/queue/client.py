@@ -25,7 +25,7 @@ INITIAL_DELAY = 0.5  # seconds
 
 class QueueClient:
     """
-    Queue client for async job-based video generation.
+    Queue client for async job-based video editing.
     Only video models support the queue API.
 
     Jobs are submitted and processed asynchronously, allowing you to
@@ -38,7 +38,7 @@ class QueueClient:
         # Option 1: Submit and poll automatically
         result = await client.queue.submit_and_poll({
             "model": models.video("lucy-pro-v2v"),
-            "prompt": "A cat playing piano",
+            "prompt": "Restyle this clip with anime shading and saturated colors",
             "data": open("input.mp4", "rb"),
             "on_status_change": lambda job: print(f"Status: {job.status}"),
         })
@@ -46,7 +46,7 @@ class QueueClient:
         # Option 2: Submit and poll manually
         job = await client.queue.submit({
             "model": models.video("lucy-pro-v2v"),
-            "prompt": "A cat playing piano",
+            "prompt": "Add cinematic teal-and-orange grading and subtle film grain",
             "data": open("input.mp4", "rb"),
         })
         status = await client.queue.status(job.job_id)
@@ -62,14 +62,14 @@ class QueueClient:
 
     async def submit(self, options: dict[str, Any]) -> JobSubmitResponse:
         """
-        Submit a video generation job to the queue for async processing.
+        Submit a video editing job to the queue for async processing.
         Only video models are supported.
         Returns immediately with job_id and initial status.
 
         Args:
             options: Submit options including model and inputs
                 - model: VideoModelDefinition from models.video()
-                - prompt: Text prompt for generation
+                - prompt: Text instructions describing the requested edit
                 - Additional model-specific inputs
 
         Returns:

@@ -13,11 +13,11 @@ async def main() -> None:
             print(f"Missing bundled example image at: {image_path}")
             return
 
-        print("Transforming image...")
+        print("Editing image...")
         result = await client.process(
             {
                 "model": models.image("lucy-pro-i2i"),
-                "prompt": "Oil painting style with impressionist brushstrokes",
+                "prompt": "Apply an impressionist oil-painting treatment while keeping the framing intact",
                 "data": image_path,
                 "enhance_prompt": True,
             }

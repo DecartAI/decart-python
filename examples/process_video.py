@@ -11,18 +11,18 @@ from decart import DecartClient, models
 
 async def main() -> None:
     async with DecartClient(api_key=os.getenv("DECART_API_KEY", "your-api-key-here")) as client:
-        # Video-to-video transformation
+        # Video-to-video editing
         video_path = Path(__file__).parent / "assets" / "example_video.mp4"
 
         if not video_path.exists():
             print(f"Please add a video at: {video_path}")
             return
 
-        print("Transforming video...")
+        print("Editing video...")
         result = await client.queue.submit_and_poll(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "Anime style with vibrant colors",
+                "prompt": "Restyle this footage with anime shading, vibrant highlights, and crisp outlines",
                 "data": video_path,
                 "enhance_prompt": True,
                 "on_status_change": lambda job: print(f"  Status: {job.status}"),

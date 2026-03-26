@@ -17,7 +17,7 @@ async def main() -> None:
         result = await client.queue.submit_and_poll(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "A serene lake at sunset with mountains in the background",
+                "prompt": "Give this clip a cinematic dusk grade with cooler shadows and warm highlights",
                 "data": video_path,
                 "resolution": "480p",
                 "on_status_change": lambda job: print(f"Job {job.job_id}: {job.status}"),
@@ -36,7 +36,7 @@ async def main() -> None:
         job = await client.queue.submit(
             {
                 "model": models.video("lucy-pro-v2v"),
-                "prompt": "A cat playing piano in a cozy living room",
+                "prompt": "Restyle the scene to feel like stop-motion miniatures with soft practical lighting",
                 "data": video_path,
                 "resolution": "480p",
             }
