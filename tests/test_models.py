@@ -27,12 +27,9 @@ def test_realtime_models() -> None:
 
 
 def test_video_models() -> None:
-    model = models.video("lucy-pro-t2v")
-    assert model.name == "lucy-pro-t2v"
-    assert model.url_path == "/v1/generate/lucy-pro-t2v"
-
     model = models.video("lucy-pro-v2v")
     assert model.name == "lucy-pro-v2v"
+    assert model.url_path == "/v1/generate/lucy-pro-v2v"
 
     # lucy-restyle-v2v model
     model = models.video("lucy-restyle-v2v")
@@ -41,9 +38,9 @@ def test_video_models() -> None:
 
 
 def test_image_models() -> None:
-    model = models.image("lucy-pro-t2i")
-    assert model.name == "lucy-pro-t2i"
-    assert model.url_path == "/v1/generate/lucy-pro-t2i"
+    model = models.image("lucy-pro-i2i")
+    assert model.name == "lucy-pro-i2i"
+    assert model.url_path == "/v1/generate/lucy-pro-i2i"
 
 
 def test_lucy_2_v2v_model() -> None:

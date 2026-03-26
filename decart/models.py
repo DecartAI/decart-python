@@ -6,16 +6,12 @@ from .types import FileInput, MotionTrajectoryInput
 
 RealTimeModels = Literal["mirage", "mirage_v2", "lucy_v2v_720p_rt", "lucy_2_rt", "live_avatar"]
 VideoModels = Literal[
-    "lucy-dev-i2v",
-    "lucy-fast-v2v",
-    "lucy-pro-t2v",
-    "lucy-pro-i2v",
     "lucy-pro-v2v",
     "lucy-motion",
     "lucy-restyle-v2v",
     "lucy-2-v2v",
 ]
-ImageModels = Literal["lucy-pro-t2i", "lucy-pro-i2i"]
+ImageModels = Literal["lucy-pro-i2i"]
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
 
 # Type variable for model name
@@ -44,24 +40,6 @@ VideoModelDefinition = ModelDefinition[VideoModels]
 
 RealTimeModelDefinition = ModelDefinition[RealTimeModels]
 """Type alias for model definitions that support realtime streaming."""
-
-
-class TextToVideoInput(BaseModel):
-    prompt: str = Field(..., min_length=1, max_length=1000)
-    seed: Optional[int] = None
-    resolution: Optional[str] = None
-    orientation: Optional[str] = None
-
-
-class ImageToVideoInput(DecartBaseModel):
-    prompt: str = Field(
-        ...,
-        min_length=1,
-        max_length=1000,
-    )
-    data: FileInput
-    seed: Optional[int] = None
-    resolution: Optional[str] = None
 
 
 class VideoToVideoInput(DecartBaseModel):
@@ -128,17 +106,6 @@ class VideoEdit2Input(DecartBaseModel):
     enhance_prompt: Optional[bool] = None
 
 
-class TextToImageInput(BaseModel):
-    prompt: str = Field(
-        ...,
-        min_length=1,
-        max_length=1000,
-    )
-    seed: Optional[int] = None
-    resolution: Optional[str] = None
-    orientation: Optional[str] = None
-
-
 class ImageToImageInput(DecartBaseModel):
     prompt: str = Field(
         ...,
@@ -195,38 +162,6 @@ _MODELS = {
         ),
     },
     "video": {
-        "lucy-dev-i2v": ModelDefinition(
-            name="lucy-dev-i2v",
-            url_path="/v1/generate/lucy-dev-i2v",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=ImageToVideoInput,
-        ),
-        "lucy-fast-v2v": ModelDefinition(
-            name="lucy-fast-v2v",
-            url_path="/v1/generate/lucy-fast-v2v",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=VideoToVideoInput,
-        ),
-        "lucy-pro-t2v": ModelDefinition(
-            name="lucy-pro-t2v",
-            url_path="/v1/generate/lucy-pro-t2v",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=TextToVideoInput,
-        ),
-        "lucy-pro-i2v": ModelDefinition(
-            name="lucy-pro-i2v",
-            url_path="/v1/generate/lucy-pro-i2v",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=ImageToVideoInput,
-        ),
         "lucy-pro-v2v": ModelDefinition(
             name="lucy-pro-v2v",
             url_path="/v1/generate/lucy-pro-v2v",
@@ -261,14 +196,6 @@ _MODELS = {
         ),
     },
     "image": {
-        "lucy-pro-t2i": ModelDefinition(
-            name="lucy-pro-t2i",
-            url_path="/v1/generate/lucy-pro-t2i",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=TextToImageInput,
-        ),
         "lucy-pro-i2i": ModelDefinition(
             name="lucy-pro-i2i",
             url_path="/v1/generate/lucy-pro-i2i",
@@ -297,11 +224,7 @@ class Models:
         Video models only support the queue API.
 
         Available models:
-            - "lucy-pro-t2v" - Text-to-video
-            - "lucy-pro-i2v" - Image-to-video
             - "lucy-pro-v2v" - Video-to-video
-            - "lucy-dev-i2v" - Image-to-video (Dev quality)
-            - "lucy-fast-v2v" - Video-to-video (Fast quality)
             - "lucy-motion" - Image-to-motion-video
             - "lucy-restyle-v2v" - Video-to-video with prompt or reference image
             - "lucy-2-v2v" - Video-to-video editing (long-form, 720p)
@@ -318,7 +241,6 @@ class Models:
         Image models only support the process (sync) API.
 
         Available models:
-            - "lucy-pro-t2i" - Text-to-image
             - "lucy-pro-i2i" - Image-to-image
         """
         try:

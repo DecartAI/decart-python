@@ -31,34 +31,6 @@ def get_client(api_key: str) -> DecartClient:
 # ============================================================================
 
 
-async def process_text_to_image(
-    api_key: str,
-    prompt: str,
-    seed: Optional[int],
-    resolution: str,
-    orientation: str,
-) -> tuple[Optional[bytes], str]:
-    """Generate an image from text prompt."""
-    try:
-        client = get_client(api_key)
-
-        options = {
-            "model": models.image("lucy-pro-t2i"),
-            "prompt": prompt,
-        }
-        if seed:
-            options["seed"] = seed
-        if resolution and resolution != "default":
-            options["resolution"] = resolution
-        if orientation and orientation != "default":
-            options["orientation"] = orientation
-
-        result = await client.process(options)
-        return result, f"Success! Generated image from prompt: '{prompt[:50]}...'"
-    except Exception as e:
-        return None, f"Error: {str(e)}"
-
-
 async def process_image_to_image(
     api_key: str,
     prompt: str,
@@ -92,52 +64,6 @@ async def process_image_to_image(
 # ============================================================================
 # Video Processing (Queue API)
 # ============================================================================
-
-
-async def process_video_t2v(
-    api_key: str,
-    prompt: str,
-    seed: Optional[int],
-    enhance_prompt: bool,
-    progress=gr.Progress(),
-) -> tuple[Optional[str], str]:
-    """Generate a video from text prompt."""
-    try:
-        client = get_client(api_key)
-
-        options = {
-            "model": models.video("lucy-pro-t2v"),
-            "prompt": prompt,
-        }
-        if seed:
-            options["seed"] = seed
-        if enhance_prompt is not None:
-            options["enhance_prompt"] = enhance_prompt
-
-        progress(0.1, desc="Submitting job...")
-
-        def on_status_change(job):
-            if job.status == "pending":
-                progress(0.2, desc="Job pending...")
-            elif job.status == "processing":
-                progress(0.5, desc="Processing video...")
-
-        options["on_status_change"] = on_status_change
-
-        result = await client.queue.submit_and_poll(options)
-
-        if result.status == "failed":
-            return None, f"Job failed: {result.error}"
-
-        progress(0.9, desc="Saving video...")
-
-        # Save to temp file
-        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
-            f.write(result.data)
-            return f.name, f"Success! Generated video from prompt: '{prompt[:50]}...'"
-
-    except Exception as e:
-        return None, f"Error: {str(e)}"
 
 
 async def process_video_v2v(
@@ -252,56 +178,6 @@ async def process_video_restyle(
         return None, f"Error: {str(e)}"
 
 
-async def process_video_i2v(
-    api_key: str,
-    prompt: str,
-    input_image: str,
-    seed: Optional[int],
-    enhance_prompt: bool,
-    progress=gr.Progress(),
-) -> tuple[Optional[str], str]:
-    """Generate a video from an image."""
-    try:
-        if not input_image:
-            return None, "Please upload an image"
-
-        client = get_client(api_key)
-
-        options = {
-            "model": models.video("lucy-pro-i2v"),
-            "prompt": prompt,
-            "data": Path(input_image),
-        }
-        if seed:
-            options["seed"] = seed
-        if enhance_prompt is not None:
-            options["enhance_prompt"] = enhance_prompt
-
-        progress(0.1, desc="Submitting job...")
-
-        def on_status_change(job):
-            if job.status == "pending":
-                progress(0.2, desc="Job pending...")
-            elif job.status == "processing":
-                progress(0.5, desc="Processing video...")
-
-        options["on_status_change"] = on_status_change
-
-        result = await client.queue.submit_and_poll(options)
-
-        if result.status == "failed":
-            return None, f"Job failed: {result.error}"
-
-        progress(0.9, desc="Saving video...")
-
-        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
-            f.write(result.data)
-            return f.name, "Success! Generated video from image"
-
-    except Exception as e:
-        return None, f"Error: {str(e)}"
-
-
 # ============================================================================
 # Tokens API
 # ============================================================================
@@ -354,39 +230,7 @@ def create_ui():
             # ================================================================
             # Image Processing Tab
             # ================================================================
-            with gr.TabItem("Image Generation"):
-                gr.Markdown("### Text to Image")
-                with gr.Row():
-                    with gr.Column():
-                        t2i_prompt = gr.Textbox(
-                            label="Prompt",
-                            placeholder="A beautiful sunset over mountains",
-                            lines=3,
-                        )
-                        with gr.Row():
-                            t2i_seed = gr.Number(label="Seed (optional)", precision=0)
-                            t2i_resolution = gr.Dropdown(
-                                label="Resolution",
-                                choices=["default", "720p", "1080p"],
-                                value="default",
-                            )
-                            t2i_orientation = gr.Dropdown(
-                                label="Orientation",
-                                choices=["default", "landscape", "portrait", "square"],
-                                value="default",
-                            )
-                        t2i_btn = gr.Button("Generate Image", variant="primary")
-                    with gr.Column():
-                        t2i_output = gr.Image(label="Generated Image", type="filepath")
-                        t2i_status = gr.Textbox(label="Status", interactive=False)
-
-                t2i_btn.click(
-                    fn=lambda *args: asyncio.run(process_text_to_image(*args)),
-                    inputs=[api_key, t2i_prompt, t2i_seed, t2i_resolution, t2i_orientation],
-                    outputs=[t2i_output, t2i_status],
-                )
-
-                gr.Markdown("---")
+            with gr.TabItem("Image Editing"):
                 gr.Markdown("### Image to Image")
                 with gr.Row():
                     with gr.Column():
@@ -419,54 +263,7 @@ def create_ui():
             # ================================================================
             # Video Processing Tab
             # ================================================================
-            with gr.TabItem("Video Generation"):
-                gr.Markdown("### Text to Video")
-                with gr.Row():
-                    with gr.Column():
-                        t2v_prompt = gr.Textbox(
-                            label="Prompt",
-                            placeholder="A cat walking in a park",
-                            lines=3,
-                        )
-                        with gr.Row():
-                            t2v_seed = gr.Number(label="Seed (optional)", precision=0)
-                            t2v_enhance = gr.Checkbox(label="Enhance Prompt", value=True)
-                        t2v_btn = gr.Button("Generate Video", variant="primary")
-                    with gr.Column():
-                        t2v_output = gr.Video(label="Generated Video")
-                        t2v_status = gr.Textbox(label="Status", interactive=False)
-
-                t2v_btn.click(
-                    fn=lambda *args: asyncio.run(process_video_t2v(*args)),
-                    inputs=[api_key, t2v_prompt, t2v_seed, t2v_enhance],
-                    outputs=[t2v_output, t2v_status],
-                )
-
-                gr.Markdown("---")
-                gr.Markdown("### Image to Video")
-                with gr.Row():
-                    with gr.Column():
-                        i2v_input = gr.Image(label="Input Image", type="filepath")
-                        i2v_prompt = gr.Textbox(
-                            label="Prompt",
-                            placeholder="The scene comes to life",
-                            lines=2,
-                        )
-                        with gr.Row():
-                            i2v_seed = gr.Number(label="Seed (optional)", precision=0)
-                            i2v_enhance = gr.Checkbox(label="Enhance Prompt", value=True)
-                        i2v_btn = gr.Button("Generate Video", variant="primary")
-                    with gr.Column():
-                        i2v_output = gr.Video(label="Generated Video")
-                        i2v_status = gr.Textbox(label="Status", interactive=False)
-
-                i2v_btn.click(
-                    fn=lambda *args: asyncio.run(process_video_i2v(*args)),
-                    inputs=[api_key, i2v_prompt, i2v_input, i2v_seed, i2v_enhance],
-                    outputs=[i2v_output, i2v_status],
-                )
-
-                gr.Markdown("---")
+            with gr.TabItem("Video Editing"):
                 gr.Markdown("### Video to Video")
                 with gr.Row():
                     with gr.Column():

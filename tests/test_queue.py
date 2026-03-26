@@ -10,8 +10,8 @@ from decart import DecartClient, models, DecartSDKError
 
 
 @pytest.mark.asyncio
-async def test_queue_submit_text_to_video() -> None:
-    """Test text-to-video submission with queue API."""
+async def test_queue_submit_video_to_video_basic() -> None:
+    """Test video-to-video submission with queue API."""
     client = DecartClient(api_key="test-key")
 
     with patch("decart.queue.client.submit_job") as mock_submit:
@@ -19,8 +19,9 @@ async def test_queue_submit_text_to_video() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.video("lucy-pro-v2v"),
                 "prompt": "A cat walking in a park",
+                "data": b"fake video data",
                 "seed": 42,
             }
         )
@@ -59,7 +60,7 @@ async def test_queue_rejects_image_models() -> None:
     with pytest.raises(DecartSDKError) as exc_info:
         await client.queue.submit(
             {
-                "model": models.image("lucy-pro-t2i"),
+                "model": models.image("lucy-pro-i2i"),
                 "prompt": "A beautiful sunset",
             }
         )
@@ -128,8 +129,9 @@ async def test_queue_submit_and_poll_completed() -> None:
 
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.video("lucy-pro-v2v"),
                 "prompt": "A serene lake",
+                "data": b"fake video data",
             }
         )
 
@@ -153,8 +155,9 @@ async def test_queue_submit_and_poll_failed() -> None:
 
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.video("lucy-pro-v2v"),
                 "prompt": "A serene lake",
+                "data": b"fake video data",
             }
         )
 
@@ -187,8 +190,9 @@ async def test_queue_submit_and_poll_with_callback() -> None:
 
         await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.video("lucy-pro-v2v"),
                 "prompt": "A serene lake",
+                "data": b"fake video data",
                 "on_status_change": on_status_change,
             }
         )
@@ -221,12 +225,13 @@ async def test_queue_submit_max_prompt_length() -> None:
     with pytest.raises(DecartSDKError) as exception:
         await client.queue.submit(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.video("lucy-pro-v2v"),
                 "prompt": prompt,
+                "data": b"fake video data",
             }
         )
 
-    assert "Invalid inputs for lucy-pro-t2v" in str(exception)
+    assert "Invalid inputs for lucy-pro-v2v" in str(exception)
 
 
 @pytest.mark.asyncio
@@ -250,8 +255,9 @@ async def test_queue_includes_user_agent_header() -> None:
 
         await client.queue.submit(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.video("lucy-pro-v2v"),
                 "prompt": "Test prompt",
+                "data": b"fake video data",
             }
         )
 

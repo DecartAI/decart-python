@@ -37,15 +37,17 @@ class QueueClient:
 
         # Option 1: Submit and poll automatically
         result = await client.queue.submit_and_poll({
-            "model": models.video("lucy-pro-t2v"),
+            "model": models.video("lucy-pro-v2v"),
             "prompt": "A cat playing piano",
+            "data": open("input.mp4", "rb"),
             "on_status_change": lambda job: print(f"Status: {job.status}"),
         })
 
         # Option 2: Submit and poll manually
         job = await client.queue.submit({
-            "model": models.video("lucy-pro-t2v"),
+            "model": models.video("lucy-pro-v2v"),
             "prompt": "A cat playing piano",
+            "data": open("input.mp4", "rb"),
         })
         status = await client.queue.status(job.job_id)
         result = await client.queue.result(job.job_id)

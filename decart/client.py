@@ -35,16 +35,18 @@ class DecartClient:
         # Option 2: Using DECART_API_KEY environment variable
         client = DecartClient()
 
-        # Image generation (sync) - use process()
+        # Image editing (sync) - use process()
         image = await client.process({
-            "model": models.image("lucy-pro-t2i"),
-            "prompt": "A serene lake at sunset",
+            "model": models.image("lucy-pro-i2i"),
+            "prompt": "Oil painting style",
+            "data": open("input.png", "rb"),
         })
 
-        # Video generation (async) - use queue
+        # Video editing (async) - use queue
         result = await client.queue.submit_and_poll({
-            "model": models.video("lucy-pro-t2v"),
-            "prompt": "A serene lake at sunset",
+            "model": models.video("lucy-pro-v2v"),
+            "prompt": "Anime style",
+            "data": open("input.mp4", "rb"),
         })
         ```
     """
@@ -82,8 +84,9 @@ class DecartClient:
             ```python
             # Submit and poll automatically
             result = await client.queue.submit_and_poll({
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A cat playing piano",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Anime style",
+                "data": open("input.mp4", "rb"),
             })
 
             # Or submit and poll manually

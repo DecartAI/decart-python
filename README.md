@@ -23,7 +23,7 @@ For complete documentation, guides, and examples, visit:
 
 ## Quick Start
 
-### Process Files
+### Image Editing (Process API)
 
 ```python
 import asyncio
@@ -32,29 +32,30 @@ from decart import DecartClient, models
 
 async def main():
     async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
-        # Generate a video from text
+        # Edit an image
         result = await client.process({
-            "model": models.video("lucy-pro-t2v"),
-            "prompt": "A cat walking in a lego world",
+            "model": models.image("lucy-pro-i2i"),
+            "prompt": "Oil painting style",
+            "data": open("input.png", "rb"),
         })
 
-        # Save the result
-        with open("output.mp4", "wb") as f:
+        with open("output.png", "wb") as f:
             f.write(result)
 
 asyncio.run(main())
 ```
 
-### Async Processing (Queue API)
+### Video Editing (Queue API)
 
-For video generation jobs, use the queue API to submit jobs and poll for results:
+For video editing jobs, use the queue API to submit jobs and poll for results:
 
 ```python
 async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
     # Submit and poll automatically
     result = await client.queue.submit_and_poll({
-        "model": models.video("lucy-pro-t2v"),
-        "prompt": "A cat playing piano",
+        "model": models.video("lucy-pro-v2v"),
+        "prompt": "Anime style with vibrant colors",
+        "data": open("input.mp4", "rb"),
         "on_status_change": lambda job: print(f"Status: {job.status}"),
     })
 
@@ -71,8 +72,9 @@ Or manage the polling manually:
 async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
     # Submit the job
     job = await client.queue.submit({
-        "model": models.video("lucy-pro-t2v"),
-        "prompt": "A cat playing piano",
+        "model": models.video("lucy-pro-v2v"),
+        "prompt": "Anime style",
+        "data": open("input.mp4", "rb"),
     })
     print(f"Job ID: {job.job_id}")
 
@@ -147,8 +149,8 @@ python test_ui.py
 Then open http://localhost:7860 in your browser.
 
 The UI provides tabs for:
-- **Image Generation** - Text-to-image and image-to-image transformations
-- **Video Generation** - Text-to-video, image-to-video, and video-to-video
+- **Image Editing** - Image-to-image transformations
+- **Video Editing** - Video-to-video editing
 - **Video Restyle** - Restyle videos using text prompts or reference images
 - **Tokens** - Create short-lived client tokens
 
