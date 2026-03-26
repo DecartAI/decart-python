@@ -1,6 +1,6 @@
 """
 Tests for the process API.
-Note: process() only supports image models (t2i, i2i).
+Note: process() only supports image models (i2i).
 Video models must use the queue API.
 """
 
@@ -8,35 +8,6 @@ import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
 from decart import DecartClient, models, DecartSDKError
-
-
-@pytest.mark.asyncio
-async def test_process_text_to_image() -> None:
-    """Test text-to-image generation with process API."""
-    client = DecartClient(api_key="test-key")
-
-    with patch("aiohttp.ClientSession") as mock_session_cls:
-        mock_response = MagicMock()
-        mock_response.ok = True
-        mock_response.read = AsyncMock(return_value=b"fake image data")
-
-        mock_session = MagicMock()
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-        mock_session.post = MagicMock()
-        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session_cls.return_value = mock_session
-
-        result = await client.process(
-            {
-                "model": models.image("lucy-pro-t2i"),
-                "prompt": "A cat walking",
-            }
-        )
-
-        assert result == b"fake image data"
 
 
 @pytest.mark.asyncio
@@ -61,7 +32,7 @@ async def test_process_image_to_image() -> None:
         result = await client.process(
             {
                 "model": models.image("lucy-pro-i2i"),
-                "prompt": "Oil painting style",
+                "prompt": "Apply an oil-painting treatment while preserving the composition",
                 "data": b"fake input image",
                 "enhance_prompt": True,
             }
@@ -78,8 +49,8 @@ async def test_process_rejects_video_models() -> None:
     with pytest.raises(DecartSDKError) as exc_info:
         await client.process(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A cat walking",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Add cinematic teal-and-orange grading",
             }
         )
 
@@ -94,7 +65,7 @@ async def test_process_missing_model() -> None:
     with pytest.raises(DecartSDKError):
         await client.process(
             {
-                "prompt": "A cat walking",
+                "prompt": "Apply an editorial color grade",
             }
         )
 
@@ -120,11 +91,12 @@ async def test_process_max_prompt_length() -> None:
     with pytest.raises(DecartSDKError) as exception:
         await client.process(
             {
-                "model": models.image("lucy-pro-t2i"),
+                "model": models.image("lucy-pro-i2i"),
                 "prompt": prompt,
+                "data": b"fake image data",
             }
         )
-    assert "Invalid inputs for lucy-pro-t2i: 1 validation error for TextToImageInput" in str(
+    assert "Invalid inputs for lucy-pro-i2i: 1 validation error for ImageToImageInput" in str(
         exception
     )
 
@@ -140,8 +112,9 @@ async def test_process_with_cancellation() -> None:
     with pytest.raises(asyncio.CancelledError):
         await client.process(
             {
-                "model": models.image("lucy-pro-t2i"),
-                "prompt": "An image that will be cancelled",
+                "model": models.image("lucy-pro-i2i"),
+                "prompt": "Apply a high-contrast editorial treatment",
+                "data": b"fake image data",
                 "cancel_token": cancel_token,
             }
         )
@@ -168,8 +141,9 @@ async def test_process_includes_user_agent_header() -> None:
 
         await client.process(
             {
-                "model": models.image("lucy-pro-t2i"),
-                "prompt": "Test prompt",
+                "model": models.image("lucy-pro-i2i"),
+                "prompt": "Apply a soft watercolor treatment",
+                "data": b"fake image data",
             }
         )
 
@@ -204,8 +178,9 @@ async def test_process_includes_integration_in_user_agent() -> None:
 
         await client.process(
             {
-                "model": models.image("lucy-pro-t2i"),
-                "prompt": "Test prompt",
+                "model": models.image("lucy-pro-i2i"),
+                "prompt": "Apply a soft watercolor treatment",
+                "data": b"fake image data",
             }
         )
 

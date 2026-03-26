@@ -10,8 +10,8 @@ from decart import DecartClient, models, DecartSDKError
 
 
 @pytest.mark.asyncio
-async def test_queue_submit_text_to_video() -> None:
-    """Test text-to-video submission with queue API."""
+async def test_queue_submit_video_to_video_basic() -> None:
+    """Test video-to-video submission with queue API."""
     client = DecartClient(api_key="test-key")
 
     with patch("decart.queue.client.submit_job") as mock_submit:
@@ -19,8 +19,9 @@ async def test_queue_submit_text_to_video() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A cat walking in a park",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Restyle this clip with a cinematic dusk grade",
+                "data": b"fake video data",
                 "seed": 42,
             }
         )
@@ -59,8 +60,8 @@ async def test_queue_rejects_image_models() -> None:
     with pytest.raises(DecartSDKError) as exc_info:
         await client.queue.submit(
             {
-                "model": models.image("lucy-pro-t2i"),
-                "prompt": "A beautiful sunset",
+                "model": models.image("lucy-pro-i2i"),
+                "prompt": "Apply a painterly sunset color grade",
             }
         )
 
@@ -76,7 +77,7 @@ async def test_queue_missing_model() -> None:
     with pytest.raises(DecartSDKError):
         await client.queue.submit(
             {
-                "prompt": "A cat walking",
+                "prompt": "Apply a cinematic grade",
             }
         )
 
@@ -128,8 +129,9 @@ async def test_queue_submit_and_poll_completed() -> None:
 
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A serene lake",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Add anime shading and crisp outlines",
+                "data": b"fake video data",
             }
         )
 
@@ -153,8 +155,9 @@ async def test_queue_submit_and_poll_failed() -> None:
 
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A serene lake",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Add anime shading and crisp outlines",
+                "data": b"fake video data",
             }
         )
 
@@ -187,8 +190,9 @@ async def test_queue_submit_and_poll_with_callback() -> None:
 
         await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A serene lake",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Add anime shading and crisp outlines",
+                "data": b"fake video data",
                 "on_status_change": on_status_change,
             }
         )
@@ -221,12 +225,13 @@ async def test_queue_submit_max_prompt_length() -> None:
     with pytest.raises(DecartSDKError) as exception:
         await client.queue.submit(
             {
-                "model": models.video("lucy-pro-t2v"),
+                "model": models.video("lucy-pro-v2v"),
                 "prompt": prompt,
+                "data": b"fake video data",
             }
         )
 
-    assert "Invalid inputs for lucy-pro-t2v" in str(exception)
+    assert "Invalid inputs for lucy-pro-v2v" in str(exception)
 
 
 @pytest.mark.asyncio
@@ -250,8 +255,9 @@ async def test_queue_includes_user_agent_header() -> None:
 
         await client.queue.submit(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "Test prompt",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Apply a cinematic grade",
+                "data": b"fake video data",
             }
         )
 
@@ -276,7 +282,7 @@ async def test_queue_lucy2_v2v_with_prompt() -> None:
         job = await client.queue.submit(
             {
                 "model": models.video("lucy-2-v2v"),
-                "prompt": "Transform the scene",
+                "prompt": "Restyle the scene with softer contrast and warmer highlights",
                 "data": b"fake video data",
                 "enhance_prompt": True,
                 "seed": 42,

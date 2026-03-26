@@ -6,7 +6,7 @@ using either a text prompt OR a reference image.
 
 Usage:
     # With text prompt:
-    DECART_API_KEY=your-key python video_restyle.py input.mp4 --prompt "anime style"
+    DECART_API_KEY=your-key python video_restyle.py input.mp4 --prompt "add anime shading and neon highlights"
 
     # With reference image:
     DECART_API_KEY=your-key python video_restyle.py input.mp4 --reference style.png
@@ -32,7 +32,7 @@ async def main():
     parser.add_argument(
         "--prompt",
         "-p",
-        help="Text prompt describing the style (e.g., 'anime style', 'oil painting')",
+        help="Text prompt describing the edit (e.g., 'add anime shading', 'apply an oil-painting look')",
     )
     parser.add_argument("--reference", "-r", help="Path to reference image for style transfer")
     parser.add_argument("--output", "-o", help="Output file path (default: output_restyle.mp4)")

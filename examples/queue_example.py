@@ -1,16 +1,24 @@
 import asyncio
 import os
+from pathlib import Path
 from decart import DecartClient, models
 
 
 async def main() -> None:
+    video_path = Path(__file__).parent / "assets" / "example_video.mp4"
+
+    if not video_path.exists():
+        print(f"Please add a video at: {video_path}")
+        return
+
     async with DecartClient(api_key=os.getenv("DECART_API_KEY", "your-api-key-here")) as client:
         # Automatic polling - submits and waits for completion
         print("Submitting job with automatic polling...")
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A serene lake at sunset with mountains in the background",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Give this clip a cinematic dusk grade with cooler shadows and warm highlights",
+                "data": video_path,
                 "resolution": "480p",
                 "on_status_change": lambda job: print(f"Job {job.job_id}: {job.status}"),
             }
@@ -27,8 +35,9 @@ async def main() -> None:
         print("\nSubmitting job with manual polling...")
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-pro-t2v"),
-                "prompt": "A cat playing piano in a cozy living room",
+                "model": models.video("lucy-pro-v2v"),
+                "prompt": "Restyle the scene to feel like stop-motion miniatures with soft practical lighting",
+                "data": video_path,
                 "resolution": "480p",
             }
         )
