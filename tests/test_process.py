@@ -42,6 +42,38 @@ async def test_process_image_to_image() -> None:
 
 
 @pytest.mark.asyncio
+async def test_process_image_to_image_with_reference_image() -> None:
+    """Test image-to-image with optional reference_image."""
+    client = DecartClient(api_key="test-key")
+
+    with patch("aiohttp.ClientSession") as mock_session_cls:
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.read = AsyncMock(return_value=b"fake image data")
+
+        mock_session = MagicMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.post = MagicMock()
+        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        mock_session_cls.return_value = mock_session
+
+        result = await client.process(
+            {
+                "model": models.image("lucy-pro-i2i"),
+                "prompt": "Add the object from the reference image",
+                "data": b"fake input image",
+                "reference_image": b"fake reference image",
+                "enhance_prompt": False,
+            }
+        )
+
+        assert result == b"fake image data"
+
+
+@pytest.mark.asyncio
 async def test_process_rejects_video_models() -> None:
     """Test that process() rejects video models with helpful error message."""
     client = DecartClient(api_key="test-key")
