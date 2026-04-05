@@ -113,6 +113,7 @@ class ImageToImageInput(DecartBaseModel):
         max_length=1000,
     )
     data: FileInput
+    reference_image: Optional[FileInput] = None
     seed: Optional[int] = None
     resolution: Optional[str] = None
     enhance_prompt: Optional[bool] = None
