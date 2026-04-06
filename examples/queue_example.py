@@ -16,7 +16,7 @@ async def main() -> None:
         print("Submitting job with automatic polling...")
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Give this clip a cinematic dusk grade with cooler shadows and warm highlights",
                 "data": video_path,
                 "resolution": "480p",
@@ -35,7 +35,7 @@ async def main() -> None:
         print("\nSubmitting job with manual polling...")
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Restyle the scene to feel like stop-motion miniatures with soft practical lighting",
                 "data": video_path,
                 "resolution": "480p",

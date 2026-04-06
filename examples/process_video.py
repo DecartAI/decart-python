@@ -21,7 +21,7 @@ async def main() -> None:
         print("Editing video...")
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Restyle this footage with anime shading, vibrant highlights, and crisp outlines",
                 "data": video_path,
                 "enhance_prompt": True,

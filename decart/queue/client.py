@@ -37,7 +37,7 @@ class QueueClient:
 
         # Option 1: Submit and poll automatically
         result = await client.queue.submit_and_poll({
-            "model": models.video("lucy-pro-v2v"),
+            "model": models.video("lucy-clip"),
             "prompt": "Restyle this clip with anime shading and saturated colors",
             "data": open("input.mp4", "rb"),
             "on_status_change": lambda job: print(f"Status: {job.status}"),
@@ -45,7 +45,7 @@ class QueueClient:
 
         # Option 2: Submit and poll manually
         job = await client.queue.submit({
-            "model": models.video("lucy-pro-v2v"),
+            "model": models.video("lucy-clip"),
             "prompt": "Add cinematic teal-and-orange grading and subtle film grain",
             "data": open("input.mp4", "rb"),
         })

@@ -13,10 +13,10 @@ Features:
 
 Usage:
   python playground.py                                      # Interactive mode
-  python playground.py --model mirage_v2                    # Camera model
-  python playground.py --model mirage_v2 --prompt "Anime"   # With initial prompt
-  python playground.py --model avatar-live --image face.png  # Avatar mode
-  python playground.py --model avatar-live --image face.png --audio speech.mp3
+  python playground.py --model lucy-restyle-2                    # Camera model
+  python playground.py --model lucy-restyle-2 --prompt "Anime"   # With initial prompt
+  python playground.py --model live-avatar --image face.png      # Avatar mode
+  python playground.py --model live-avatar --image face.png --audio speech.mp3
 
 Controls (while running):
   Type text + Enter    → Send prompt to Decart
@@ -91,9 +91,17 @@ logger = logging.getLogger("playground")
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-REALTIME_MODELS = ["mirage", "mirage_v2", "lucy_v2v_720p_rt", "lucy_2_rt", "live_avatar"]
-CAMERA_MODELS = {"mirage", "mirage_v2", "lucy_v2v_720p_rt", "lucy_2_rt"}
-AVATAR_MODELS = {"live_avatar"}
+REALTIME_MODELS = [
+    "lucy",
+    "lucy-2",
+    "lucy-2.1",
+    "lucy-2.1-vton",
+    "lucy-restyle",
+    "lucy-restyle-2",
+    "live-avatar",
+]
+CAMERA_MODELS = {"lucy", "lucy-2", "lucy-2.1", "lucy-2.1-vton", "lucy-restyle", "lucy-restyle-2"}
+AVATAR_MODELS = {"live-avatar"}
 
 BANNER = """
 ╔══════════════════════════════════════╗
@@ -176,11 +184,11 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 Examples:
-  %(prog)s --model mirage_v2
-  %(prog)s --model mirage_v2 --prompt "Anime style"
-  %(prog)s --model avatar-live --image avatar.png
-  %(prog)s --model avatar-live --image avatar.png --audio speech.mp3
-  %(prog)s --model lucy_2_rt --image ref.png --prompt "Lego World"
+  %(prog)s --model lucy-restyle-2
+  %(prog)s --model lucy-restyle-2 --prompt "Anime style"
+  %(prog)s --model live-avatar --image avatar.png
+  %(prog)s --model live-avatar --image avatar.png --audio speech.mp3
+  %(prog)s --model lucy-2 --image ref.png --prompt "Lego World"
 """,
     )
     p.add_argument("--model", "-m", choices=REALTIME_MODELS, help="Model name")
@@ -201,7 +209,7 @@ def select_model_interactive() -> str:
         note = ""
         if name in AVATAR_MODELS:
             note = " (requires --image)"
-        elif name in ("lucy_2_rt", "mirage_v2"):
+        elif name in ("lucy-2", "lucy-2.1", "lucy-2.1-vton", "lucy-restyle-2"):
             note = " (supports reference image)"
         print(f"  {i}. {name}{note}")
 

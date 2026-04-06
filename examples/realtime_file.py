@@ -46,7 +46,7 @@ async def main():
 
     print("Creating Decart client...")
     async with DecartClient(api_key=api_key) as client:
-        model = models.realtime("mirage_v2")
+        model = models.realtime("lucy-restyle-2")
         print(f"Using model: {model.name}")
 
         frame_count = 0

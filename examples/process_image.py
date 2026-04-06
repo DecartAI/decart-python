@@ -16,7 +16,7 @@ async def main() -> None:
         print("Editing image...")
         result = await client.process(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 "prompt": "Apply an impressionist oil-painting treatment while keeping the framing intact",
                 "data": image_path,
                 "enhance_prompt": True,

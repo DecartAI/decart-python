@@ -1,7 +1,7 @@
 """
 Video Restyle Example
 
-This example demonstrates how to use the lucy-restyle-v2v model to restyle a video
+This example demonstrates how to use the lucy-restyle-2 model to restyle a video
 using either a text prompt OR a reference image.
 
 Usage:
@@ -93,7 +93,7 @@ async def main():
     async with DecartClient(api_key=api_key) as client:
         # Build options
         options = {
-            "model": models.video("lucy-restyle-v2v"),
+            "model": models.video("lucy-restyle-2"),
             "data": video_path,
         }
 
