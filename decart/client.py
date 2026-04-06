@@ -37,14 +37,14 @@ class DecartClient:
 
         # Image editing (sync) - use process()
         image = await client.process({
-            "model": models.image("lucy-pro-i2i"),
+            "model": models.image("lucy-image-2"),
             "prompt": "Apply a painterly oil-on-canvas look while preserving the composition",
             "data": open("input.png", "rb"),
         })
 
         # Video editing (async) - use queue
         result = await client.queue.submit_and_poll({
-            "model": models.video("lucy-pro-v2v"),
+            "model": models.video("lucy-clip"),
             "prompt": "Restyle this footage with anime shading and vibrant neon highlights",
             "data": open("input.mp4", "rb"),
         })
@@ -84,7 +84,7 @@ class DecartClient:
             ```python
             # Submit and poll automatically
             result = await client.queue.submit_and_poll({
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Restyle this footage with anime shading and vibrant neon highlights",
                 "data": open("input.mp4", "rb"),
             })

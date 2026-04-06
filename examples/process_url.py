@@ -13,7 +13,7 @@ async def main() -> None:
         print("Transforming video from URL...")
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Watercolor painting style",
                 "data": "https://docs.platform.decart.ai/assets/example-video.mp4",
                 "on_status_change": lambda job: print(f"  Status: {job.status}"),

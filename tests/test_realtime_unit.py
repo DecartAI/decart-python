@@ -25,29 +25,29 @@ def test_realtime_client_available():
 
 def test_realtime_models_available():
     """Test that realtime models are available"""
-    model = models.realtime("mirage")
-    assert model.name == "mirage"
+    model = models.realtime("lucy-restyle")
+    assert model.name == "lucy-restyle"
     assert model.fps == 25
     assert model.width == 1280
     assert model.height == 704
     assert model.url_path == "/v1/stream"
 
-    model2 = models.realtime("mirage_v2")
-    assert model2.name == "mirage_v2"
+    model2 = models.realtime("lucy-restyle-2")
+    assert model2.name == "lucy-restyle-2"
     assert model2.fps == 22
     assert model2.width == 1280
     assert model2.height == 704
     assert model2.url_path == "/v1/stream"
 
-    model2 = models.realtime("lucy_v2v_720p_rt")
-    assert model2.name == "lucy_v2v_720p_rt"
+    model2 = models.realtime("lucy")
+    assert model2.name == "lucy"
     assert model2.fps == 25
     assert model2.width == 1280
     assert model2.height == 704
     assert model2.url_path == "/v1/stream"
 
-    model2 = models.realtime("lucy_2_rt")
-    assert model2.name == "lucy_2_rt"
+    model2 = models.realtime("lucy-2")
+    assert model2.name == "lucy-2"
     assert model2.fps == 20
     assert model2.width == 1280
     assert model2.height == 720
@@ -86,7 +86,7 @@ async def test_realtime_client_creation_with_mock():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
                 initial_state=ModelState(prompt=Prompt(text="Test", enhance=True)),
             ),
@@ -147,7 +147,7 @@ async def test_realtime_set_prompt_with_mock():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -186,7 +186,7 @@ async def test_buffered_events_delivered_after_handler_registration():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -223,7 +223,7 @@ async def test_realtime_events():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -285,7 +285,7 @@ async def test_realtime_set_prompt_timeout():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -332,7 +332,7 @@ async def test_realtime_set_prompt_server_error():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -357,8 +357,8 @@ async def test_realtime_set_prompt_server_error():
 
 def test_avatar_live_model_available():
     """Test that avatar-live model is available"""
-    model = models.realtime("live_avatar")
-    assert model.name == "live_avatar"
+    model = models.realtime("live-avatar")
+    assert model.name == "live-avatar"
     assert model.fps == 25
     assert model.width == 1280
     assert model.height == 720
@@ -400,14 +400,14 @@ async def test_avatar_live_connect_with_initial_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("live_avatar"),
+                model=models.realtime("live-avatar"),
                 on_remote_stream=lambda t: None,
                 initial_state=ModelState(image=b"fake image bytes"),
             ),
         )
 
         assert realtime_client is not None
-        assert realtime_client._model_name == "live_avatar"
+        assert realtime_client._model_name == "live-avatar"
         mock_image_to_b64.assert_called_once()
         # Verify initial_image was passed to connect
         mock_manager.connect.assert_called_once()
@@ -448,7 +448,7 @@ async def test_avatar_live_set_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("live_avatar"),
+                model=models.realtime("live-avatar"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -491,7 +491,7 @@ async def test_set_image_works_for_any_model():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -528,7 +528,7 @@ async def test_set_image_null_clears_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -569,7 +569,7 @@ async def test_set_image_with_prompt_and_enhance():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -614,7 +614,7 @@ async def test_avatar_live_set_image_timeout():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("live_avatar"),
+                model=models.realtime("live-avatar"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -659,7 +659,7 @@ async def test_avatar_live_set_image_server_error():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("live_avatar"),
+                model=models.realtime("live-avatar"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -702,7 +702,7 @@ async def test_set_rejects_when_neither_prompt_nor_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -740,7 +740,7 @@ async def test_set_rejects_empty_prompt():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -778,7 +778,7 @@ async def test_set_sends_prompt_only():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -824,7 +824,7 @@ async def test_set_sends_prompt_with_enhance():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -873,7 +873,7 @@ async def test_set_sends_image_only():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -923,7 +923,7 @@ async def test_set_sends_prompt_and_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -972,7 +972,7 @@ async def test_set_converts_bytes_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -1021,7 +1021,7 @@ async def test_connect_with_initial_prompt():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
                 initial_state=ModelState(prompt=Prompt(text="Test prompt", enhance=False)),
             ),
@@ -1127,7 +1127,7 @@ async def test_connect_without_initial_state_sends_passthrough():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("mirage"),
+                model=models.realtime("lucy-restyle"),
                 on_remote_stream=lambda t: None,
                 # No initial_state — should trigger passthrough
             ),

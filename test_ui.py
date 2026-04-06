@@ -46,7 +46,7 @@ async def process_image_to_image(
         client = get_client(api_key)
 
         options = {
-            "model": models.image("lucy-pro-i2i"),
+            "model": models.image("lucy-image-2"),
             "prompt": prompt,
             "data": Path(input_image),
         }
@@ -82,7 +82,7 @@ async def process_video_v2v(
         client = get_client(api_key)
 
         options = {
-            "model": models.video("lucy-pro-v2v"),
+            "model": models.video("lucy-clip"),
             "prompt": prompt,
             "data": Path(input_video),
         }
@@ -134,7 +134,7 @@ async def process_video_restyle(
         client = get_client(api_key)
 
         options = {
-            "model": models.video("lucy-restyle-v2v"),
+            "model": models.video("lucy-restyle-2"),
             "data": Path(input_video),
         }
 

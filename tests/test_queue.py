@@ -19,7 +19,7 @@ async def test_queue_submit_video_to_video_basic() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Restyle this clip with a cinematic dusk grade",
                 "data": b"fake video data",
                 "seed": 42,
@@ -41,7 +41,7 @@ async def test_queue_submit_video_to_video() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Anime style",
                 "data": b"fake video data",
                 "enhance_prompt": True,
@@ -60,7 +60,7 @@ async def test_queue_rejects_image_models() -> None:
     with pytest.raises(DecartSDKError) as exc_info:
         await client.queue.submit(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 "prompt": "Apply a painterly sunset color grade",
             }
         )
@@ -129,7 +129,7 @@ async def test_queue_submit_and_poll_completed() -> None:
 
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
             }
@@ -155,7 +155,7 @@ async def test_queue_submit_and_poll_failed() -> None:
 
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
             }
@@ -190,7 +190,7 @@ async def test_queue_submit_and_poll_with_callback() -> None:
 
         await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
                 "on_status_change": on_status_change,
@@ -210,7 +210,7 @@ async def test_queue_submit_missing_required_field() -> None:
     with pytest.raises(DecartSDKError):
         await client.queue.submit(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 # Missing 'prompt' and 'data' which are required for v2v
             }
         )
@@ -225,13 +225,13 @@ async def test_queue_submit_max_prompt_length() -> None:
     with pytest.raises(DecartSDKError) as exception:
         await client.queue.submit(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": prompt,
                 "data": b"fake video data",
             }
         )
 
-    assert "Invalid inputs for lucy-pro-v2v" in str(exception)
+    assert "Invalid inputs for lucy-clip" in str(exception)
 
 
 @pytest.mark.asyncio
@@ -255,7 +255,7 @@ async def test_queue_includes_user_agent_header() -> None:
 
         await client.queue.submit(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Apply a cinematic grade",
                 "data": b"fake video data",
             }
@@ -269,7 +269,7 @@ async def test_queue_includes_user_agent_header() -> None:
         assert headers["User-Agent"].startswith("decart-python-sdk/")
 
 
-# Tests for lucy-2-v2v
+# Tests for lucy-2
 
 
 @pytest.mark.asyncio
@@ -281,7 +281,7 @@ async def test_queue_lucy2_v2v_with_prompt() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-2-v2v"),
+                "model": models.video("lucy-2"),
                 "prompt": "Restyle the scene with softer contrast and warmer highlights",
                 "data": b"fake video data",
                 "enhance_prompt": True,
@@ -303,7 +303,7 @@ async def test_queue_lucy2_v2v_with_empty_prompt_and_reference_image() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-2-v2v"),
+                "model": models.video("lucy-2"),
                 "prompt": "",
                 "reference_image": b"fake image data",
                 "data": b"fake video data",
@@ -324,7 +324,7 @@ async def test_queue_lucy2_v2v_with_both_prompt_and_reference_image() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-2-v2v"),
+                "model": models.video("lucy-2"),
                 "prompt": "Transform the scene",
                 "reference_image": b"fake image data",
                 "data": b"fake video data",
@@ -337,12 +337,12 @@ async def test_queue_lucy2_v2v_with_both_prompt_and_reference_image() -> None:
         mock_submit.assert_called_once()
 
 
-# Tests for lucy-restyle-v2v with reference_image
+# Tests for lucy-restyle-2 with reference_image
 
 
 @pytest.mark.asyncio
 async def test_queue_restyle_with_prompt() -> None:
-    """Test lucy-restyle-v2v submission with text prompt."""
+    """Test lucy-restyle-2 submission with text prompt."""
     client = DecartClient(api_key="test-key")
 
     with patch("decart.queue.client.submit_job") as mock_submit:
@@ -350,7 +350,7 @@ async def test_queue_restyle_with_prompt() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-restyle-v2v"),
+                "model": models.video("lucy-restyle-2"),
                 "prompt": "Make it look like anime",
                 "data": b"fake video data",
                 "enhance_prompt": True,
@@ -364,7 +364,7 @@ async def test_queue_restyle_with_prompt() -> None:
 
 @pytest.mark.asyncio
 async def test_queue_restyle_with_reference_image() -> None:
-    """Test lucy-restyle-v2v submission with reference image."""
+    """Test lucy-restyle-2 submission with reference image."""
     client = DecartClient(api_key="test-key")
 
     with patch("decart.queue.client.submit_job") as mock_submit:
@@ -372,7 +372,7 @@ async def test_queue_restyle_with_reference_image() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-restyle-v2v"),
+                "model": models.video("lucy-restyle-2"),
                 "reference_image": b"fake image data",
                 "data": b"fake video data",
             }
@@ -385,13 +385,13 @@ async def test_queue_restyle_with_reference_image() -> None:
 
 @pytest.mark.asyncio
 async def test_queue_restyle_rejects_both_prompt_and_reference_image() -> None:
-    """Test that lucy-restyle-v2v rejects both prompt and reference_image."""
+    """Test that lucy-restyle-2 rejects both prompt and reference_image."""
     client = DecartClient(api_key="test-key")
 
     with pytest.raises(DecartSDKError) as exc_info:
         await client.queue.submit(
             {
-                "model": models.video("lucy-restyle-v2v"),
+                "model": models.video("lucy-restyle-2"),
                 "prompt": "Make it anime",
                 "reference_image": b"fake image data",
                 "data": b"fake video data",
@@ -403,13 +403,13 @@ async def test_queue_restyle_rejects_both_prompt_and_reference_image() -> None:
 
 @pytest.mark.asyncio
 async def test_queue_restyle_rejects_neither_prompt_nor_reference_image() -> None:
-    """Test that lucy-restyle-v2v rejects when neither prompt nor reference_image provided."""
+    """Test that lucy-restyle-2 rejects when neither prompt nor reference_image provided."""
     client = DecartClient(api_key="test-key")
 
     with pytest.raises(DecartSDKError) as exc_info:
         await client.queue.submit(
             {
-                "model": models.video("lucy-restyle-v2v"),
+                "model": models.video("lucy-restyle-2"),
                 "data": b"fake video data",
             }
         )
@@ -425,7 +425,7 @@ async def test_queue_restyle_rejects_enhance_prompt_with_reference_image() -> No
     with pytest.raises(DecartSDKError) as exc_info:
         await client.queue.submit(
             {
-                "model": models.video("lucy-restyle-v2v"),
+                "model": models.video("lucy-restyle-2"),
                 "reference_image": b"fake image data",
                 "data": b"fake video data",
                 "enhance_prompt": True,

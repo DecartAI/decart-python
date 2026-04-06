@@ -113,7 +113,7 @@ class RealtimeClient:
 
         model_name: RealTimeModels = options.model.name  # type: ignore[assignment]
 
-        is_avatar_live = model_name == "live_avatar"
+        is_avatar_live = model_name in ("live_avatar", "live-avatar")
         audio_stream_manager: Optional[AudioStreamManager] = None
 
         if is_avatar_live and local_track is None:

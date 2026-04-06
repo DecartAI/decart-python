@@ -31,7 +31,7 @@ async def test_process_image_to_image() -> None:
 
         result = await client.process(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 "prompt": "Apply an oil-painting treatment while preserving the composition",
                 "data": b"fake input image",
                 "enhance_prompt": True,
@@ -62,7 +62,7 @@ async def test_process_image_to_image_with_reference_image() -> None:
 
         result = await client.process(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 "prompt": "Add the object from the reference image",
                 "data": b"fake input image",
                 "reference_image": b"fake reference image",
@@ -81,7 +81,7 @@ async def test_process_rejects_video_models() -> None:
     with pytest.raises(DecartSDKError) as exc_info:
         await client.process(
             {
-                "model": models.video("lucy-pro-v2v"),
+                "model": models.video("lucy-clip"),
                 "prompt": "Add cinematic teal-and-orange grading",
             }
         )
@@ -110,7 +110,7 @@ async def test_process_missing_required_field() -> None:
     with pytest.raises(DecartSDKError):
         await client.process(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 # Missing 'data' field which is required for i2i
             }
         )
@@ -123,12 +123,12 @@ async def test_process_max_prompt_length() -> None:
     with pytest.raises(DecartSDKError) as exception:
         await client.process(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 "prompt": prompt,
                 "data": b"fake image data",
             }
         )
-    assert "Invalid inputs for lucy-pro-i2i: 1 validation error for ImageToImageInput" in str(
+    assert "Invalid inputs for lucy-image-2: 1 validation error for ImageToImageInput" in str(
         exception
     )
 
@@ -144,7 +144,7 @@ async def test_process_with_cancellation() -> None:
     with pytest.raises(asyncio.CancelledError):
         await client.process(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 "prompt": "Apply a high-contrast editorial treatment",
                 "data": b"fake image data",
                 "cancel_token": cancel_token,
@@ -173,7 +173,7 @@ async def test_process_includes_user_agent_header() -> None:
 
         await client.process(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 "prompt": "Apply a soft watercolor treatment",
                 "data": b"fake image data",
             }
@@ -210,7 +210,7 @@ async def test_process_includes_integration_in_user_agent() -> None:
 
         await client.process(
             {
-                "model": models.image("lucy-pro-i2i"),
+                "model": models.image("lucy-image-2"),
                 "prompt": "Apply a soft watercolor treatment",
                 "data": b"fake image data",
             }
