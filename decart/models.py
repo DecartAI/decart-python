@@ -70,6 +70,7 @@ def _warn_deprecated(model: str) -> None:
             stacklevel=3,
         )
 
+
 # Type variable for model name
 ModelT = TypeVar("ModelT", bound=str)
 
