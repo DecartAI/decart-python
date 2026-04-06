@@ -14,6 +14,10 @@ RealTimeModels = Literal[
     "lucy-restyle",
     "lucy-restyle-2",
     "live-avatar",
+    # Latest aliases (server-side resolution)
+    "lucy-latest",
+    "lucy-vton-latest",
+    "lucy-restyle-latest",
     # Deprecated names
     "mirage",
     "mirage_v2",
@@ -28,6 +32,11 @@ VideoModels = Literal[
     "lucy-2.1",
     "lucy-restyle-2",
     "lucy-motion",
+    # Latest aliases (server-side resolution)
+    "lucy-latest",
+    "lucy-restyle-latest",
+    "lucy-clip-latest",
+    "lucy-motion-latest",
     # Deprecated names
     "lucy-pro-v2v",
     "lucy-restyle-v2v",
@@ -36,6 +45,8 @@ VideoModels = Literal[
 ImageModels = Literal[
     # Canonical names
     "lucy-image-2",
+    # Latest alias (server-side resolution)
+    "lucy-image-latest",
     # Deprecated names
     "lucy-pro-i2i",
 ]
@@ -236,6 +247,31 @@ _MODELS = {
             height=720,
             input_schema=BaseModel,
         ),
+        # Latest aliases (server-side resolution)
+        "lucy-latest": ModelDefinition(
+            name="lucy-latest",
+            url_path="/v1/stream",
+            fps=20,
+            width=1088,
+            height=624,
+            input_schema=BaseModel,
+        ),
+        "lucy-vton-latest": ModelDefinition(
+            name="lucy-vton-latest",
+            url_path="/v1/stream",
+            fps=20,
+            width=1088,
+            height=624,
+            input_schema=BaseModel,
+        ),
+        "lucy-restyle-latest": ModelDefinition(
+            name="lucy-restyle-latest",
+            url_path="/v1/stream",
+            fps=22,
+            width=1280,
+            height=704,
+            input_schema=BaseModel,
+        ),
         # Deprecated names
         "mirage": ModelDefinition(
             name="mirage",
@@ -320,6 +356,39 @@ _MODELS = {
             height=704,
             input_schema=ImageToMotionVideoInput,
         ),
+        # Latest aliases (server-side resolution)
+        "lucy-latest": ModelDefinition(
+            name="lucy-latest",
+            url_path="/v1/jobs/lucy-latest",
+            fps=20,
+            width=1088,
+            height=624,
+            input_schema=VideoEdit2Input,
+        ),
+        "lucy-restyle-latest": ModelDefinition(
+            name="lucy-restyle-latest",
+            url_path="/v1/jobs/lucy-restyle-latest",
+            fps=22,
+            width=1280,
+            height=704,
+            input_schema=VideoRestyleInput,
+        ),
+        "lucy-clip-latest": ModelDefinition(
+            name="lucy-clip-latest",
+            url_path="/v1/jobs/lucy-clip-latest",
+            fps=25,
+            width=1280,
+            height=704,
+            input_schema=VideoToVideoInput,
+        ),
+        "lucy-motion-latest": ModelDefinition(
+            name="lucy-motion-latest",
+            url_path="/v1/jobs/lucy-motion-latest",
+            fps=25,
+            width=1280,
+            height=704,
+            input_schema=ImageToMotionVideoInput,
+        ),
         # Deprecated names
         "lucy-pro-v2v": ModelDefinition(
             name="lucy-pro-v2v",
@@ -351,6 +420,15 @@ _MODELS = {
         "lucy-image-2": ModelDefinition(
             name="lucy-image-2",
             url_path="/v1/generate/lucy-image-2",
+            fps=25,
+            width=1280,
+            height=704,
+            input_schema=ImageToImageInput,
+        ),
+        # Latest alias (server-side resolution)
+        "lucy-image-latest": ModelDefinition(
+            name="lucy-image-latest",
+            url_path="/v1/generate/lucy-image-latest",
             fps=25,
             width=1280,
             height=704,

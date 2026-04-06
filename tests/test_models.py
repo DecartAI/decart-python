@@ -164,6 +164,75 @@ def test_deprecation_warning_only_once() -> None:
         assert len(w) == 1
 
 
+def test_latest_realtime_models() -> None:
+    model = models.realtime("lucy-latest")
+    assert model.name == "lucy-latest"
+    assert model.url_path == "/v1/stream"
+    assert model.fps == 20
+    assert model.width == 1088
+    assert model.height == 624
+
+    model = models.realtime("lucy-vton-latest")
+    assert model.name == "lucy-vton-latest"
+    assert model.url_path == "/v1/stream"
+    assert model.fps == 20
+    assert model.width == 1088
+    assert model.height == 624
+
+    model = models.realtime("lucy-restyle-latest")
+    assert model.name == "lucy-restyle-latest"
+    assert model.url_path == "/v1/stream"
+    assert model.fps == 22
+    assert model.width == 1280
+    assert model.height == 704
+
+
+def test_latest_video_models() -> None:
+    model = models.video("lucy-latest")
+    assert model.name == "lucy-latest"
+    assert model.url_path == "/v1/jobs/lucy-latest"
+    assert model.fps == 20
+    assert model.width == 1088
+    assert model.height == 624
+
+    model = models.video("lucy-restyle-latest")
+    assert model.name == "lucy-restyle-latest"
+    assert model.url_path == "/v1/jobs/lucy-restyle-latest"
+    assert model.fps == 22
+
+    model = models.video("lucy-clip-latest")
+    assert model.name == "lucy-clip-latest"
+    assert model.url_path == "/v1/jobs/lucy-clip-latest"
+    assert model.fps == 25
+
+    model = models.video("lucy-motion-latest")
+    assert model.name == "lucy-motion-latest"
+    assert model.url_path == "/v1/jobs/lucy-motion-latest"
+    assert model.fps == 25
+
+
+def test_latest_image_models() -> None:
+    model = models.image("lucy-image-latest")
+    assert model.name == "lucy-image-latest"
+    assert model.url_path == "/v1/generate/lucy-image-latest"
+
+
+def test_latest_aliases_no_deprecation_warning() -> None:
+    _warned_aliases.clear()
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        models.realtime("lucy-latest")
+        models.realtime("lucy-vton-latest")
+        models.realtime("lucy-restyle-latest")
+        models.video("lucy-latest")
+        models.video("lucy-restyle-latest")
+        models.video("lucy-clip-latest")
+        models.video("lucy-motion-latest")
+        models.image("lucy-image-latest")
+        assert len(w) == 0
+
+
 def test_invalid_model() -> None:
     with pytest.raises(DecartSDKError):
         models.video("invalid-model")
