@@ -96,6 +96,7 @@ class ModelDefinition(DecartBaseModel, Generic[ModelT]):
     fps: int = Field(ge=1)
     width: int = Field(ge=1)
     height: int = Field(ge=1)
+    max_file_size: Optional[int] = None
     input_schema: type[BaseModel]
 
 
@@ -371,6 +372,7 @@ _MODELS = {
             fps=22,
             width=1280,
             height=704,
+            max_file_size=100 * 1024 * 1024,
             input_schema=VideoRestyleInput,
         ),
         "lucy-clip-latest": ModelDefinition(
