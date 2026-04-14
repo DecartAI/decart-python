@@ -98,6 +98,13 @@ def test_canonical_video_models() -> None:
     assert model.width == 1088
     assert model.height == 624
 
+    model = models.video("lucy-2.1-vton")
+    assert model.name == "lucy-2.1-vton"
+    assert model.url_path == "/v1/jobs/lucy-2.1-vton"
+    assert model.fps == 20
+    assert model.width == 1088
+    assert model.height == 624
+
     model = models.video("lucy-restyle-2")
     assert model.name == "lucy-restyle-2"
     assert model.url_path == "/v1/jobs/lucy-restyle-2"
@@ -195,6 +202,13 @@ def test_latest_video_models() -> None:
     assert model.width == 1088
     assert model.height == 624
 
+    model = models.video("lucy-vton-latest")
+    assert model.name == "lucy-vton-latest"
+    assert model.url_path == "/v1/jobs/lucy-vton-latest"
+    assert model.fps == 20
+    assert model.width == 1088
+    assert model.height == 624
+
     model = models.video("lucy-restyle-latest")
     assert model.name == "lucy-restyle-latest"
     assert model.url_path == "/v1/jobs/lucy-restyle-latest"
@@ -226,6 +240,7 @@ def test_latest_aliases_no_deprecation_warning() -> None:
         models.realtime("lucy-vton-latest")
         models.realtime("lucy-restyle-latest")
         models.video("lucy-latest")
+        models.video("lucy-vton-latest")
         models.video("lucy-restyle-latest")
         models.video("lucy-clip-latest")
         models.video("lucy-motion-latest")
