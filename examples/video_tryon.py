@@ -29,12 +29,8 @@ async def main():
         description="Virtual try-on: apply a garment from a reference image onto a person in a video"
     )
     parser.add_argument("video", help="Path to input video file")
-    parser.add_argument(
-        "--reference", "-r", required=True, help="Path to reference garment image"
-    )
-    parser.add_argument(
-        "--prompt", "-p", default="", help="Text prompt (default: empty string)"
-    )
+    parser.add_argument("--reference", "-r", required=True, help="Path to reference garment image")
+    parser.add_argument("--prompt", "-p", default="", help="Text prompt (default: empty string)")
     parser.add_argument("--output", "-o", help="Output file path (default: output_tryon.mp4)")
     parser.add_argument("--seed", "-s", type=int, help="Random seed for reproducibility")
     parser.add_argument(
