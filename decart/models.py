@@ -30,10 +30,12 @@ VideoModels = Literal[
     "lucy-clip",
     "lucy-2",
     "lucy-2.1",
+    "lucy-2.1-vton",
     "lucy-restyle-2",
     "lucy-motion",
     # Latest aliases (server-side resolution)
     "lucy-latest",
+    "lucy-vton-latest",
     "lucy-restyle-latest",
     "lucy-clip-latest",
     "lucy-motion-latest",
@@ -340,6 +342,14 @@ _MODELS = {
             height=624,
             input_schema=VideoEdit2Input,
         ),
+        "lucy-2.1-vton": ModelDefinition(
+            name="lucy-2.1-vton",
+            url_path="/v1/jobs/lucy-2.1-vton",
+            fps=20,
+            width=1088,
+            height=624,
+            input_schema=VideoEdit2Input,
+        ),
         "lucy-restyle-2": ModelDefinition(
             name="lucy-restyle-2",
             url_path="/v1/jobs/lucy-restyle-2",
@@ -360,6 +370,14 @@ _MODELS = {
         "lucy-latest": ModelDefinition(
             name="lucy-latest",
             url_path="/v1/jobs/lucy-latest",
+            fps=20,
+            width=1088,
+            height=624,
+            input_schema=VideoEdit2Input,
+        ),
+        "lucy-vton-latest": ModelDefinition(
+            name="lucy-vton-latest",
+            url_path="/v1/jobs/lucy-vton-latest",
             fps=20,
             width=1088,
             height=624,
