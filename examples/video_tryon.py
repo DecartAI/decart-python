@@ -33,12 +33,6 @@ async def main():
     parser.add_argument("--prompt", "-p", default="", help="Text prompt (default: empty string)")
     parser.add_argument("--output", "-o", help="Output file path (default: output_tryon.mp4)")
     parser.add_argument("--seed", "-s", type=int, help="Random seed for reproducibility")
-    parser.add_argument(
-        "--enhance",
-        action="store_true",
-        default=True,
-        help="Enhance the prompt (default: True)",
-    )
     parser.add_argument("--no-enhance", action="store_true", help="Disable prompt enhancement")
 
     args = parser.parse_args()
@@ -69,7 +63,7 @@ async def main():
         print(f"Prompt: '{args.prompt}'")
         print(f"Enhance prompt: {not args.no_enhance}")
     print(f"Output: {output_path}")
-    if args.seed:
+    if args.seed is not None:
         print(f"Seed: {args.seed}")
     print("=" * 50)
 
@@ -84,7 +78,7 @@ async def main():
         if args.prompt:
             options["enhance_prompt"] = not args.no_enhance
 
-        if args.seed:
+        if args.seed is not None:
             options["seed"] = args.seed
 
         def on_status_change(job):
