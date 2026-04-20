@@ -116,8 +116,12 @@ class WebRTCConnection:
 
             raise TimeoutError("Connection timeout")
 
-        except WebRTCError:
+        except WebRTCError as e:
             await self._set_state("disconnected")
+            # _handle_error already emitted on_error when it set _connection_error;
+            # only direct-raise paths (e.g., ack timeouts) still need reporting.
+            if self._on_error and not self._connection_error:
+                self._on_error(e)
             raise
         except Exception as e:
             logger.error(f"Connection failed: {e}")

@@ -1408,3 +1408,53 @@ async def test_connect_does_not_double_wrap_webrtc_error():
         "on_error should not be invoked by the connect() exception handler for WebRTCError; "
         f"got {errors!r}"
     )
+
+
+@pytest.mark.asyncio
+async def test_connect_direct_raise_fires_on_error_once():
+    """Direct-raise WebRTCError paths (e.g. ack timeouts) must fire on_error exactly once."""
+    from decart.realtime.webrtc_connection import WebRTCConnection
+    from decart.errors import WebRTCError
+
+    errors: list[Exception] = []
+    connection = WebRTCConnection(on_error=lambda e: errors.append(e))
+
+    async def _raise_ack_timeout(prompt, timeout=15.0):
+        raise WebRTCError("Initial prompt acknowledgment timed out")
+
+    connection._send_initial_prompt_and_wait = _raise_ack_timeout  # type: ignore[assignment]
+    connection._setup_peer_connection = AsyncMock()  # type: ignore[assignment]
+    connection._create_and_send_offer = AsyncMock()  # type: ignore[assignment]
+
+    async def _noop_receive():
+        await asyncio.sleep(60)
+
+    connection._receive_messages = _noop_receive  # type: ignore[assignment]
+
+    fake_ws = MagicMock()
+    fake_ws.closed = False
+    fake_ws.close = AsyncMock()
+
+    mock_session = MagicMock()
+    mock_session.closed = False
+    mock_session.close = AsyncMock()
+    mock_session.ws_connect = AsyncMock(return_value=fake_ws)
+
+    with patch(
+        "decart.realtime.webrtc_connection.aiohttp.ClientSession",
+        return_value=mock_session,
+    ):
+        with pytest.raises(WebRTCError) as exc_info:
+            await connection.connect(
+                url="https://example.com/ws",
+                local_track=None,
+                timeout=10.0,
+                initial_prompt={"text": "hello", "enhance": True},
+            )
+
+    assert exc_info.value.message == "Initial prompt acknowledgment timed out"
+    assert not isinstance(exc_info.value.cause, WebRTCError)
+    assert len(errors) == 1, (
+        f"on_error should fire exactly once for direct-raise paths; got {errors!r}"
+    )
+    assert errors[0] is exc_info.value
