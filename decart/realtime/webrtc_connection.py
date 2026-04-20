@@ -61,6 +61,7 @@ class WebRTCConnection:
         self._pending_image_set: Optional[tuple[asyncio.Event, dict]] = None
         self._local_track: Optional[MediaStreamTrack] = None
         self._model_name: Optional[str] = None
+        self._connection_error: Optional[str] = None
 
     async def connect(
         self,
@@ -75,6 +76,7 @@ class WebRTCConnection:
         try:
             self._local_track = local_track
             self._model_name = model_name
+            self._connection_error = None
 
             await self._set_state("connecting")
 
@@ -108,6 +110,8 @@ class WebRTCConnection:
             while asyncio.get_event_loop().time() < deadline:
                 if self._state in ("connected", "generating"):
                     return
+                if self._connection_error:
+                    raise WebRTCError(self._connection_error)
                 await asyncio.sleep(0.1)
 
             raise TimeoutError("Connection timeout")
@@ -285,7 +289,8 @@ class WebRTCConnection:
             if self._on_error:
                 self._on_error(e)
         finally:
-            self._resolve_pending_waits("WebSocket disconnected")
+            final_error = self._connection_error or "WebSocket disconnected"
+            self._resolve_pending_waits(final_error)
             await self._set_state("disconnected")
 
     async def _handle_message(self, data: dict) -> None:
@@ -384,6 +389,8 @@ class WebRTCConnection:
         logger.error(f"Received error from server: {message.error}")
         error = WebRTCError(message.error)
 
+        if not self._connection_error:
+            self._connection_error = message.error
         self._resolve_pending_waits(message.error)
 
         if self._on_error:
