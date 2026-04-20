@@ -122,6 +122,7 @@ class WebRTCConnection:
             raise TimeoutError("Connection timeout")
 
         except WebRTCError as e:
+            logger.error(f"Connection failed: {e}")
             await self._set_state("disconnected")
             if self._on_error and not self._on_error_fired:
                 self._on_error_fired = True
