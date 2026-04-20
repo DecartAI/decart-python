@@ -1384,7 +1384,11 @@ async def test_connect_does_not_double_wrap_webrtc_error():
 
     async def inject_error_soon():
         await asyncio.sleep(0.15)
+        # Simulate _handle_error having run: it sets _connection_error, fires
+        # on_error, and marks _on_error_fired so connect() doesn't double-fire.
         connection._connection_error = "Server at capacity. Please try again later."
+        errors.append(WebRTCError("Server at capacity. Please try again later."))
+        connection._on_error_fired = True
 
     injector = asyncio.create_task(inject_error_soon())
 
@@ -1404,9 +1408,9 @@ async def test_connect_does_not_double_wrap_webrtc_error():
 
     assert exc_info.value.message == "Server at capacity. Please try again later."
     assert not isinstance(exc_info.value.cause, WebRTCError)
-    assert [type(e).__name__ for e in errors] == [], (
-        "on_error should not be invoked by the connect() exception handler for WebRTCError; "
-        f"got {errors!r}"
+    assert len(errors) == 1, (
+        "connect()'s WebRTCError handler must not fire on_error again when _handle_error "
+        f"already did; got {errors!r}"
     )
 
 
