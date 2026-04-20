@@ -62,6 +62,9 @@ class WebRTCConnection:
         self._local_track: Optional[MediaStreamTrack] = None
         self._model_name: Optional[str] = None
         self._connection_error: Optional[str] = None
+        # Per-connect() dedup: _handle_error and connect()'s except branches both
+        # may see the same error; whichever fires first flips this to True and the
+        # other skips. Reset at the top of every connect() call.
         self._on_error_fired: bool = False
 
     async def connect(
