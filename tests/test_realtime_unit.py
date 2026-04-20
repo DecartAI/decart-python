@@ -1458,7 +1458,7 @@ async def test_connect_direct_raise_fires_on_error_once():
 
     assert exc_info.value.message == "Initial prompt acknowledgment timed out"
     assert not isinstance(exc_info.value.cause, WebRTCError)
-    assert len(errors) == 1, (
-        f"on_error should fire exactly once for direct-raise paths; got {errors!r}"
-    )
+    assert (
+        len(errors) == 1
+    ), f"on_error should fire exactly once for direct-raise paths; got {errors!r}"
     assert errors[0] is exc_info.value
