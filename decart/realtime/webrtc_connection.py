@@ -62,6 +62,10 @@ class WebRTCConnection:
         self._local_track: Optional[MediaStreamTrack] = None
         self._model_name: Optional[str] = None
         self._connection_error: Optional[str] = None
+        # Per-connect() dedup: _handle_error and connect()'s except branches both
+        # may see the same error; whichever fires first flips this to True and the
+        # other skips. Reset at the top of every connect() call.
+        self._on_error_fired: bool = False
 
     async def connect(
         self,
@@ -77,6 +81,7 @@ class WebRTCConnection:
             self._local_track = local_track
             self._model_name = model_name
             self._connection_error = None
+            self._on_error_fired = False
 
             await self._set_state("connecting")
 
@@ -116,10 +121,18 @@ class WebRTCConnection:
 
             raise TimeoutError("Connection timeout")
 
+        except WebRTCError as e:
+            logger.error(f"Connection failed: {e}")
+            await self._set_state("disconnected")
+            if self._on_error and not self._on_error_fired:
+                self._on_error_fired = True
+                self._on_error(e)
+            raise
         except Exception as e:
             logger.error(f"Connection failed: {e}")
             await self._set_state("disconnected")
-            if self._on_error:
+            if self._on_error and not self._on_error_fired:
+                self._on_error_fired = True
                 self._on_error(e)
             raise WebRTCError(str(e), cause=e)
 
@@ -394,6 +407,7 @@ class WebRTCConnection:
         self._resolve_pending_waits(message.error)
 
         if self._on_error:
+            self._on_error_fired = True
             self._on_error(error)
 
     def register_image_set_wait(self) -> tuple[asyncio.Event, dict]:
