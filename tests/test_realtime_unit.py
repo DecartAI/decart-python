@@ -1354,3 +1354,57 @@ async def test_connect_raises_immediately_on_connection_error_subscribe_mode():
                 )
     finally:
         injector.cancel()
+
+
+@pytest.mark.asyncio
+async def test_connect_does_not_double_wrap_webrtc_error():
+    """WebRTCError raised inside connect() re-raises as-is — no nested cause, no duplicate on_error."""
+    from decart.realtime.webrtc_connection import WebRTCConnection
+    from decart.errors import WebRTCError
+
+    errors: list[Exception] = []
+    connection = WebRTCConnection(on_error=lambda e: errors.append(e))
+
+    connection._setup_peer_connection = AsyncMock()  # type: ignore[assignment]
+    connection._create_and_send_offer = AsyncMock()  # type: ignore[assignment]
+
+    async def _noop_receive():
+        await asyncio.sleep(60)
+
+    connection._receive_messages = _noop_receive  # type: ignore[assignment]
+
+    fake_ws = MagicMock()
+    fake_ws.closed = False
+    fake_ws.close = AsyncMock()
+
+    mock_session = MagicMock()
+    mock_session.closed = False
+    mock_session.close = AsyncMock()
+    mock_session.ws_connect = AsyncMock(return_value=fake_ws)
+
+    async def inject_error_soon():
+        await asyncio.sleep(0.15)
+        connection._connection_error = "Server at capacity. Please try again later."
+
+    injector = asyncio.create_task(inject_error_soon())
+
+    try:
+        with patch(
+            "decart.realtime.webrtc_connection.aiohttp.ClientSession",
+            return_value=mock_session,
+        ):
+            with pytest.raises(WebRTCError) as exc_info:
+                await connection.connect(
+                    url="https://example.com/ws",
+                    local_track=None,
+                    timeout=10.0,
+                )
+    finally:
+        injector.cancel()
+
+    assert exc_info.value.message == "Server at capacity. Please try again later."
+    assert not isinstance(exc_info.value.cause, WebRTCError)
+    assert [type(e).__name__ for e in errors] == [], (
+        "on_error should not be invoked by the connect() exception handler for WebRTCError; "
+        f"got {errors!r}"
+    )
