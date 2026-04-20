@@ -1,5 +1,8 @@
 from typing import Any, Optional
 
+# Maximum file size allowed for uploads (20MB)
+MAX_FILE_SIZE = 20 * 1024 * 1024
+
 
 class DecartSDKError(Exception):
     """Base exception for all Decart SDK errors."""
@@ -88,3 +91,20 @@ class TokenCreateError(DecartSDKError):
     """Raised when token creation fails."""
 
     pass
+
+
+class FileTooLargeError(DecartSDKError):
+    """Raised when a file exceeds the maximum allowed size."""
+
+    def __init__(self, file_size: int, max_size: int, field_name: str | None = None) -> None:
+        file_size_mb = f"{file_size / (1024 * 1024):.1f}"
+        max_size_mb = f"{max_size / (1024 * 1024):.0f}"
+        field = f" for field '{field_name}'" if field_name else ""
+        super().__init__(
+            f"File size{field} ({file_size_mb}MB) exceeds the maximum allowed size of {max_size_mb}MB. "
+            f"Please reduce the file size or resolution before uploading.",
+            data={"file_size": file_size, "max_size": max_size, "field_name": field_name},
+        )
+        self.file_size = file_size
+        self.max_size = max_size
+        self.field_name = field_name
