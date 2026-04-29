@@ -269,19 +269,19 @@ async def test_queue_includes_user_agent_header() -> None:
         assert headers["User-Agent"].startswith("decart-python-sdk/")
 
 
-# Tests for lucy-2
+# Tests for lucy-2.1
 
 
 @pytest.mark.asyncio
-async def test_queue_lucy2_v2v_with_prompt() -> None:
+async def test_queue_lucy21_v2v_with_prompt() -> None:
     client = DecartClient(api_key="test-key")
 
     with patch("decart.queue.client.submit_job") as mock_submit:
-        mock_submit.return_value = MagicMock(job_id="job-lucy2", status="pending")
+        mock_submit.return_value = MagicMock(job_id="job-lucy21", status="pending")
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-2"),
+                "model": models.video("lucy-2.1"),
                 "prompt": "Restyle the scene with softer contrast and warmer highlights",
                 "data": b"fake video data",
                 "enhance_prompt": True,
@@ -289,42 +289,42 @@ async def test_queue_lucy2_v2v_with_prompt() -> None:
             }
         )
 
-        assert job.job_id == "job-lucy2"
+        assert job.job_id == "job-lucy21"
         assert job.status == "pending"
         mock_submit.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_queue_lucy2_v2v_with_empty_prompt_and_reference_image() -> None:
+async def test_queue_lucy21_v2v_with_empty_prompt_and_reference_image() -> None:
     client = DecartClient(api_key="test-key")
 
     with patch("decart.queue.client.submit_job") as mock_submit:
-        mock_submit.return_value = MagicMock(job_id="job-lucy2-ref", status="pending")
+        mock_submit.return_value = MagicMock(job_id="job-lucy21-ref", status="pending")
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-2"),
+                "model": models.video("lucy-2.1"),
                 "prompt": "",
                 "reference_image": b"fake image data",
                 "data": b"fake video data",
             }
         )
 
-        assert job.job_id == "job-lucy2-ref"
+        assert job.job_id == "job-lucy21-ref"
         assert job.status == "pending"
         mock_submit.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_queue_lucy2_v2v_with_both_prompt_and_reference_image() -> None:
+async def test_queue_lucy21_v2v_with_both_prompt_and_reference_image() -> None:
     client = DecartClient(api_key="test-key")
 
     with patch("decart.queue.client.submit_job") as mock_submit:
-        mock_submit.return_value = MagicMock(job_id="job-lucy2-both", status="pending")
+        mock_submit.return_value = MagicMock(job_id="job-lucy21-both", status="pending")
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-2"),
+                "model": models.video("lucy-2.1"),
                 "prompt": "Transform the scene",
                 "reference_image": b"fake image data",
                 "data": b"fake video data",
@@ -332,7 +332,7 @@ async def test_queue_lucy2_v2v_with_both_prompt_and_reference_image() -> None:
             }
         )
 
-        assert job.job_id == "job-lucy2-both"
+        assert job.job_id == "job-lucy21-both"
         assert job.status == "pending"
         mock_submit.assert_called_once()
 

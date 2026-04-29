@@ -28,7 +28,7 @@ class TokensClient:
         # With expiry, model restrictions, and constraints:
         token = await client.tokens.create(
             expires_in=120,
-            allowed_models=["lucy-2"],
+            allowed_models=["lucy-2.1"],
             constraints={"realtime": {"maxSessionDuration": 300}},
         )
         ```
@@ -70,7 +70,7 @@ class TokensClient:
             token = await client.tokens.create(
                 metadata={"role": "viewer"},
                 expires_in=120,
-                allowed_models=["lucy-2"],
+                allowed_models=["lucy-2.1"],
                 constraints={"realtime": {"maxSessionDuration": 300}},
             )
             ```
