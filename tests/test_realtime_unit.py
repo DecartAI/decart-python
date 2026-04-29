@@ -49,8 +49,8 @@ def test_realtime_models_available():
     model2 = models.realtime("lucy-2.1")
     assert model2.name == "lucy-2.1"
     assert model2.fps == 20
-    assert model2.width == 1280
-    assert model2.height == 720
+    assert model2.width == 1088
+    assert model2.height == 624
     assert model2.url_path == "/v1/stream"
 
 
