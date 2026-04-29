@@ -93,14 +93,13 @@ logger = logging.getLogger("playground")
 
 REALTIME_MODELS = [
     "lucy",
-    "lucy-2",
     "lucy-2.1",
     "lucy-2.1-vton",
     "lucy-restyle",
     "lucy-restyle-2",
     "live-avatar",
 ]
-CAMERA_MODELS = {"lucy", "lucy-2", "lucy-2.1", "lucy-2.1-vton", "lucy-restyle", "lucy-restyle-2"}
+CAMERA_MODELS = {"lucy", "lucy-2.1", "lucy-2.1-vton", "lucy-restyle", "lucy-restyle-2"}
 AVATAR_MODELS = {"live-avatar"}
 
 BANNER = """
@@ -188,7 +187,7 @@ Examples:
   %(prog)s --model lucy-restyle-2 --prompt "Anime style"
   %(prog)s --model live-avatar --image avatar.png
   %(prog)s --model live-avatar --image avatar.png --audio speech.mp3
-  %(prog)s --model lucy-2 --image ref.png --prompt "Lego World"
+  %(prog)s --model lucy-2.1 --image ref.png --prompt "Lego World"
 """,
     )
     p.add_argument("--model", "-m", choices=REALTIME_MODELS, help="Model name")
@@ -209,7 +208,7 @@ def select_model_interactive() -> str:
         note = ""
         if name in AVATAR_MODELS:
             note = " (requires --image)"
-        elif name in ("lucy-2", "lucy-2.1", "lucy-2.1-vton", "lucy-restyle-2"):
+        elif name in ("lucy-2.1", "lucy-2.1-vton", "lucy-restyle-2"):
             note = " (supports reference image)"
         print(f"  {i}. {name}{note}")
 

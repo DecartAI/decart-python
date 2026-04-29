@@ -24,12 +24,6 @@ def test_canonical_realtime_models() -> None:
     assert model.width == 1280
     assert model.height == 704
 
-    model = models.realtime("lucy-2")
-    assert model.name == "lucy-2"
-    assert model.fps == 20
-    assert model.width == 1280
-    assert model.height == 720
-
     model = models.realtime("lucy-2.1")
     assert model.name == "lucy-2.1"
     assert model.fps == 20
@@ -84,13 +78,6 @@ def test_canonical_video_models() -> None:
     assert model.name == "lucy-clip"
     assert model.url_path == "/v1/jobs/lucy-clip"
 
-    model = models.video("lucy-2")
-    assert model.name == "lucy-2"
-    assert model.url_path == "/v1/jobs/lucy-2"
-    assert model.fps == 20
-    assert model.width == 1280
-    assert model.height == 720
-
     model = models.video("lucy-2.1")
     assert model.name == "lucy-2.1"
     assert model.url_path == "/v1/jobs/lucy-2.1"
@@ -132,15 +119,6 @@ def test_deprecated_video_models() -> None:
         assert model.name == "lucy-restyle-v2v"
         assert len(w) == 1
         assert "lucy-restyle-2" in str(w[0].message)
-
-    _warned_aliases.clear()
-
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        model = models.video("lucy-2-v2v")
-        assert model.name == "lucy-2-v2v"
-        assert len(w) == 1
-        assert '"lucy-2"' in str(w[0].message)
 
 
 def test_canonical_image_models() -> None:

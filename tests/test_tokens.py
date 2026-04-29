@@ -158,10 +158,10 @@ async def test_create_token_with_allowed_models() -> None:
     )
 
     with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
-        await client.tokens.create(allowed_models=["lucy-2"])
+        await client.tokens.create(allowed_models=["lucy-2.1"])
 
     call_kwargs = mock_session.post.call_args
-    assert call_kwargs.kwargs["json"] == {"allowedModels": ["lucy-2"]}
+    assert call_kwargs.kwargs["json"] == {"allowedModels": ["lucy-2.1"]}
 
 
 @pytest.mark.asyncio
@@ -199,7 +199,7 @@ async def test_create_token_with_all_v2_fields() -> None:
         return_value={
             "apiKey": "ek_test123",
             "expiresAt": "2024-12-15T12:10:00Z",
-            "permissions": {"models": ["lucy-2"]},
+            "permissions": {"models": ["lucy-2.1"]},
             "constraints": {"realtime": {"maxSessionDuration": 120}},
         }
     )
@@ -213,19 +213,19 @@ async def test_create_token_with_all_v2_fields() -> None:
         result = await client.tokens.create(
             metadata={"role": "viewer"},
             expires_in=120,
-            allowed_models=["lucy-2"],
+            allowed_models=["lucy-2.1"],
             constraints={"realtime": {"maxSessionDuration": 120}},
         )
 
     assert result.api_key == "ek_test123"
     assert result.expires_at == "2024-12-15T12:10:00Z"
-    assert result.permissions == {"models": ["lucy-2"]}
+    assert result.permissions == {"models": ["lucy-2.1"]}
     assert result.constraints == {"realtime": {"maxSessionDuration": 120}}
 
     call_kwargs = mock_session.post.call_args
     assert call_kwargs.kwargs["json"] == {
         "metadata": {"role": "viewer"},
         "expiresIn": 120,
-        "allowedModels": ["lucy-2"],
+        "allowedModels": ["lucy-2.1"],
         "constraints": {"realtime": {"maxSessionDuration": 120}},
     }

@@ -73,7 +73,7 @@ async def main():
         print("Creating synthetic video track...")
         video_track = SyntheticVideoTrack()
 
-        model = models.realtime("lucy-2")
+        model = models.realtime("lucy-2.1")
         print(f"Using model: {model.name}")
         print(f"Model config - FPS: {model.fps}, Size: {model.width}x{model.height}")
 

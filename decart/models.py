@@ -8,7 +8,6 @@ from .types import FileInput, MotionTrajectoryInput
 RealTimeModels = Literal[
     # Canonical names
     "lucy",
-    "lucy-2",
     "lucy-2.1",
     "lucy-2.1-vton",
     "lucy-restyle",
@@ -22,13 +21,11 @@ RealTimeModels = Literal[
     "mirage",
     "mirage_v2",
     "lucy_v2v_720p_rt",
-    "lucy_2_rt",
     "live_avatar",
 ]
 VideoModels = Literal[
     # Canonical names
     "lucy-clip",
-    "lucy-2",
     "lucy-2.1",
     "lucy-2.1-vton",
     "lucy-restyle-2",
@@ -42,7 +39,6 @@ VideoModels = Literal[
     # Deprecated names
     "lucy-pro-v2v",
     "lucy-restyle-v2v",
-    "lucy-2-v2v",
 ]
 ImageModels = Literal[
     # Canonical names
@@ -59,12 +55,10 @@ MODEL_ALIASES: dict[str, str] = {
     "mirage": "lucy-restyle",
     "mirage_v2": "lucy-restyle-2",
     "lucy_v2v_720p_rt": "lucy",
-    "lucy_2_rt": "lucy-2",
     "live_avatar": "live-avatar",
     # Video aliases
     "lucy-pro-v2v": "lucy-clip",
     "lucy-restyle-v2v": "lucy-restyle-2",
-    "lucy-2-v2v": "lucy-2",
     # Image aliases
     "lucy-pro-i2i": "lucy-image-2",
 }
@@ -163,7 +157,7 @@ class VideoRestyleInput(DecartBaseModel):
 
 
 class VideoEdit2Input(DecartBaseModel):
-    """Input for lucy-2-v2v model.
+    """Input for Lucy 2.1 video editing models.
 
     Prompt is required but can be an empty string.
     Optional reference_image can also be provided.
@@ -199,14 +193,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
-        ),
-        "lucy-2": ModelDefinition(
-            name="lucy-2",
-            url_path="/v1/stream",
-            fps=20,
-            width=1280,
-            height=720,
             input_schema=BaseModel,
         ),
         "lucy-2.1": ModelDefinition(
@@ -299,14 +285,6 @@ _MODELS = {
             height=704,
             input_schema=BaseModel,
         ),
-        "lucy_2_rt": ModelDefinition(
-            name="lucy_2_rt",
-            url_path="/v1/stream",
-            fps=20,
-            width=1280,
-            height=720,
-            input_schema=BaseModel,
-        ),
         "live_avatar": ModelDefinition(
             name="live_avatar",
             url_path="/v1/stream",
@@ -325,14 +303,6 @@ _MODELS = {
             width=1280,
             height=704,
             input_schema=VideoToVideoInput,
-        ),
-        "lucy-2": ModelDefinition(
-            name="lucy-2",
-            url_path="/v1/jobs/lucy-2",
-            fps=20,
-            width=1280,
-            height=720,
-            input_schema=VideoEdit2Input,
         ),
         "lucy-2.1": ModelDefinition(
             name="lucy-2.1",
@@ -424,14 +394,6 @@ _MODELS = {
             height=704,
             input_schema=VideoRestyleInput,
         ),
-        "lucy-2-v2v": ModelDefinition(
-            name="lucy-2-v2v",
-            url_path="/v1/jobs/lucy-2-v2v",
-            fps=20,
-            width=1280,
-            height=720,
-            input_schema=VideoEdit2Input,
-        ),
     },
     "image": {
         # Canonical names
@@ -483,7 +445,6 @@ class Models:
 
         Available models:
             - "lucy-clip" - Video-to-video
-            - "lucy-2" - Video editing with reference image support
             - "lucy-2.1" - Video editing (newer, higher quality)
             - "lucy-restyle-2" - Video restyling with prompt or reference image
             - "lucy-motion" - Image-to-motion-video
