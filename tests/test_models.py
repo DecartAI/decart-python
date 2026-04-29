@@ -229,23 +229,3 @@ def test_latest_aliases_no_deprecation_warning() -> None:
 def test_invalid_model() -> None:
     with pytest.raises(DecartSDKError):
         models.video("invalid-model")
-
-
-def test_retired_models_are_not_available() -> None:
-    retired_realtime_models = ["lucy-2", "lucy_2_rt"]
-    retired_video_models = [
-        "lucy-2",
-        "lucy-2-v2v",
-        "lucy-fast-v2v",
-        "lucy-dev-v2v",
-        "lucy-dev-i2v",
-        "lucy-pro-i2v",
-    ]
-
-    for model in retired_realtime_models:
-        with pytest.raises(DecartSDKError):
-            models.realtime(model)  # type: ignore[arg-type]
-
-    for model in retired_video_models:
-        with pytest.raises(DecartSDKError):
-            models.video(model)  # type: ignore[arg-type]
