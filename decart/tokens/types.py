@@ -11,8 +11,9 @@ class TokenConstraints(TypedDict, total=False):
     realtime: RealtimeConstraints
 
 
-class TokenPermissions(TypedDict):
+class TokenPermissions(TypedDict, total=False):
     models: list[str]
+    origins: list[str]
 
 
 class CreateTokenResponse(BaseModel):

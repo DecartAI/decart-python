@@ -597,7 +597,7 @@ wheels = [
 
 [[package]]
 name = "decart"
-version = "0.0.33"
+version = "0.0.36"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
