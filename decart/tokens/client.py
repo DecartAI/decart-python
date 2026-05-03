@@ -25,10 +25,11 @@ class TokensClient:
         # With metadata:
         token = await client.tokens.create(metadata={"role": "viewer"})
 
-        # With expiry, model restrictions, and constraints:
+        # With expiry, model restrictions, origin restrictions, and constraints:
         token = await client.tokens.create(
             expires_in=120,
             allowed_models=["lucy-2.1"],
+            allowed_origins=["https://example.com"],
             constraints={"realtime": {"maxSessionDuration": 300}},
         )
         ```
@@ -46,6 +47,7 @@ class TokensClient:
         metadata: dict[str, Any] | None = None,
         expires_in: int | None = None,
         allowed_models: list[Union[Model, str]] | None = None,
+        allowed_origins: list[str] | None = None,
         constraints: TokenConstraints | None = None,
     ) -> CreateTokenResponse:
         """
@@ -55,6 +57,11 @@ class TokensClient:
             metadata: Optional custom key-value pairs to attach to the token.
             expires_in: Seconds until the token expires (1-3600, default 60).
             allowed_models: Restrict which models this token can access (max 20).
+            allowed_origins: Restrict which web origins this token can be used
+                from (max 20). Each entry must be a full origin including
+                scheme, e.g. ``https://example.com``. Enforced on realtime
+                sessions by matching the WebSocket ``Origin`` header verbatim.
+                Defense-in-depth — only effective for browser-based clients.
             constraints: Operational limits, e.g.
                 ``{"realtime": {"maxSessionDuration": 120}}``.
 
@@ -71,6 +78,7 @@ class TokensClient:
                 metadata={"role": "viewer"},
                 expires_in=120,
                 allowed_models=["lucy-2.1"],
+                allowed_origins=["https://example.com"],
                 constraints={"realtime": {"maxSessionDuration": 300}},
             )
             ```
@@ -93,6 +101,8 @@ class TokensClient:
             body["expiresIn"] = expires_in
         if allowed_models is not None:
             body["allowedModels"] = list(allowed_models)
+        if allowed_origins is not None:
+            body["allowedOrigins"] = list(allowed_origins)
         if constraints is not None:
             body["constraints"] = constraints
 

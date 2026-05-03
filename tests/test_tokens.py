@@ -165,6 +165,33 @@ async def test_create_token_with_allowed_models() -> None:
 
 
 @pytest.mark.asyncio
+async def test_create_token_with_allowed_origins() -> None:
+    """Sends allowedOrigins in request body."""
+    client = DecartClient(api_key="test-api-key")
+
+    mock_response = AsyncMock()
+    mock_response.ok = True
+    mock_response.json = AsyncMock(
+        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+    )
+
+    mock_session = MagicMock()
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
+        await client.tokens.create(
+            allowed_origins=["https://example.com", "https://app.example.com"]
+        )
+
+    call_kwargs = mock_session.post.call_args
+    assert call_kwargs.kwargs["json"] == {
+        "allowedOrigins": ["https://example.com", "https://app.example.com"]
+    }
+
+
+@pytest.mark.asyncio
 async def test_create_token_with_constraints() -> None:
     """Sends constraints in request body."""
     client = DecartClient(api_key="test-api-key")
@@ -199,7 +226,10 @@ async def test_create_token_with_all_v2_fields() -> None:
         return_value={
             "apiKey": "ek_test123",
             "expiresAt": "2024-12-15T12:10:00Z",
-            "permissions": {"models": ["lucy-2.1"]},
+            "permissions": {
+                "models": ["lucy-2.1"],
+                "origins": ["https://example.com"],
+            },
             "constraints": {"realtime": {"maxSessionDuration": 120}},
         }
     )
@@ -214,12 +244,16 @@ async def test_create_token_with_all_v2_fields() -> None:
             metadata={"role": "viewer"},
             expires_in=120,
             allowed_models=["lucy-2.1"],
+            allowed_origins=["https://example.com"],
             constraints={"realtime": {"maxSessionDuration": 120}},
         )
 
     assert result.api_key == "ek_test123"
     assert result.expires_at == "2024-12-15T12:10:00Z"
-    assert result.permissions == {"models": ["lucy-2.1"]}
+    assert result.permissions == {
+        "models": ["lucy-2.1"],
+        "origins": ["https://example.com"],
+    }
     assert result.constraints == {"realtime": {"maxSessionDuration": 120}}
 
     call_kwargs = mock_session.post.call_args
@@ -227,5 +261,6 @@ async def test_create_token_with_all_v2_fields() -> None:
         "metadata": {"role": "viewer"},
         "expiresIn": 120,
         "allowedModels": ["lucy-2.1"],
+        "allowedOrigins": ["https://example.com"],
         "constraints": {"realtime": {"maxSessionDuration": 120}},
     }
