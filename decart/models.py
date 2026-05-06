@@ -105,11 +105,7 @@ RealTimeModelDefinition = ModelDefinition[RealTimeModels]
 """Type alias for model definitions that support realtime streaming."""
 
 CustomModelDefinition = ModelDefinition[str]
-"""Type alias for custom model definitions with arbitrary model names.
-
-Useful for preview, experimental, or private models that are not yet
-in the SDK's built-in registry.
-"""
+"""Type alias for model definitions with arbitrary (non-registry) model names."""
 
 
 class VideoToVideoInput(DecartBaseModel):

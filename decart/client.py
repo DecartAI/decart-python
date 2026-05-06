@@ -79,7 +79,6 @@ class DecartClient:
     def queue(self) -> QueueClient:
         """
         Queue client for async jobs.
-        The SDK accepts any model definition and lets the backend validate support.
 
         Example:
             ```python
@@ -145,14 +144,13 @@ class DecartClient:
     async def process(self, options: dict[str, Any]) -> bytes:
         """
         Process synchronously using the model definition's configured endpoint.
-        The backend validates whether the model supports this API.
 
         For video editing, use the queue API instead:
             result = await client.queue.submit_and_poll({...})
 
         Args:
             options: Processing options including model and inputs
-                - model: ModelDefinition from models.image(), models.video(), models.realtime(), or constructed directly
+                - model: ModelDefinition from models.image() or constructed directly
                 - prompt: Text instructions describing the requested edit
                 - Additional model-specific inputs
 
@@ -180,8 +178,6 @@ class DecartClient:
         non_file_inputs = {k: v for k, v in inputs.items() if k not in FILE_FIELDS}
 
         if model.input_schema is None:
-            # Custom models can omit an input schema; in that case we pass
-            # arbitrary fields through and let the backend validate them.
             processed_inputs = {k: v for k, v in inputs.items() if v is not None}
         else:
             # Validate non-file inputs and create placeholder for file fields

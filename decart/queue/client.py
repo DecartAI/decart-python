@@ -26,7 +26,6 @@ INITIAL_DELAY = 0.5  # seconds
 class QueueClient:
     """
     Queue client for async jobs.
-    The SDK accepts any model definition and lets the backend validate support.
 
     Jobs are submitted and processed asynchronously, allowing you to
     poll for status and retrieve results when ready.
@@ -63,7 +62,6 @@ class QueueClient:
     async def submit(self, options: dict[str, Any]) -> JobSubmitResponse:
         """
         Submit an async queue job.
-        Video models and custom queue model definitions are supported.
         Returns immediately with job_id and initial status.
 
         Args:
@@ -94,8 +92,6 @@ class QueueClient:
         non_file_inputs = {k: v for k, v in inputs.items() if k not in FILE_FIELDS}
 
         if model.input_schema is None:
-            # Custom models can omit an input schema; in that case we pass
-            # arbitrary fields through and let the backend validate them.
             processed_inputs = {k: v for k, v in inputs.items() if v is not None}
         else:
             # Validate non-file inputs
