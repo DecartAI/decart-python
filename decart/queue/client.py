@@ -68,7 +68,7 @@ class QueueClient:
 
         Args:
             options: Submit options including model and inputs
-                - model: VideoModelDefinition from models.video(), or a custom definition from models.custom()
+                - model: VideoModelDefinition from models.video(), or a custom ModelDefinition
                 - prompt: Text instructions describing the requested edit
                 - Additional model-specific inputs
 

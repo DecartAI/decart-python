@@ -152,7 +152,7 @@ class DecartClient:
 
         Args:
             options: Processing options including model and inputs
-                - model: ModelDefinition from models.image(), models.video(), models.realtime(), or models.custom()
+                - model: ModelDefinition from models.image(), models.video(), models.realtime(), or constructed directly
                 - prompt: Text instructions describing the requested edit
                 - Additional model-specific inputs
 

@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from decart import DecartClient, models
+from decart import DecartClient, ModelDefinition, models
 
 try:
     from decart.realtime.client import RealtimeClient
@@ -120,8 +120,9 @@ async def test_realtime_client_creation_with_mock():
 async def test_realtime_connect_accepts_custom_model_definition():
     """Custom realtime models can use arbitrary model names, matching the JS SDK escape hatch."""
     client = DecartClient(api_key="test-key")
-    custom_model = models.custom(
-        "lucy_2_rt_preview",
+    custom_model = ModelDefinition(
+        name="lucy_2_rt_preview",
+        url_path="/v1/stream",
         fps=20,
         width=1280,
         height=720,
