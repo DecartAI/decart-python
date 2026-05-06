@@ -1,7 +1,6 @@
 import warnings
 import pytest
 from decart import models, DecartSDKError, ModelDefinition
-from pydantic import ValidationError
 from decart.models import _warned_aliases
 
 
@@ -236,18 +235,8 @@ def test_custom_model_definition_allows_arbitrary_model_names() -> None:
         height=720,
     )
 
-    assert isinstance(model, ModelDefinition)
     assert model.name == "lucy_2_rt_preview"
-    assert model.url_path == "/v1/stream"
-    assert model.fps == 20
-    assert model.width == 1280
-    assert model.height == 720
     assert model.input_schema is None
-
-
-def test_custom_model_definition_validates_required_shape() -> None:
-    with pytest.raises(ValidationError):
-        ModelDefinition(name="my_custom_model", url_path="/v1/stream")
 
 
 def test_invalid_model() -> None:

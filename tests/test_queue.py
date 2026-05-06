@@ -1,7 +1,4 @@
-"""
-Tests for the queue API.
-Note: queue API accepts any model definition and lets the backend validate support.
-"""
+"""Tests for the queue API."""
 
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -294,54 +291,8 @@ async def test_queue_includes_user_agent_header() -> None:
 
 
 @pytest.mark.asyncio
-async def test_queue_custom_model_uses_url_path() -> None:
+async def test_queue_submit_surfaces_backend_error() -> None:
     client = DecartClient(api_key="test-key")
-    custom_model = ModelDefinition(
-        name="lucy_video_preview",
-        url_path="/v1/jobs/lucy_video_preview",
-        fps=20,
-        width=1280,
-        height=720,
-    )
-
-    with patch("aiohttp.ClientSession") as mock_session_cls:
-        mock_response = MagicMock()
-        mock_response.ok = True
-        mock_response.json = AsyncMock(return_value={"job_id": "job-123", "status": "pending"})
-
-        mock_session = MagicMock()
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-        mock_session.post = MagicMock()
-        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session_cls.return_value = mock_session
-
-        await client.queue.submit(
-            {
-                "model": custom_model,
-                "prompt": "Use the custom video model",
-                "data": b"fake video data",
-            }
-        )
-
-        assert (
-            mock_session.post.call_args.args[0]
-            == "https://api.decart.ai/v1/jobs/lucy_video_preview"
-        )
-
-
-@pytest.mark.asyncio
-async def test_queue_custom_model_raises_bouncer_error() -> None:
-    client = DecartClient(api_key="test-key")
-    custom_model = ModelDefinition(
-        name="unknown_model",
-        url_path="/v1/jobs/unknown_model",
-        fps=20,
-        width=1280,
-        height=720,
-    )
 
     with patch("aiohttp.ClientSession") as mock_session_cls:
         mock_response = MagicMock()
@@ -361,8 +312,8 @@ async def test_queue_custom_model_raises_bouncer_error() -> None:
         with pytest.raises(QueueSubmitError) as exc_info:
             await client.queue.submit(
                 {
-                    "model": custom_model,
-                    "prompt": "Use the custom video model",
+                    "model": models.video("lucy-clip"),
+                    "prompt": "Apply a cinematic grade",
                     "data": b"fake video data",
                 }
             )

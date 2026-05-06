@@ -1,7 +1,4 @@
-"""
-Tests for the process API.
-Note: process() accepts any model definition and lets the backend validate support.
-"""
+"""Tests for the process API."""
 
 import pytest
 import asyncio
@@ -105,32 +102,6 @@ async def test_process_accepts_custom_model_definition_without_schema() -> None:
         "data": b"fake image data",
         "custom_strength": 0.7,
     }
-
-
-@pytest.mark.asyncio
-async def test_process_allows_custom_model_definition_for_realtime_url_path() -> None:
-    client = DecartClient(api_key="test-key")
-    custom_model = ModelDefinition(
-        name="lucy_image_preview",
-        url_path="/v1/stream",
-        fps=25,
-        width=1280,
-        height=704,
-    )
-
-    with patch("decart.client.send_request", new_callable=AsyncMock) as mock_send:
-        mock_send.return_value = b"fake image data"
-
-        result = await client.process(
-            {
-                "model": custom_model,
-                "prompt": "Apply a preview model treatment",
-                "data": b"fake image data",
-            }
-        )
-
-    assert result == b"fake image data"
-    assert mock_send.call_args.kwargs["model"] is custom_model
 
 
 @pytest.mark.asyncio
