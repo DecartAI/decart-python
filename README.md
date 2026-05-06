@@ -89,69 +89,6 @@ async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
             f.write(data)
 ```
 
-### Custom Models
-
-For preview, experimental, or private models that are not yet in the SDK registry,
-construct a `ModelDefinition` directly and pass it to the matching API.
-`models.realtime(...)`, `models.video(...)`, and `models.image(...)` remain registry-only helpers.
-
-```python
-from decart import DecartClient, ModelDefinition, RealtimeClient, RealtimeConnectOptions
-
-# Realtime: url_path is /v1/stream.
-custom_realtime_model = ModelDefinition(
-    name="lucy_2_rt_preview",
-    url_path="/v1/stream",
-    fps=20,
-    width=1280,
-    height=720,
-)
-
-realtime_client = await RealtimeClient.connect(
-    base_url=client.realtime_base_url,
-    api_key=client.api_key,
-    local_track=track,
-    options=RealtimeConnectOptions(
-        model=custom_realtime_model,
-        on_remote_stream=lambda stream: print("remote stream", stream),
-    ),
-)
-
-# Process API: pass the generation endpoint as url_path.
-custom_image_model = ModelDefinition(
-    name="lucy_image_preview",
-    url_path="/v1/generate/lucy_image_preview",
-    fps=25,
-    width=1280,
-    height=704,
-)
-
-image = await client.process({
-    "model": custom_image_model,
-    "prompt": "Apply a preview model treatment",
-    "data": open("input.png", "rb"),
-})
-
-# Queue API: point url_path at the queue endpoint for the model.
-custom_video_model = ModelDefinition(
-    name="lucy_video_preview",
-    url_path="/v1/jobs/lucy_video_preview",
-    fps=20,
-    width=1280,
-    height=720,
-)
-
-job = await client.queue.submit({
-    "model": custom_video_model,
-    "prompt": "Use the preview video model",
-    "data": open("input.mp4", "rb"),
-})
-```
-
-If `input_schema` is omitted, custom process and queue inputs are sent through without
-client-side schema validation; the backend/bouncer validates whether the model name,
-API surface, and inputs are supported.
-
 ## Development
 
 ### Setup with UV
