@@ -1,6 +1,6 @@
 import warnings
 import pytest
-from decart import models, DecartSDKError
+from decart import models, DecartSDKError, ModelDefinition
 from decart.models import _warned_aliases
 
 
@@ -224,6 +224,19 @@ def test_latest_aliases_no_deprecation_warning() -> None:
         models.video("lucy-motion-latest")
         models.image("lucy-image-latest")
         assert len(w) == 0
+
+
+def test_custom_model_definition_allows_arbitrary_model_names() -> None:
+    model = ModelDefinition(
+        name="lucy_2_rt_preview",
+        url_path="/v1/stream",
+        fps=20,
+        width=1280,
+        height=720,
+    )
+
+    assert model.name == "lucy_2_rt_preview"
+    assert model.input_schema is None
 
 
 def test_invalid_model() -> None:

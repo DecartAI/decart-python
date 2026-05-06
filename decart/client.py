@@ -1,9 +1,10 @@
 import os
+from types import TracebackType
 from typing import Any, Optional
 import aiohttp
 from pydantic import ValidationError
 from .errors import InvalidAPIKeyError, InvalidBaseURLError, InvalidInputError
-from .models import ImageModelDefinition, _MODELS
+from .models import ModelDefinition
 from .process.request import send_request
 from .queue.client import QueueClient
 from .tokens.client import TokensClient
@@ -77,8 +78,7 @@ class DecartClient:
     @property
     def queue(self) -> QueueClient:
         """
-        Queue client for async video editing jobs.
-        Only video models support the queue API.
+        Queue client for async jobs.
 
         Example:
             ```python
@@ -128,25 +128,29 @@ class DecartClient:
         if self._session and not self._session.closed:
             await self._session.close()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "DecartClient":
         """Async context manager entry."""
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         """Async context manager exit."""
         await self.close()
 
     async def process(self, options: dict[str, Any]) -> bytes:
         """
-        Process image editing synchronously.
-        Only image models support the process API.
+        Process synchronously using the model definition's configured endpoint.
 
         For video editing, use the queue API instead:
             result = await client.queue.submit_and_poll({...})
 
         Args:
             options: Processing options including model and inputs
-                - model: ImageModelDefinition from models.image()
+                - model: ModelDefinition from models.image() or constructed directly
                 - prompt: Text instructions describing the requested edit
                 - Additional model-specific inputs
 
@@ -154,21 +158,13 @@ class DecartClient:
             Generated/transformed image as bytes
 
         Raises:
-            InvalidInputError: If inputs are invalid or model is not an image model
+            InvalidInputError: If inputs are invalid
             ProcessingError: If processing fails
         """
         if "model" not in options:
             raise InvalidInputError("model is required")
 
-        model: ImageModelDefinition = options["model"]
-
-        # Validate that this is an image model (check against registry)
-        if model.name not in _MODELS["image"]:
-            raise InvalidInputError(
-                f"Model '{model.name}' is not supported by process(). "
-                f"Only image models support sync processing. "
-                f"For video models, use client.queue.submit_and_poll() instead."
-            )
+        model: ModelDefinition[str] = options["model"]
 
         cancel_token = options.get("cancel_token")
 
@@ -181,22 +177,25 @@ class DecartClient:
         file_inputs = {k: v for k, v in inputs.items() if k in FILE_FIELDS}
         non_file_inputs = {k: v for k, v in inputs.items() if k not in FILE_FIELDS}
 
-        # Validate non-file inputs and create placeholder for file fields
-        validation_inputs = {
-            **non_file_inputs,
-            **{k: b"" for k in file_inputs.keys()},  # Placeholder bytes for validation
-        }
+        if model.input_schema is None:
+            processed_inputs = {k: v for k, v in inputs.items() if v is not None}
+        else:
+            # Validate non-file inputs and create placeholder for file fields
+            validation_inputs = {
+                **non_file_inputs,
+                **{k: b"" for k in file_inputs.keys()},  # Placeholder bytes for validation
+            }
 
-        try:
-            validated_inputs = model.input_schema(**validation_inputs)
-        except ValidationError as e:
-            raise InvalidInputError(f"Invalid inputs for {model.name}: {str(e)}") from e
+            try:
+                validated_inputs = model.input_schema(**validation_inputs)
+            except ValidationError as e:
+                raise InvalidInputError(f"Invalid inputs for {model.name}: {str(e)}") from e
 
-        # Build final inputs: validated non-file inputs + original file inputs
-        processed_inputs = {
-            **validated_inputs.model_dump(exclude_none=True),
-            **file_inputs,  # Override placeholders with actual file data
-        }
+            # Build final inputs: validated non-file inputs + original file inputs
+            processed_inputs = {
+                **validated_inputs.model_dump(exclude_none=True),
+                **file_inputs,  # Override placeholders with actual file data
+            }
 
         session = await self._get_session()
         response = await send_request(

@@ -12,13 +12,13 @@ async def submit_job(
     session: aiohttp.ClientSession,
     base_url: str,
     api_key: str,
-    model: ModelDefinition,
+    model: ModelDefinition[str],
     inputs: dict[str, Any],
     integration: Optional[str] = None,
 ) -> JobSubmitResponse:
     """Submit a job to the queue.
 
-    POST /v1/jobs/{model}
+    POST {model.url_path}
     """
     form_data = aiohttp.FormData()
 
@@ -30,7 +30,7 @@ async def submit_job(
             else:
                 form_data.add_field(key, str(value))
 
-    endpoint = f"{base_url}/v1/jobs/{model.name}"
+    endpoint = f"{base_url}{model.url_path}"
 
     async with session.post(
         endpoint,

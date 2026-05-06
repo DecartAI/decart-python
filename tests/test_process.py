@@ -1,13 +1,9 @@
-"""
-Tests for the process API.
-Note: process() only supports image models (i2i).
-Video models must use the queue API.
-"""
+"""Tests for the process API."""
 
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
-from decart import DecartClient, models, DecartSDKError
+from decart import DecartClient, ModelDefinition, models, DecartSDKError
 
 
 @pytest.mark.asyncio
@@ -74,20 +70,38 @@ async def test_process_image_to_image_with_reference_image() -> None:
 
 
 @pytest.mark.asyncio
-async def test_process_rejects_video_models() -> None:
-    """Test that process() rejects video models with helpful error message."""
+async def test_process_accepts_custom_model_definition_without_schema() -> None:
     client = DecartClient(api_key="test-key")
+    custom_model = ModelDefinition(
+        name="lucy_image_preview",
+        url_path="/v1/generate/lucy_image_preview",
+        fps=25,
+        width=1280,
+        height=704,
+    )
 
-    with pytest.raises(DecartSDKError) as exc_info:
-        await client.process(
+    with patch("decart.client.send_request", new_callable=AsyncMock) as mock_send:
+        mock_send.return_value = b"fake image data"
+
+        result = await client.process(
             {
-                "model": models.video("lucy-clip"),
-                "prompt": "Add cinematic teal-and-orange grading",
+                "model": custom_model,
+                "prompt": "Apply a preview model treatment",
+                "data": b"fake image data",
+                "custom_strength": 0.7,
+                "optional": None,
             }
         )
 
-    assert "not supported by process()" in str(exc_info.value)
-    assert "queue" in str(exc_info.value).lower()
+    assert result == b"fake image data"
+    mock_send.assert_called_once()
+    call_kwargs = mock_send.call_args.kwargs
+    assert call_kwargs["model"] is custom_model
+    assert call_kwargs["inputs"] == {
+        "prompt": "Apply a preview model treatment",
+        "data": b"fake image data",
+        "custom_strength": 0.7,
+    }
 
 
 @pytest.mark.asyncio

@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field, ConfigDict, model_validator
 from .errors import ModelNotFoundError
 from .types import FileInput, MotionTrajectoryInput
 
-
 RealTimeModels = Literal[
     # Canonical names
     "lucy",
@@ -92,7 +91,7 @@ class ModelDefinition(DecartBaseModel, Generic[ModelT]):
     fps: int = Field(ge=1)
     width: int = Field(ge=1)
     height: int = Field(ge=1)
-    input_schema: type[BaseModel]
+    input_schema: Optional[type[BaseModel]] = None
 
 
 # Type aliases for model definitions that support specific APIs
@@ -104,6 +103,9 @@ VideoModelDefinition = ModelDefinition[VideoModels]
 
 RealTimeModelDefinition = ModelDefinition[RealTimeModels]
 """Type alias for model definitions that support realtime streaming."""
+
+CustomModelDefinition = ModelDefinition[str]
+"""Type alias for model definitions with arbitrary (non-registry) model names."""
 
 
 class VideoToVideoInput(DecartBaseModel):
@@ -193,7 +195,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "lucy-2.1": ModelDefinition(
             name="lucy-2.1",
@@ -201,7 +202,6 @@ _MODELS = {
             fps=20,
             width=1088,
             height=624,
-            input_schema=BaseModel,
         ),
         "lucy-2.1-vton": ModelDefinition(
             name="lucy-2.1-vton",
@@ -209,7 +209,6 @@ _MODELS = {
             fps=20,
             width=1088,
             height=624,
-            input_schema=BaseModel,
         ),
         "lucy-restyle": ModelDefinition(
             name="lucy-restyle",
@@ -217,7 +216,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "lucy-restyle-2": ModelDefinition(
             name="lucy-restyle-2",
@@ -225,7 +223,6 @@ _MODELS = {
             fps=22,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "live-avatar": ModelDefinition(
             name="live-avatar",
@@ -233,7 +230,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=720,
-            input_schema=BaseModel,
         ),
         # Latest aliases (server-side resolution)
         "lucy-latest": ModelDefinition(
@@ -242,7 +238,6 @@ _MODELS = {
             fps=20,
             width=1088,
             height=624,
-            input_schema=BaseModel,
         ),
         "lucy-vton-latest": ModelDefinition(
             name="lucy-vton-latest",
@@ -250,7 +245,6 @@ _MODELS = {
             fps=20,
             width=1088,
             height=624,
-            input_schema=BaseModel,
         ),
         "lucy-restyle-latest": ModelDefinition(
             name="lucy-restyle-latest",
@@ -258,7 +252,6 @@ _MODELS = {
             fps=22,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         # Deprecated names
         "mirage": ModelDefinition(
@@ -267,7 +260,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "mirage_v2": ModelDefinition(
             name="mirage_v2",
@@ -275,7 +267,6 @@ _MODELS = {
             fps=22,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "lucy_v2v_720p_rt": ModelDefinition(
             name="lucy_v2v_720p_rt",
@@ -283,7 +274,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "live_avatar": ModelDefinition(
             name="live_avatar",
@@ -291,7 +281,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=720,
-            input_schema=BaseModel,
         ),
     },
     "video": {

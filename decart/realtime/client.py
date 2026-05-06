@@ -19,7 +19,6 @@ from .subscribe import (
 )
 from .types import ConnectionState, RealtimeConnectOptions
 from ..types import FileInput
-from ..models import RealTimeModels
 from ..errors import DecartSDKError, InvalidInputError, WebRTCError
 from ..process.request import file_input_to_bytes
 
@@ -111,7 +110,7 @@ class RealtimeClient:
         ws_url = f"{base_url}{options.model.url_path}"
         ws_url += f"?api_key={quote(api_key)}&model={quote(options.model.name)}"
 
-        model_name: RealTimeModels = options.model.name  # type: ignore[assignment]
+        model_name: str = options.model.name
 
         is_avatar_live = model_name in ("live_avatar", "live-avatar")
         audio_stream_manager: Optional[AudioStreamManager] = None

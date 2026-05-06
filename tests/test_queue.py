@@ -1,12 +1,14 @@
-"""
-Tests for the queue API.
-Note: queue API only supports video models.
-Image models must use the process API.
-"""
+"""Tests for the queue API."""
 
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from decart import DecartClient, models, DecartSDKError
+from decart import (
+    DecartClient,
+    ModelDefinition,
+    models,
+    DecartSDKError,
+    QueueSubmitError,
+)
 
 
 @pytest.mark.asyncio
@@ -53,20 +55,38 @@ async def test_queue_submit_video_to_video() -> None:
 
 
 @pytest.mark.asyncio
-async def test_queue_rejects_image_models() -> None:
-    """Test that queue API rejects image models with helpful error message."""
+async def test_queue_submit_accepts_custom_model_definition_without_schema() -> None:
     client = DecartClient(api_key="test-key")
+    custom_model = ModelDefinition(
+        name="lucy_video_preview",
+        url_path="/v1/jobs/lucy_video_preview",
+        fps=20,
+        width=1280,
+        height=720,
+    )
 
-    with pytest.raises(DecartSDKError) as exc_info:
-        await client.queue.submit(
+    with patch("decart.queue.client.submit_job") as mock_submit:
+        mock_submit.return_value = MagicMock(job_id="job-custom", status="pending")
+
+        job = await client.queue.submit(
             {
-                "model": models.image("lucy-image-2"),
-                "prompt": "Apply a painterly sunset color grade",
+                "model": custom_model,
+                "prompt": "Use the custom video model",
+                "data": b"fake video data",
+                "custom_strength": 0.7,
+                "optional": None,
             }
         )
 
-    assert "not supported by queue" in str(exc_info.value)
-    assert "process" in str(exc_info.value).lower()
+    assert job.job_id == "job-custom"
+    mock_submit.assert_called_once()
+    call_kwargs = mock_submit.call_args.kwargs
+    assert call_kwargs["model"] is custom_model
+    assert call_kwargs["inputs"] == {
+        "prompt": "Use the custom video model",
+        "data": b"fake video data",
+        "custom_strength": 0.7,
+    }
 
 
 @pytest.mark.asyncio
@@ -267,6 +287,38 @@ async def test_queue_includes_user_agent_header() -> None:
 
         assert "User-Agent" in headers
         assert headers["User-Agent"].startswith("decart-python-sdk/")
+        assert mock_session.post.call_args.args[0] == "https://api.decart.ai/v1/jobs/lucy-clip"
+
+
+@pytest.mark.asyncio
+async def test_queue_submit_surfaces_backend_error() -> None:
+    client = DecartClient(api_key="test-key")
+
+    with patch("aiohttp.ClientSession") as mock_session_cls:
+        mock_response = MagicMock()
+        mock_response.ok = False
+        mock_response.status = 400
+        mock_response.text = AsyncMock(return_value="unsupported model")
+
+        mock_session = MagicMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session.post = MagicMock()
+        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
+
+        mock_session_cls.return_value = mock_session
+
+        with pytest.raises(QueueSubmitError) as exc_info:
+            await client.queue.submit(
+                {
+                    "model": models.video("lucy-clip"),
+                    "prompt": "Apply a cinematic grade",
+                    "data": b"fake video data",
+                }
+            )
+
+        assert "unsupported model" in str(exc_info.value)
 
 
 # Tests for lucy-2.1
