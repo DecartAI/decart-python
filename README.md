@@ -132,11 +132,10 @@ image = await client.process({
     "data": open("input.png", "rb"),
 })
 
-# Queue API: set queue_url_path. Submitting a model without it raises InvalidInputError.
+# Queue API: point url_path at the queue endpoint for the model.
 custom_video_model = ModelDefinition(
     name="lucy_video_preview",
-    url_path="/v1/generate/lucy_video_preview",
-    queue_url_path="/v1/jobs/lucy_video_preview",
+    url_path="/v1/jobs/lucy_video_preview",
     fps=20,
     width=1280,
     height=720,

@@ -7,7 +7,6 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from decart import (
     DecartClient,
-    InvalidInputError,
     ModelDefinition,
     models,
     DecartSDKError,
@@ -63,8 +62,7 @@ async def test_queue_submit_accepts_custom_model_definition_without_schema() -> 
     client = DecartClient(api_key="test-key")
     custom_model = ModelDefinition(
         name="lucy_video_preview",
-        url_path="/v1/generate/lucy_video_preview",
-        queue_url_path="/v1/jobs/lucy_video_preview",
+        url_path="/v1/jobs/lucy_video_preview",
         fps=20,
         width=1280,
         height=720,
@@ -336,12 +334,11 @@ async def test_queue_includes_user_agent_header() -> None:
 
 
 @pytest.mark.asyncio
-async def test_queue_custom_model_uses_queue_url_path() -> None:
+async def test_queue_custom_model_uses_url_path() -> None:
     client = DecartClient(api_key="test-key")
     custom_model = ModelDefinition(
         name="lucy_video_preview",
-        url_path="/v1/generate/lucy_video_preview",
-        queue_url_path="/v1/jobs/lucy_video_preview",
+        url_path="/v1/jobs/lucy_video_preview",
         fps=20,
         width=1280,
         height=720,
@@ -376,35 +373,11 @@ async def test_queue_custom_model_uses_queue_url_path() -> None:
 
 
 @pytest.mark.asyncio
-async def test_queue_custom_model_without_queue_url_path_raises() -> None:
-    client = DecartClient(api_key="test-key")
-    custom_model = ModelDefinition(
-        name="lucy_video_preview",
-        url_path="/v1/stream",
-        fps=20,
-        width=1280,
-        height=720,
-    )
-
-    with pytest.raises(InvalidInputError) as exc_info:
-        await client.queue.submit(
-            {
-                "model": custom_model,
-                "prompt": "Use the custom video model",
-                "data": b"fake video data",
-            }
-        )
-
-    assert "queue_url_path" in str(exc_info.value)
-
-
-@pytest.mark.asyncio
 async def test_queue_custom_model_raises_bouncer_error() -> None:
     client = DecartClient(api_key="test-key")
     custom_model = ModelDefinition(
         name="unknown_model",
-        url_path="/v1/generate/unknown_model",
-        queue_url_path="/v1/jobs/unknown_model",
+        url_path="/v1/jobs/unknown_model",
         fps=20,
         width=1280,
         height=720,
