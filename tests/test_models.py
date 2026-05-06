@@ -1,6 +1,7 @@
 import warnings
 import pytest
-from decart import models, DecartSDKError
+from decart import models, DecartSDKError, CustomModelDefinition
+from pydantic import BaseModel, ValidationError
 from decart.models import _warned_aliases
 
 
@@ -224,6 +225,28 @@ def test_latest_aliases_no_deprecation_warning() -> None:
         models.video("lucy-motion-latest")
         models.image("lucy-image-latest")
         assert len(w) == 0
+
+
+def test_custom_model_definition_allows_arbitrary_model_names() -> None:
+    model = models.custom(
+        "lucy_2_rt_preview",
+        fps=20,
+        width=1280,
+        height=720,
+    )
+
+    assert isinstance(model, CustomModelDefinition)
+    assert model.name == "lucy_2_rt_preview"
+    assert model.url_path == "/v1/stream"
+    assert model.fps == 20
+    assert model.width == 1280
+    assert model.height == 720
+    assert model.input_schema is BaseModel
+
+
+def test_custom_model_definition_validates_required_shape() -> None:
+    with pytest.raises(ValidationError):
+        CustomModelDefinition(name="my_custom_model", url_path="/v1/stream")
 
 
 def test_invalid_model() -> None:

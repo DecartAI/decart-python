@@ -80,7 +80,7 @@ async def send_request(
     session: aiohttp.ClientSession,
     base_url: str,
     api_key: str,
-    model: ModelDefinition,
+    model: ModelDefinition[str],
     inputs: dict[str, Any],
     cancel_token: Optional[asyncio.Event] = None,
     integration: Optional[str] = None,

@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field, ConfigDict, model_validator
 from .errors import ModelNotFoundError
 from .types import FileInput, MotionTrajectoryInput
 
-
 RealTimeModels = Literal[
     # Canonical names
     "lucy",
@@ -92,7 +91,7 @@ class ModelDefinition(DecartBaseModel, Generic[ModelT]):
     fps: int = Field(ge=1)
     width: int = Field(ge=1)
     height: int = Field(ge=1)
-    input_schema: type[BaseModel]
+    input_schema: type[BaseModel] = BaseModel
 
 
 # Type aliases for model definitions that support specific APIs
@@ -104,6 +103,13 @@ VideoModelDefinition = ModelDefinition[VideoModels]
 
 RealTimeModelDefinition = ModelDefinition[RealTimeModels]
 """Type alias for model definitions that support realtime streaming."""
+
+CustomModelDefinition = ModelDefinition[str]
+"""Type alias for custom model definitions with arbitrary model names.
+
+Useful for preview, experimental, or private models that are not yet
+in the SDK's built-in registry.
+"""
 
 
 class VideoToVideoInput(DecartBaseModel):
@@ -428,6 +434,39 @@ _MODELS = {
 
 
 class Models:
+    @staticmethod
+    def custom(
+        name: str,
+        *,
+        fps: int,
+        width: int,
+        height: int,
+        url_path: str = "/v1/stream",
+        input_schema: type[BaseModel] = BaseModel,
+    ) -> CustomModelDefinition:
+        """Create a custom model definition with an arbitrary model name.
+
+        This is useful for preview, experimental, or private models that are
+        not yet in the SDK's built-in registry. Pass the returned definition
+        directly to the matching client API.
+
+        For realtime models, keep the default ``url_path="/v1/stream"``.
+        For process/custom image models, pass the generation endpoint as
+        ``url_path``. Queue jobs always submit to ``/v1/jobs/{model.name}``,
+        so custom queue models do not need a separate path. If ``input_schema``
+        is omitted, process and queue inputs are sent through without
+        client-side schema validation; the backend/bouncer validates model
+        availability and API support.
+        """
+        return CustomModelDefinition(
+            name=name,
+            url_path=url_path,
+            fps=fps,
+            width=width,
+            height=height,
+            input_schema=input_schema,
+        )
+
     @staticmethod
     def realtime(model: RealTimeModels) -> RealTimeModelDefinition:
         """Get a realtime model definition for WebRTC streaming."""

@@ -117,6 +117,53 @@ async def test_realtime_client_creation_with_mock():
 
 
 @pytest.mark.asyncio
+async def test_realtime_connect_accepts_custom_model_definition():
+    """Custom realtime models can use arbitrary model names, matching the JS SDK escape hatch."""
+    client = DecartClient(api_key="test-key")
+    custom_model = models.custom(
+        "lucy_2_rt_preview",
+        fps=20,
+        width=1280,
+        height=720,
+    )
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.is_connected = MagicMock(return_value=True)
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.realtime_base_url,
+            api_key=client.api_key,
+            local_track=MagicMock(),
+            options=RealtimeConnectOptions(
+                model=custom_model,
+                on_remote_stream=lambda t: None,
+            ),
+        )
+
+        assert realtime_client is not None
+        call_args = mock_manager_class.call_args
+        config = call_args[0][0] if call_args[0] else call_args[1]["configuration"]
+        assert "model=lucy_2_rt_preview" in config.webrtc_url
+        assert config.model_name == "lucy_2_rt_preview"
+        assert config.fps == 20
+
+        await realtime_client.disconnect()
+
+
+@pytest.mark.asyncio
 async def test_realtime_set_prompt_with_mock():
     """Test set_prompt with mocked WebRTC and prompt_ack"""
     import asyncio

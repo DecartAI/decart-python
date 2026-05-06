@@ -2,9 +2,9 @@ import asyncio
 from typing import Any, Optional, TYPE_CHECKING
 
 import aiohttp
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
-from ..models import VideoModelDefinition, _MODELS
+from ..models import ModelDefinition
 from ..errors import InvalidInputError
 from .request import submit_job, get_job_status, get_job_content
 from .types import (
@@ -25,8 +25,8 @@ INITIAL_DELAY = 0.5  # seconds
 
 class QueueClient:
     """
-    Queue client for async job-based video editing.
-    Only video models support the queue API.
+    Queue client for async jobs.
+    The SDK accepts any model definition and lets the backend validate support.
 
     Jobs are submitted and processed asynchronously, allowing you to
     poll for status and retrieve results when ready.
@@ -62,13 +62,13 @@ class QueueClient:
 
     async def submit(self, options: dict[str, Any]) -> JobSubmitResponse:
         """
-        Submit a video editing job to the queue for async processing.
-        Only video models are supported.
+        Submit an async queue job.
+        Video models and custom queue model definitions are supported.
         Returns immediately with job_id and initial status.
 
         Args:
             options: Submit options including model and inputs
-                - model: VideoModelDefinition from models.video()
+                - model: VideoModelDefinition from models.video(), or a custom definition from models.custom()
                 - prompt: Text instructions describing the requested edit
                 - Additional model-specific inputs
 
@@ -76,21 +76,13 @@ class QueueClient:
             JobSubmitResponse with job_id and status
 
         Raises:
-            InvalidInputError: If inputs are invalid or model is not a video model
+            InvalidInputError: If inputs are invalid
             QueueSubmitError: If submission fails
         """
         if "model" not in options:
             raise InvalidInputError("model is required")
 
-        model: VideoModelDefinition = options["model"]
-
-        # Validate that this is a video model (check against registry)
-        if model.name not in _MODELS["video"]:
-            raise InvalidInputError(
-                f"Model '{model.name}' is not supported by queue API. "
-                f"Only video models support async queue processing. "
-                f"For image models, use client.process() instead."
-            )
+        model: ModelDefinition[str] = options["model"]
 
         inputs = {k: v for k, v in options.items() if k not in ("model", "cancel_token")}
 
@@ -101,22 +93,27 @@ class QueueClient:
         file_inputs = {k: v for k, v in inputs.items() if k in FILE_FIELDS}
         non_file_inputs = {k: v for k, v in inputs.items() if k not in FILE_FIELDS}
 
-        # Validate non-file inputs
-        validation_inputs = {
-            **non_file_inputs,
-            **{k: b"" for k in file_inputs.keys()},
-        }
+        if model.input_schema is BaseModel:
+            # Custom models can omit an input schema; in that case we pass
+            # arbitrary fields through and let the backend validate them.
+            processed_inputs = {k: v for k, v in inputs.items() if v is not None}
+        else:
+            # Validate non-file inputs
+            validation_inputs = {
+                **non_file_inputs,
+                **{k: b"" for k in file_inputs.keys()},
+            }
 
-        try:
-            validated_inputs = model.input_schema(**validation_inputs)
-        except ValidationError as e:
-            raise InvalidInputError(f"Invalid inputs for {model.name}: {str(e)}") from e
+            try:
+                validated_inputs = model.input_schema(**validation_inputs)
+            except ValidationError as e:
+                raise InvalidInputError(f"Invalid inputs for {model.name}: {str(e)}") from e
 
-        # Build final inputs
-        processed_inputs = {
-            **validated_inputs.model_dump(exclude_none=True),
-            **file_inputs,
-        }
+            # Build final inputs
+            processed_inputs = {
+                **validated_inputs.model_dump(exclude_none=True),
+                **file_inputs,
+            }
 
         session = await self._get_session()
         return await submit_job(

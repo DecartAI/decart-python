@@ -12,7 +12,7 @@ async def submit_job(
     session: aiohttp.ClientSession,
     base_url: str,
     api_key: str,
-    model: ModelDefinition,
+    model: ModelDefinition[str],
     inputs: dict[str, Any],
     integration: Optional[str] = None,
 ) -> JobSubmitResponse:

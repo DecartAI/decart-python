@@ -12,7 +12,7 @@ from .errors import (
     QueueResultError,
     TokenCreateError,
 )
-from .models import models, ModelDefinition, VideoRestyleInput
+from .models import models, ModelDefinition, CustomModelDefinition, VideoRestyleInput
 from .types import FileInput, ModelState, Prompt
 from .queue import (
     QueueClient,
@@ -69,6 +69,7 @@ __all__ = [
     "QueueResultError",
     "models",
     "ModelDefinition",
+    "CustomModelDefinition",
     "VideoRestyleInput",
     "FileInput",
     "ModelState",

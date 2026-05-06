@@ -89,6 +89,69 @@ async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
             f.write(data)
 ```
 
+### Custom Models
+
+For preview, experimental, or private models that are not yet in the SDK registry,
+create a custom model definition and pass it directly to the matching API.
+`models.realtime(...)`, `models.video(...)`, and `models.image(...)` remain registry-only helpers;
+use `models.custom(...)` when you need to send an arbitrary model name.
+
+```python
+from decart import DecartClient, RealtimeClient, RealtimeConnectOptions, models
+
+# Realtime: default url_path is /v1/stream.
+custom_realtime_model = models.custom(
+    "lucy_2_rt_preview",
+    fps=20,
+    width=1280,
+    height=720,
+)
+
+realtime_client = await RealtimeClient.connect(
+    base_url=client.realtime_base_url,
+    api_key=client.api_key,
+    local_track=track,
+    options=RealtimeConnectOptions(
+        model=custom_realtime_model,
+        on_remote_stream=lambda stream: print("remote stream", stream),
+    ),
+)
+
+# Process API: use a generation endpoint; the default realtime url_path is
+# not valid for client.process().
+custom_image_model = models.custom(
+    "lucy_image_preview",
+    url_path="/v1/generate/lucy_image_preview",
+    fps=25,
+    width=1280,
+    height=704,
+)
+
+image = await client.process({
+    "model": custom_image_model,
+    "prompt": "Apply a preview model treatment",
+    "data": open("input.png", "rb"),
+})
+
+# Queue API: async jobs always submit to /v1/jobs/{model.name}; url_path is ignored here.
+custom_video_model = models.custom(
+    "lucy_video_preview",
+    fps=20,
+    width=1280,
+    height=720,
+)
+
+job = await client.queue.submit({
+    "model": custom_video_model,
+    "prompt": "Use the preview video model",
+    "data": open("input.mp4", "rb"),
+})
+```
+
+If `input_schema` is omitted, custom process and queue inputs are sent through without
+client-side schema validation; the backend/bouncer validates whether the model name,
+API surface, and inputs are supported.
+
 ## Development
 
 ### Setup with UV
