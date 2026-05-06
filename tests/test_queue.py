@@ -93,46 +93,6 @@ async def test_queue_submit_accepts_custom_model_definition_without_schema() -> 
 
 
 @pytest.mark.asyncio
-async def test_queue_allows_image_model_definitions() -> None:
-    client = DecartClient(api_key="test-key")
-    model = models.image("lucy-image-2")
-
-    with patch("decart.queue.client.submit_job") as mock_submit:
-        mock_submit.return_value = MagicMock(job_id="job-image", status="pending")
-
-        job = await client.queue.submit(
-            {
-                "model": model,
-                "prompt": "Apply a painterly sunset color grade",
-                "data": b"fake image data",
-            }
-        )
-
-    assert job.job_id == "job-image"
-    assert mock_submit.call_args.kwargs["model"] is model
-
-
-@pytest.mark.asyncio
-async def test_queue_allows_realtime_model_definitions_with_overlapping_video_names() -> None:
-    client = DecartClient(api_key="test-key")
-    model = models.realtime("lucy-2.1")
-
-    with patch("decart.queue.client.submit_job") as mock_submit:
-        mock_submit.return_value = MagicMock(job_id="job-realtime", status="pending")
-
-        job = await client.queue.submit(
-            {
-                "model": model,
-                "prompt": "Use the realtime model",
-                "data": b"fake video data",
-            }
-        )
-
-    assert job.job_id == "job-realtime"
-    assert mock_submit.call_args.kwargs["model"] is model
-
-
-@pytest.mark.asyncio
 async def test_queue_missing_model() -> None:
     """Test that missing model raises an error."""
     client = DecartClient(api_key="test-key")

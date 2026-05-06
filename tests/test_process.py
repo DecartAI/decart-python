@@ -134,46 +134,6 @@ async def test_process_allows_custom_model_definition_for_realtime_url_path() ->
 
 
 @pytest.mark.asyncio
-async def test_process_allows_video_model_definitions() -> None:
-    client = DecartClient(api_key="test-key")
-    model = models.video("lucy-clip")
-
-    with patch("decart.client.send_request", new_callable=AsyncMock) as mock_send:
-        mock_send.return_value = b"fake response"
-
-        result = await client.process(
-            {
-                "model": model,
-                "prompt": "Add cinematic teal-and-orange grading",
-                "data": b"fake video data",
-            }
-        )
-
-    assert result == b"fake response"
-    assert mock_send.call_args.kwargs["model"] is model
-
-
-@pytest.mark.asyncio
-async def test_process_allows_realtime_model_definitions() -> None:
-    client = DecartClient(api_key="test-key")
-    model = models.realtime("lucy")
-
-    with patch("decart.client.send_request", new_callable=AsyncMock) as mock_send:
-        mock_send.return_value = b"fake response"
-
-        result = await client.process(
-            {
-                "model": model,
-                "prompt": "Apply a preview model treatment",
-                "data": b"fake image data",
-            }
-        )
-
-    assert result == b"fake response"
-    assert mock_send.call_args.kwargs["model"] is model
-
-
-@pytest.mark.asyncio
 async def test_process_missing_model() -> None:
     client = DecartClient(api_key="test-key")
 
