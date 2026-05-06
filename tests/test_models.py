@@ -1,7 +1,7 @@
 import warnings
 import pytest
-from decart import models, DecartSDKError, CustomModelDefinition
-from pydantic import BaseModel, ValidationError
+from decart import models, DecartSDKError, ModelDefinition
+from pydantic import ValidationError
 from decart.models import _warned_aliases
 
 
@@ -77,29 +77,34 @@ def test_deprecated_realtime_models() -> None:
 def test_canonical_video_models() -> None:
     model = models.video("lucy-clip")
     assert model.name == "lucy-clip"
-    assert model.url_path == "/v1/jobs/lucy-clip"
+    assert model.url_path == "/v1/generate/lucy-clip"
+    assert model.queue_url_path == "/v1/jobs/lucy-clip"
 
     model = models.video("lucy-2.1")
     assert model.name == "lucy-2.1"
-    assert model.url_path == "/v1/jobs/lucy-2.1"
+    assert model.url_path == "/v1/generate/lucy-2.1"
+    assert model.queue_url_path == "/v1/jobs/lucy-2.1"
     assert model.fps == 20
     assert model.width == 1088
     assert model.height == 624
 
     model = models.video("lucy-2.1-vton")
     assert model.name == "lucy-2.1-vton"
-    assert model.url_path == "/v1/jobs/lucy-2.1-vton"
+    assert model.url_path == "/v1/generate/lucy-2.1-vton"
+    assert model.queue_url_path == "/v1/jobs/lucy-2.1-vton"
     assert model.fps == 20
     assert model.width == 1088
     assert model.height == 624
 
     model = models.video("lucy-restyle-2")
     assert model.name == "lucy-restyle-2"
-    assert model.url_path == "/v1/jobs/lucy-restyle-2"
+    assert model.url_path == "/v1/generate/lucy-restyle-2"
+    assert model.queue_url_path == "/v1/jobs/lucy-restyle-2"
 
     model = models.video("lucy-motion")
     assert model.name == "lucy-motion"
-    assert model.url_path == "/v1/jobs/lucy-motion"
+    assert model.url_path == "/v1/generate/lucy-motion"
+    assert model.queue_url_path == "/v1/jobs/lucy-motion"
 
 
 def test_deprecated_video_models() -> None:
@@ -176,31 +181,36 @@ def test_latest_realtime_models() -> None:
 def test_latest_video_models() -> None:
     model = models.video("lucy-latest")
     assert model.name == "lucy-latest"
-    assert model.url_path == "/v1/jobs/lucy-latest"
+    assert model.url_path == "/v1/generate/lucy-latest"
+    assert model.queue_url_path == "/v1/jobs/lucy-latest"
     assert model.fps == 20
     assert model.width == 1088
     assert model.height == 624
 
     model = models.video("lucy-vton-latest")
     assert model.name == "lucy-vton-latest"
-    assert model.url_path == "/v1/jobs/lucy-vton-latest"
+    assert model.url_path == "/v1/generate/lucy-vton-latest"
+    assert model.queue_url_path == "/v1/jobs/lucy-vton-latest"
     assert model.fps == 20
     assert model.width == 1088
     assert model.height == 624
 
     model = models.video("lucy-restyle-latest")
     assert model.name == "lucy-restyle-latest"
-    assert model.url_path == "/v1/jobs/lucy-restyle-latest"
+    assert model.url_path == "/v1/generate/lucy-restyle-latest"
+    assert model.queue_url_path == "/v1/jobs/lucy-restyle-latest"
     assert model.fps == 22
 
     model = models.video("lucy-clip-latest")
     assert model.name == "lucy-clip-latest"
-    assert model.url_path == "/v1/jobs/lucy-clip-latest"
+    assert model.url_path == "/v1/generate/lucy-clip-latest"
+    assert model.queue_url_path == "/v1/jobs/lucy-clip-latest"
     assert model.fps == 25
 
     model = models.video("lucy-motion-latest")
     assert model.name == "lucy-motion-latest"
-    assert model.url_path == "/v1/jobs/lucy-motion-latest"
+    assert model.url_path == "/v1/generate/lucy-motion-latest"
+    assert model.queue_url_path == "/v1/jobs/lucy-motion-latest"
     assert model.fps == 25
 
 
@@ -228,25 +238,27 @@ def test_latest_aliases_no_deprecation_warning() -> None:
 
 
 def test_custom_model_definition_allows_arbitrary_model_names() -> None:
-    model = models.custom(
-        "lucy_2_rt_preview",
+    model = ModelDefinition(
+        name="lucy_2_rt_preview",
+        url_path="/v1/stream",
         fps=20,
         width=1280,
         height=720,
     )
 
-    assert isinstance(model, CustomModelDefinition)
+    assert isinstance(model, ModelDefinition)
     assert model.name == "lucy_2_rt_preview"
     assert model.url_path == "/v1/stream"
+    assert model.queue_url_path is None
     assert model.fps == 20
     assert model.width == 1280
     assert model.height == 720
-    assert model.input_schema is BaseModel
+    assert model.input_schema is None
 
 
 def test_custom_model_definition_validates_required_shape() -> None:
     with pytest.raises(ValidationError):
-        CustomModelDefinition(name="my_custom_model", url_path="/v1/stream")
+        ModelDefinition(name="my_custom_model", url_path="/v1/stream")
 
 
 def test_invalid_model() -> None:

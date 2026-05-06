@@ -2,7 +2,7 @@ import asyncio
 from typing import Any, Optional, TYPE_CHECKING
 
 import aiohttp
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from ..models import ModelDefinition
 from ..errors import InvalidInputError
@@ -93,7 +93,7 @@ class QueueClient:
         file_inputs = {k: v for k, v in inputs.items() if k in FILE_FIELDS}
         non_file_inputs = {k: v for k, v in inputs.items() if k not in FILE_FIELDS}
 
-        if model.input_schema is BaseModel:
+        if model.input_schema is None:
             # Custom models can omit an input schema; in that case we pass
             # arbitrary fields through and let the backend validate them.
             processed_inputs = {k: v for k, v in inputs.items() if v is not None}

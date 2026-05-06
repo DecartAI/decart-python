@@ -5,7 +5,14 @@ Note: queue API accepts any model definition and lets the backend validate suppo
 
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from decart import DecartClient, models, DecartSDKError, QueueSubmitError
+from decart import (
+    DecartClient,
+    InvalidInputError,
+    ModelDefinition,
+    models,
+    DecartSDKError,
+    QueueSubmitError,
+)
 
 
 @pytest.mark.asyncio
@@ -54,8 +61,10 @@ async def test_queue_submit_video_to_video() -> None:
 @pytest.mark.asyncio
 async def test_queue_submit_accepts_custom_model_definition_without_schema() -> None:
     client = DecartClient(api_key="test-key")
-    custom_model = models.custom(
-        "lucy_video_preview",
+    custom_model = ModelDefinition(
+        name="lucy_video_preview",
+        url_path="/v1/generate/lucy_video_preview",
+        queue_url_path="/v1/jobs/lucy_video_preview",
         fps=20,
         width=1280,
         height=720,
@@ -327,10 +336,12 @@ async def test_queue_includes_user_agent_header() -> None:
 
 
 @pytest.mark.asyncio
-async def test_queue_custom_model_uses_standard_jobs_url() -> None:
+async def test_queue_custom_model_uses_queue_url_path() -> None:
     client = DecartClient(api_key="test-key")
-    custom_model = models.custom(
-        "lucy_video_preview",
+    custom_model = ModelDefinition(
+        name="lucy_video_preview",
+        url_path="/v1/generate/lucy_video_preview",
+        queue_url_path="/v1/jobs/lucy_video_preview",
         fps=20,
         width=1280,
         height=720,
@@ -365,30 +376,17 @@ async def test_queue_custom_model_uses_standard_jobs_url() -> None:
 
 
 @pytest.mark.asyncio
-async def test_queue_custom_model_ignores_url_path_for_jobs_url() -> None:
+async def test_queue_custom_model_without_queue_url_path_raises() -> None:
     client = DecartClient(api_key="test-key")
-    custom_model = models.custom(
-        "lucy_video_preview",
-        url_path="/v1/not-the-queue-url",
+    custom_model = ModelDefinition(
+        name="lucy_video_preview",
+        url_path="/v1/stream",
         fps=20,
         width=1280,
         height=720,
     )
 
-    with patch("aiohttp.ClientSession") as mock_session_cls:
-        mock_response = MagicMock()
-        mock_response.ok = True
-        mock_response.json = AsyncMock(return_value={"job_id": "job-123", "status": "pending"})
-
-        mock_session = MagicMock()
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-        mock_session.post = MagicMock()
-        mock_session.post.return_value.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_session.post.return_value.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session_cls.return_value = mock_session
-
+    with pytest.raises(InvalidInputError) as exc_info:
         await client.queue.submit(
             {
                 "model": custom_model,
@@ -397,17 +395,16 @@ async def test_queue_custom_model_ignores_url_path_for_jobs_url() -> None:
             }
         )
 
-        assert (
-            mock_session.post.call_args.args[0]
-            == "https://api.decart.ai/v1/jobs/lucy_video_preview"
-        )
+    assert "queue_url_path" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
 async def test_queue_custom_model_raises_bouncer_error() -> None:
     client = DecartClient(api_key="test-key")
-    custom_model = models.custom(
-        "unknown_model",
+    custom_model = ModelDefinition(
+        name="unknown_model",
+        url_path="/v1/generate/unknown_model",
+        queue_url_path="/v1/jobs/unknown_model",
         fps=20,
         width=1280,
         height=720,

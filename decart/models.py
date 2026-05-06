@@ -88,10 +88,11 @@ class DecartBaseModel(BaseModel):
 class ModelDefinition(DecartBaseModel, Generic[ModelT]):
     name: ModelT
     url_path: str
+    queue_url_path: Optional[str] = None
     fps: int = Field(ge=1)
     width: int = Field(ge=1)
     height: int = Field(ge=1)
-    input_schema: type[BaseModel] = BaseModel
+    input_schema: Optional[type[BaseModel]] = None
 
 
 # Type aliases for model definitions that support specific APIs
@@ -199,7 +200,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "lucy-2.1": ModelDefinition(
             name="lucy-2.1",
@@ -207,7 +207,6 @@ _MODELS = {
             fps=20,
             width=1088,
             height=624,
-            input_schema=BaseModel,
         ),
         "lucy-2.1-vton": ModelDefinition(
             name="lucy-2.1-vton",
@@ -215,7 +214,6 @@ _MODELS = {
             fps=20,
             width=1088,
             height=624,
-            input_schema=BaseModel,
         ),
         "lucy-restyle": ModelDefinition(
             name="lucy-restyle",
@@ -223,7 +221,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "lucy-restyle-2": ModelDefinition(
             name="lucy-restyle-2",
@@ -231,7 +228,6 @@ _MODELS = {
             fps=22,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "live-avatar": ModelDefinition(
             name="live-avatar",
@@ -239,7 +235,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=720,
-            input_schema=BaseModel,
         ),
         # Latest aliases (server-side resolution)
         "lucy-latest": ModelDefinition(
@@ -248,7 +243,6 @@ _MODELS = {
             fps=20,
             width=1088,
             height=624,
-            input_schema=BaseModel,
         ),
         "lucy-vton-latest": ModelDefinition(
             name="lucy-vton-latest",
@@ -256,7 +250,6 @@ _MODELS = {
             fps=20,
             width=1088,
             height=624,
-            input_schema=BaseModel,
         ),
         "lucy-restyle-latest": ModelDefinition(
             name="lucy-restyle-latest",
@@ -264,7 +257,6 @@ _MODELS = {
             fps=22,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         # Deprecated names
         "mirage": ModelDefinition(
@@ -273,7 +265,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "mirage_v2": ModelDefinition(
             name="mirage_v2",
@@ -281,7 +272,6 @@ _MODELS = {
             fps=22,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "lucy_v2v_720p_rt": ModelDefinition(
             name="lucy_v2v_720p_rt",
@@ -289,7 +279,6 @@ _MODELS = {
             fps=25,
             width=1280,
             height=704,
-            input_schema=BaseModel,
         ),
         "live_avatar": ModelDefinition(
             name="live_avatar",
@@ -297,14 +286,14 @@ _MODELS = {
             fps=25,
             width=1280,
             height=720,
-            input_schema=BaseModel,
         ),
     },
     "video": {
         # Canonical names
         "lucy-clip": ModelDefinition(
             name="lucy-clip",
-            url_path="/v1/jobs/lucy-clip",
+            url_path="/v1/generate/lucy-clip",
+            queue_url_path="/v1/jobs/lucy-clip",
             fps=25,
             width=1280,
             height=704,
@@ -312,7 +301,8 @@ _MODELS = {
         ),
         "lucy-2.1": ModelDefinition(
             name="lucy-2.1",
-            url_path="/v1/jobs/lucy-2.1",
+            url_path="/v1/generate/lucy-2.1",
+            queue_url_path="/v1/jobs/lucy-2.1",
             fps=20,
             width=1088,
             height=624,
@@ -320,7 +310,8 @@ _MODELS = {
         ),
         "lucy-2.1-vton": ModelDefinition(
             name="lucy-2.1-vton",
-            url_path="/v1/jobs/lucy-2.1-vton",
+            url_path="/v1/generate/lucy-2.1-vton",
+            queue_url_path="/v1/jobs/lucy-2.1-vton",
             fps=20,
             width=1088,
             height=624,
@@ -328,7 +319,8 @@ _MODELS = {
         ),
         "lucy-restyle-2": ModelDefinition(
             name="lucy-restyle-2",
-            url_path="/v1/jobs/lucy-restyle-2",
+            url_path="/v1/generate/lucy-restyle-2",
+            queue_url_path="/v1/jobs/lucy-restyle-2",
             fps=22,
             width=1280,
             height=704,
@@ -336,7 +328,8 @@ _MODELS = {
         ),
         "lucy-motion": ModelDefinition(
             name="lucy-motion",
-            url_path="/v1/jobs/lucy-motion",
+            url_path="/v1/generate/lucy-motion",
+            queue_url_path="/v1/jobs/lucy-motion",
             fps=25,
             width=1280,
             height=704,
@@ -345,7 +338,8 @@ _MODELS = {
         # Latest aliases (server-side resolution)
         "lucy-latest": ModelDefinition(
             name="lucy-latest",
-            url_path="/v1/jobs/lucy-latest",
+            url_path="/v1/generate/lucy-latest",
+            queue_url_path="/v1/jobs/lucy-latest",
             fps=20,
             width=1088,
             height=624,
@@ -353,7 +347,8 @@ _MODELS = {
         ),
         "lucy-vton-latest": ModelDefinition(
             name="lucy-vton-latest",
-            url_path="/v1/jobs/lucy-vton-latest",
+            url_path="/v1/generate/lucy-vton-latest",
+            queue_url_path="/v1/jobs/lucy-vton-latest",
             fps=20,
             width=1088,
             height=624,
@@ -361,7 +356,8 @@ _MODELS = {
         ),
         "lucy-restyle-latest": ModelDefinition(
             name="lucy-restyle-latest",
-            url_path="/v1/jobs/lucy-restyle-latest",
+            url_path="/v1/generate/lucy-restyle-latest",
+            queue_url_path="/v1/jobs/lucy-restyle-latest",
             fps=22,
             width=1280,
             height=704,
@@ -369,7 +365,8 @@ _MODELS = {
         ),
         "lucy-clip-latest": ModelDefinition(
             name="lucy-clip-latest",
-            url_path="/v1/jobs/lucy-clip-latest",
+            url_path="/v1/generate/lucy-clip-latest",
+            queue_url_path="/v1/jobs/lucy-clip-latest",
             fps=25,
             width=1280,
             height=704,
@@ -377,7 +374,8 @@ _MODELS = {
         ),
         "lucy-motion-latest": ModelDefinition(
             name="lucy-motion-latest",
-            url_path="/v1/jobs/lucy-motion-latest",
+            url_path="/v1/generate/lucy-motion-latest",
+            queue_url_path="/v1/jobs/lucy-motion-latest",
             fps=25,
             width=1280,
             height=704,
@@ -386,7 +384,8 @@ _MODELS = {
         # Deprecated names
         "lucy-pro-v2v": ModelDefinition(
             name="lucy-pro-v2v",
-            url_path="/v1/jobs/lucy-pro-v2v",
+            url_path="/v1/generate/lucy-pro-v2v",
+            queue_url_path="/v1/jobs/lucy-pro-v2v",
             fps=25,
             width=1280,
             height=704,
@@ -394,7 +393,8 @@ _MODELS = {
         ),
         "lucy-restyle-v2v": ModelDefinition(
             name="lucy-restyle-v2v",
-            url_path="/v1/jobs/lucy-restyle-v2v",
+            url_path="/v1/generate/lucy-restyle-v2v",
+            queue_url_path="/v1/jobs/lucy-restyle-v2v",
             fps=22,
             width=1280,
             height=704,
@@ -406,6 +406,7 @@ _MODELS = {
         "lucy-image-2": ModelDefinition(
             name="lucy-image-2",
             url_path="/v1/generate/lucy-image-2",
+            queue_url_path="/v1/jobs/lucy-image-2",
             fps=25,
             width=1280,
             height=704,
@@ -415,6 +416,7 @@ _MODELS = {
         "lucy-image-latest": ModelDefinition(
             name="lucy-image-latest",
             url_path="/v1/generate/lucy-image-latest",
+            queue_url_path="/v1/jobs/lucy-image-latest",
             fps=25,
             width=1280,
             height=704,
@@ -424,6 +426,7 @@ _MODELS = {
         "lucy-pro-i2i": ModelDefinition(
             name="lucy-pro-i2i",
             url_path="/v1/generate/lucy-pro-i2i",
+            queue_url_path="/v1/jobs/lucy-pro-i2i",
             fps=25,
             width=1280,
             height=704,
@@ -434,39 +437,6 @@ _MODELS = {
 
 
 class Models:
-    @staticmethod
-    def custom(
-        name: str,
-        *,
-        fps: int,
-        width: int,
-        height: int,
-        url_path: str = "/v1/stream",
-        input_schema: type[BaseModel] = BaseModel,
-    ) -> CustomModelDefinition:
-        """Create a custom model definition with an arbitrary model name.
-
-        This is useful for preview, experimental, or private models that are
-        not yet in the SDK's built-in registry. Pass the returned definition
-        directly to the matching client API.
-
-        For realtime models, keep the default ``url_path="/v1/stream"``.
-        For process/custom image models, pass the generation endpoint as
-        ``url_path``. Queue jobs always submit to ``/v1/jobs/{model.name}``,
-        so custom queue models do not need a separate path. If ``input_schema``
-        is omitted, process and queue inputs are sent through without
-        client-side schema validation; the backend/bouncer validates model
-        availability and API support.
-        """
-        return CustomModelDefinition(
-            name=name,
-            url_path=url_path,
-            fps=fps,
-            width=width,
-            height=height,
-            input_schema=input_schema,
-        )
-
     @staticmethod
     def realtime(model: RealTimeModels) -> RealTimeModelDefinition:
         """Get a realtime model definition for WebRTC streaming."""

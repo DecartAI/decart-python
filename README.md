@@ -92,16 +92,16 @@ async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
 ### Custom Models
 
 For preview, experimental, or private models that are not yet in the SDK registry,
-create a custom model definition and pass it directly to the matching API.
-`models.realtime(...)`, `models.video(...)`, and `models.image(...)` remain registry-only helpers;
-use `models.custom(...)` when you need to send an arbitrary model name.
+construct a `ModelDefinition` directly and pass it to the matching API.
+`models.realtime(...)`, `models.video(...)`, and `models.image(...)` remain registry-only helpers.
 
 ```python
-from decart import DecartClient, RealtimeClient, RealtimeConnectOptions, models
+from decart import DecartClient, ModelDefinition, RealtimeClient, RealtimeConnectOptions
 
-# Realtime: default url_path is /v1/stream.
-custom_realtime_model = models.custom(
-    "lucy_2_rt_preview",
+# Realtime: url_path is /v1/stream.
+custom_realtime_model = ModelDefinition(
+    name="lucy_2_rt_preview",
+    url_path="/v1/stream",
     fps=20,
     width=1280,
     height=720,
@@ -117,10 +117,9 @@ realtime_client = await RealtimeClient.connect(
     ),
 )
 
-# Process API: use a generation endpoint; the default realtime url_path is
-# not valid for client.process().
-custom_image_model = models.custom(
-    "lucy_image_preview",
+# Process API: pass the generation endpoint as url_path.
+custom_image_model = ModelDefinition(
+    name="lucy_image_preview",
     url_path="/v1/generate/lucy_image_preview",
     fps=25,
     width=1280,
@@ -133,9 +132,11 @@ image = await client.process({
     "data": open("input.png", "rb"),
 })
 
-# Queue API: async jobs always submit to /v1/jobs/{model.name}; url_path is ignored here.
-custom_video_model = models.custom(
-    "lucy_video_preview",
+# Queue API: set queue_url_path. Submitting a model without it raises InvalidInputError.
+custom_video_model = ModelDefinition(
+    name="lucy_video_preview",
+    url_path="/v1/generate/lucy_video_preview",
+    queue_url_path="/v1/jobs/lucy_video_preview",
     fps=20,
     width=1280,
     height=720,

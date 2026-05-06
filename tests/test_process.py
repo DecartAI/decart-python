@@ -6,7 +6,7 @@ Note: process() accepts any model definition and lets the backend validate suppo
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
-from decart import DecartClient, models, DecartSDKError
+from decart import DecartClient, ModelDefinition, models, DecartSDKError
 
 
 @pytest.mark.asyncio
@@ -75,8 +75,8 @@ async def test_process_image_to_image_with_reference_image() -> None:
 @pytest.mark.asyncio
 async def test_process_accepts_custom_model_definition_without_schema() -> None:
     client = DecartClient(api_key="test-key")
-    custom_model = models.custom(
-        "lucy_image_preview",
+    custom_model = ModelDefinition(
+        name="lucy_image_preview",
         url_path="/v1/generate/lucy_image_preview",
         fps=25,
         width=1280,
@@ -108,10 +108,11 @@ async def test_process_accepts_custom_model_definition_without_schema() -> None:
 
 
 @pytest.mark.asyncio
-async def test_process_allows_custom_model_with_default_url_path() -> None:
+async def test_process_allows_custom_model_definition_for_realtime_url_path() -> None:
     client = DecartClient(api_key="test-key")
-    custom_model = models.custom(
-        "lucy_image_preview",
+    custom_model = ModelDefinition(
+        name="lucy_image_preview",
+        url_path="/v1/stream",
         fps=25,
         width=1280,
         height=704,

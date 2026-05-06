@@ -2,7 +2,12 @@ import aiohttp
 from typing import Any, Optional
 
 from ..models import ModelDefinition
-from ..errors import QueueSubmitError, QueueStatusError, QueueResultError
+from ..errors import (
+    InvalidInputError,
+    QueueSubmitError,
+    QueueStatusError,
+    QueueResultError,
+)
 from .._user_agent import build_user_agent
 from ..process.request import file_input_to_bytes
 from .types import JobSubmitResponse, JobStatusResponse
@@ -18,8 +23,14 @@ async def submit_job(
 ) -> JobSubmitResponse:
     """Submit a job to the queue.
 
-    POST /v1/jobs/{model}
+    POST {model.queue_url_path}
     """
+    if not model.queue_url_path:
+        raise InvalidInputError(
+            f"Model '{model.name}' does not support the queue API. "
+            f"Set queue_url_path on the model definition (e.g. '/v1/jobs/{model.name}')."
+        )
+
     form_data = aiohttp.FormData()
 
     for key, value in inputs.items():
@@ -30,7 +41,7 @@ async def submit_job(
             else:
                 form_data.add_field(key, str(value))
 
-    endpoint = f"{base_url}/v1/jobs/{model.name}"
+    endpoint = f"{base_url}{model.queue_url_path}"
 
     async with session.post(
         endpoint,
