@@ -166,7 +166,11 @@ Examples:
     )
     p.add_argument("--model", "-m", choices=REALTIME_MODELS, help="Model name")
     p.add_argument("--api-key", "-k", help="API key (or set DECART_API_KEY env var)")
-    p.add_argument("--image", "-i", help="Optional reference image (for lucy-2.1 / lucy-2.1-vton)")
+    p.add_argument(
+        "--image",
+        "-i",
+        help="Optional reference image (for lucy-2.1 / lucy-2.1-vton / lucy-restyle-2)",
+    )
     p.add_argument("--prompt", "-p", help="Initial prompt text")
     p.add_argument("--camera", "-c", type=int, default=0, help="Camera device index (default: 0)")
     p.add_argument("--no-local", action="store_true", help="Hide local camera feed")
@@ -179,7 +183,7 @@ def select_model_interactive() -> str:
     print("\nAvailable realtime models:")
     for i, name in enumerate(REALTIME_MODELS, 1):
         note = ""
-        if name in ("lucy-2.1", "lucy-2.1-vton"):
+        if name in ("lucy-2.1", "lucy-2.1-vton", "lucy-restyle-2"):
             note = " (supports reference image)"
         print(f"  {i}. {name}{note}")
 
