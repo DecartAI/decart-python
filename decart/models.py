@@ -1,5 +1,5 @@
 import warnings
-from typing import Literal, Optional, List, Generic, TypeVar
+from typing import Literal, Optional, Generic, TypeVar
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from .errors import ModelNotFoundError
 from .types import FileInput
