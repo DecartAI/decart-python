@@ -15,8 +15,6 @@ Usage:
   python playground.py                                      # Interactive mode
   python playground.py --model lucy-restyle-2                    # Camera model
   python playground.py --model lucy-restyle-2 --prompt "Anime"   # With initial prompt
-  python playground.py --model live-avatar --image face.png      # Avatar mode
-  python playground.py --model live-avatar --image face.png --audio speech.mp3
 
 Controls (while running):
   Type text + Enter    → Send prompt to Decart
@@ -92,15 +90,10 @@ logger = logging.getLogger("playground")
 # ── Constants ────────────────────────────────────────────────────────────────
 
 REALTIME_MODELS = [
-    "lucy",
     "lucy-2.1",
     "lucy-2.1-vton",
-    "lucy-restyle",
     "lucy-restyle-2",
-    "live-avatar",
 ]
-CAMERA_MODELS = {"lucy", "lucy-2.1", "lucy-2.1-vton", "lucy-restyle", "lucy-restyle-2"}
-AVATAR_MODELS = {"live-avatar"}
 
 BANNER = """
 ╔══════════════════════════════════════╗
@@ -157,23 +150,6 @@ class CameraTrack(VideoStreamTrack):
             self._cap.release()
 
 
-# ── Audio Track ──────────────────────────────────────────────────────────────
-
-
-def load_audio_track(path: str) -> Optional[MediaStreamTrack]:
-    """Load an audio track from a file using aiortc's MediaPlayer."""
-    try:
-        from aiortc.contrib.media import MediaPlayer
-
-        player = MediaPlayer(path)
-        if player.audio:
-            return player.audio
-        print(f"  ⚠ No audio stream in {path}")
-    except Exception as e:
-        print(f"  ⚠ Failed to load audio: {e}")
-    return None
-
-
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 
@@ -185,16 +161,17 @@ def parse_args() -> argparse.Namespace:
 Examples:
   %(prog)s --model lucy-restyle-2
   %(prog)s --model lucy-restyle-2 --prompt "Anime style"
-  %(prog)s --model live-avatar --image avatar.png
-  %(prog)s --model live-avatar --image avatar.png --audio speech.mp3
   %(prog)s --model lucy-2.1 --image ref.png --prompt "Lego World"
 """,
     )
     p.add_argument("--model", "-m", choices=REALTIME_MODELS, help="Model name")
     p.add_argument("--api-key", "-k", help="API key (or set DECART_API_KEY env var)")
-    p.add_argument("--image", "-i", help="Initial image path (required for avatar-live)")
+    p.add_argument(
+        "--image",
+        "-i",
+        help="Optional reference image (for lucy-2.1 / lucy-2.1-vton / lucy-restyle-2)",
+    )
     p.add_argument("--prompt", "-p", help="Initial prompt text")
-    p.add_argument("--audio", "-a", help="Audio file path (for avatar-live)")
     p.add_argument("--camera", "-c", type=int, default=0, help="Camera device index (default: 0)")
     p.add_argument("--no-local", action="store_true", help="Hide local camera feed")
     p.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
@@ -206,9 +183,7 @@ def select_model_interactive() -> str:
     print("\nAvailable realtime models:")
     for i, name in enumerate(REALTIME_MODELS, 1):
         note = ""
-        if name in AVATAR_MODELS:
-            note = " (requires --image)"
-        elif name in ("lucy-2.1", "lucy-2.1-vton", "lucy-restyle-2"):
+        if name in ("lucy-2.1", "lucy-2.1-vton", "lucy-restyle-2"):
             note = " (supports reference image)"
         print(f"  {i}. {name}{note}")
 
@@ -248,23 +223,13 @@ async def run() -> None:
         model_name = select_model_interactive()
 
     model = models.realtime(cast(RealTimeModels, model_name))
-    needs_camera = model_name in CAMERA_MODELS
-    is_avatar = model_name in AVATAR_MODELS
 
     print(f"\n  Model : {model_name}")
     print(f"  Res   : {model.width}x{model.height} @ {model.fps}fps")
 
     # ── Validate ─────────────────────────────────────────────────────────
-    if is_avatar and not args.image:
-        print("\nError: --image is required for avatar-live model")
-        return
-
     if args.image and not Path(args.image).exists():
         print(f"\nError: Image not found: {args.image}")
-        return
-
-    if args.audio and not Path(args.audio).exists():
-        print(f"\nError: Audio file not found: {args.audio}")
         return
 
     # ── Initial State ────────────────────────────────────────────────────
@@ -285,22 +250,16 @@ async def run() -> None:
     camera_track: Optional[CameraTrack] = None
     local_track: Optional[MediaStreamTrack] = None
 
-    if needs_camera:
-        print(f"\n  Opening camera (device {args.camera})...")
-        try:
-            camera_track = CameraTrack(args.camera, model.width, model.height, model.fps)
-            local_track = camera_track
-            actual_w = int(camera_track._cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            actual_h = int(camera_track._cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            print(f"  ✓ Camera opened ({actual_w}x{actual_h})")
-        except RuntimeError as e:
-            print(f"  ✗ {e}")
-            return
-    elif args.audio:
-        print(f"  Loading audio: {args.audio}")
-        local_track = load_audio_track(args.audio)
-        if local_track:
-            print("  ✓ Audio loaded")
+    print(f"\n  Opening camera (device {args.camera})...")
+    try:
+        camera_track = CameraTrack(args.camera, model.width, model.height, model.fps)
+        local_track = camera_track
+        actual_w = int(camera_track._cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_h = int(camera_track._cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        print(f"  ✓ Camera opened ({actual_w}x{actual_h})")
+    except RuntimeError as e:
+        print(f"  ✗ {e}")
+        return
 
     # ── Connect ──────────────────────────────────────────────────────────
     remote_track_ready = asyncio.Event()

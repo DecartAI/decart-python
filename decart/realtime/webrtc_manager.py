@@ -48,7 +48,6 @@ class WebRTCConfiguration:
     initial_state: Optional[ModelState] = None
     customize_offer: Optional[Callable] = None
     integration: Optional[str] = None
-    model_name: Optional[str] = None
 
 
 def _is_permanent_error(exception: BaseException) -> bool:
@@ -155,7 +154,6 @@ class WebRTCManager:
                 local_track=self._local_track,
                 timeout=CONNECTION_TIMEOUT,
                 integration=self._config.integration,
-                model_name=self._config.model_name,
             )
 
             if self._intentional_disconnect or reconnect_generation != self._reconnect_generation:
@@ -192,7 +190,6 @@ class WebRTCManager:
                 local_track=local_track,
                 timeout=CONNECTION_TIMEOUT,
                 integration=self._config.integration,
-                model_name=self._config.model_name,
                 initial_image=initial_image,
                 initial_prompt=initial_prompt,
             )

@@ -1,26 +1,20 @@
 import warnings
-from typing import Literal, Optional, List, Generic, TypeVar
+from typing import Literal, Optional, Generic, TypeVar
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from .errors import ModelNotFoundError
-from .types import FileInput, MotionTrajectoryInput
+from .types import FileInput
 
 RealTimeModels = Literal[
     # Canonical names
-    "lucy",
     "lucy-2.1",
     "lucy-2.1-vton",
-    "lucy-restyle",
     "lucy-restyle-2",
-    "live-avatar",
     # Latest aliases (server-side resolution)
     "lucy-latest",
     "lucy-vton-latest",
     "lucy-restyle-latest",
     # Deprecated names
-    "mirage",
     "mirage_v2",
-    "lucy_v2v_720p_rt",
-    "live_avatar",
 ]
 VideoModels = Literal[
     # Canonical names
@@ -28,13 +22,11 @@ VideoModels = Literal[
     "lucy-2.1",
     "lucy-2.1-vton",
     "lucy-restyle-2",
-    "lucy-motion",
     # Latest aliases (server-side resolution)
     "lucy-latest",
     "lucy-vton-latest",
     "lucy-restyle-latest",
     "lucy-clip-latest",
-    "lucy-motion-latest",
     # Deprecated names
     "lucy-pro-v2v",
     "lucy-restyle-v2v",
@@ -51,10 +43,7 @@ Model = Literal[RealTimeModels, VideoModels, ImageModels]
 
 MODEL_ALIASES: dict[str, str] = {
     # Realtime aliases
-    "mirage": "lucy-restyle",
     "mirage_v2": "lucy-restyle-2",
-    "lucy_v2v_720p_rt": "lucy",
-    "live_avatar": "live-avatar",
     # Video aliases
     "lucy-pro-v2v": "lucy-clip",
     "lucy-restyle-v2v": "lucy-restyle-2",
@@ -121,13 +110,6 @@ class VideoToVideoInput(DecartBaseModel):
     enhance_prompt: Optional[bool] = None
 
 
-class ImageToMotionVideoInput(DecartBaseModel):
-    data: FileInput
-    trajectory: List[MotionTrajectoryInput] = Field(..., min_length=2, max_length=1000)
-    seed: Optional[int] = None
-    resolution: Optional[str] = None
-
-
 class VideoRestyleInput(DecartBaseModel):
     """Input for lucy-restyle-v2v model.
 
@@ -189,13 +171,6 @@ class ImageToImageInput(DecartBaseModel):
 _MODELS = {
     "realtime": {
         # Canonical names
-        "lucy": ModelDefinition(
-            name="lucy",
-            url_path="/v1/stream",
-            fps=25,
-            width=1280,
-            height=704,
-        ),
         "lucy-2.1": ModelDefinition(
             name="lucy-2.1",
             url_path="/v1/stream",
@@ -210,26 +185,12 @@ _MODELS = {
             width=1088,
             height=624,
         ),
-        "lucy-restyle": ModelDefinition(
-            name="lucy-restyle",
-            url_path="/v1/stream",
-            fps=25,
-            width=1280,
-            height=704,
-        ),
         "lucy-restyle-2": ModelDefinition(
             name="lucy-restyle-2",
             url_path="/v1/stream",
             fps=22,
             width=1280,
             height=704,
-        ),
-        "live-avatar": ModelDefinition(
-            name="live-avatar",
-            url_path="/v1/stream",
-            fps=25,
-            width=1280,
-            height=720,
         ),
         # Latest aliases (server-side resolution)
         "lucy-latest": ModelDefinition(
@@ -254,33 +215,12 @@ _MODELS = {
             height=704,
         ),
         # Deprecated names
-        "mirage": ModelDefinition(
-            name="mirage",
-            url_path="/v1/stream",
-            fps=25,
-            width=1280,
-            height=704,
-        ),
         "mirage_v2": ModelDefinition(
             name="mirage_v2",
             url_path="/v1/stream",
             fps=22,
             width=1280,
             height=704,
-        ),
-        "lucy_v2v_720p_rt": ModelDefinition(
-            name="lucy_v2v_720p_rt",
-            url_path="/v1/stream",
-            fps=25,
-            width=1280,
-            height=704,
-        ),
-        "live_avatar": ModelDefinition(
-            name="live_avatar",
-            url_path="/v1/stream",
-            fps=25,
-            width=1280,
-            height=720,
         ),
     },
     "video": {
@@ -317,14 +257,6 @@ _MODELS = {
             height=704,
             input_schema=VideoRestyleInput,
         ),
-        "lucy-motion": ModelDefinition(
-            name="lucy-motion",
-            url_path="/v1/jobs/lucy-motion",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=ImageToMotionVideoInput,
-        ),
         # Latest aliases (server-side resolution)
         "lucy-latest": ModelDefinition(
             name="lucy-latest",
@@ -357,14 +289,6 @@ _MODELS = {
             width=1280,
             height=704,
             input_schema=VideoToVideoInput,
-        ),
-        "lucy-motion-latest": ModelDefinition(
-            name="lucy-motion-latest",
-            url_path="/v1/jobs/lucy-motion-latest",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=ImageToMotionVideoInput,
         ),
         # Deprecated names
         "lucy-pro-v2v": ModelDefinition(
@@ -435,8 +359,8 @@ class Models:
         Available models:
             - "lucy-clip" - Video-to-video
             - "lucy-2.1" - Video editing (newer, higher quality)
+            - "lucy-2.1-vton" - Virtual try-on video editing
             - "lucy-restyle-2" - Video restyling with prompt or reference image
-            - "lucy-motion" - Image-to-motion-video
         """
         _warn_deprecated(model)
         try:
