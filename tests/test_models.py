@@ -5,24 +5,12 @@ from decart.models import _warned_aliases
 
 
 def test_canonical_realtime_models() -> None:
-    model = models.realtime("lucy-restyle")
-    assert model.name == "lucy-restyle"
-    assert model.fps == 25
-    assert model.width == 1280
-    assert model.height == 704
-    assert model.url_path == "/v1/stream"
-
     model = models.realtime("lucy-restyle-2")
     assert model.name == "lucy-restyle-2"
     assert model.fps == 22
     assert model.width == 1280
     assert model.height == 704
-
-    model = models.realtime("lucy")
-    assert model.name == "lucy"
-    assert model.fps == 25
-    assert model.width == 1280
-    assert model.height == 704
+    assert model.url_path == "/v1/stream"
 
     model = models.realtime("lucy-2.1")
     assert model.name == "lucy-2.1"
@@ -36,24 +24,8 @@ def test_canonical_realtime_models() -> None:
     assert model.width == 1088
     assert model.height == 624
 
-    model = models.realtime("live-avatar")
-    assert model.name == "live-avatar"
-    assert model.fps == 25
-    assert model.width == 1280
-    assert model.height == 720
-
 
 def test_deprecated_realtime_models() -> None:
-    _warned_aliases.clear()
-
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        model = models.realtime("mirage")
-        assert model.name == "mirage"
-        assert len(w) == 1
-        assert "deprecated" in str(w[0].message).lower()
-        assert "lucy-restyle" in str(w[0].message)
-
     _warned_aliases.clear()
 
     with warnings.catch_warnings(record=True) as w:
@@ -61,16 +33,8 @@ def test_deprecated_realtime_models() -> None:
         model = models.realtime("mirage_v2")
         assert model.name == "mirage_v2"
         assert len(w) == 1
+        assert "deprecated" in str(w[0].message).lower()
         assert "lucy-restyle-2" in str(w[0].message)
-
-    _warned_aliases.clear()
-
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        model = models.realtime("live_avatar")
-        assert model.name == "live_avatar"
-        assert len(w) == 1
-        assert "live-avatar" in str(w[0].message)
 
 
 def test_canonical_video_models() -> None:
@@ -95,10 +59,6 @@ def test_canonical_video_models() -> None:
     model = models.video("lucy-restyle-2")
     assert model.name == "lucy-restyle-2"
     assert model.url_path == "/v1/jobs/lucy-restyle-2"
-
-    model = models.video("lucy-motion")
-    assert model.name == "lucy-motion"
-    assert model.url_path == "/v1/jobs/lucy-motion"
 
 
 def test_deprecated_video_models() -> None:
@@ -143,9 +103,9 @@ def test_deprecation_warning_only_once() -> None:
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        models.realtime("mirage")
-        models.realtime("mirage")
-        models.realtime("mirage")
+        models.realtime("mirage_v2")
+        models.realtime("mirage_v2")
+        models.realtime("mirage_v2")
         assert len(w) == 1
 
 
@@ -197,11 +157,6 @@ def test_latest_video_models() -> None:
     assert model.url_path == "/v1/jobs/lucy-clip-latest"
     assert model.fps == 25
 
-    model = models.video("lucy-motion-latest")
-    assert model.name == "lucy-motion-latest"
-    assert model.url_path == "/v1/jobs/lucy-motion-latest"
-    assert model.fps == 25
-
 
 def test_latest_image_models() -> None:
     model = models.image("lucy-image-latest")
@@ -221,7 +176,6 @@ def test_latest_aliases_no_deprecation_warning() -> None:
         models.video("lucy-vton-latest")
         models.video("lucy-restyle-latest")
         models.video("lucy-clip-latest")
-        models.video("lucy-motion-latest")
         models.image("lucy-image-latest")
         assert len(w) == 0
 

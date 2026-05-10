@@ -23,7 +23,6 @@ export DECART_API_KEY="your-api-key-here"
 - **`process_video.py`** - Edit a local video with `lucy-clip`
 - **`process_image.py`** - Edit the bundled example image with `lucy-image-2`
 - **`process_url.py`** - Transform videos from URLs
-- **`queue_image_example.py`** - Turn the bundled example image into motion with `lucy-motion`
 
 ### Realtime API
 
@@ -38,7 +37,7 @@ pip install decart[realtime]
 
 ### Running Examples
 
-`process_image.py` and `queue_image_example.py` use the bundled `examples/files/image.png` asset.
+`process_image.py` uses the bundled `examples/files/image.png` asset.
 `process_video.py` expects you to place a local video at `examples/assets/example_video.mp4` first.
 
 ```bash
@@ -47,9 +46,6 @@ python examples/process_video.py
 
 # Edit the bundled example image
 python examples/process_image.py
-
-# Turn the bundled example image into motion
-python examples/queue_image_example.py
 
 # Transform video from URL
 python examples/process_url.py

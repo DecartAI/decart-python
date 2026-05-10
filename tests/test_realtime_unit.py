@@ -25,26 +25,12 @@ def test_realtime_client_available():
 
 def test_realtime_models_available():
     """Test that realtime models are available"""
-    model = models.realtime("lucy-restyle")
-    assert model.name == "lucy-restyle"
-    assert model.fps == 25
+    model = models.realtime("lucy-restyle-2")
+    assert model.name == "lucy-restyle-2"
+    assert model.fps == 22
     assert model.width == 1280
     assert model.height == 704
     assert model.url_path == "/v1/stream"
-
-    model2 = models.realtime("lucy-restyle-2")
-    assert model2.name == "lucy-restyle-2"
-    assert model2.fps == 22
-    assert model2.width == 1280
-    assert model2.height == 704
-    assert model2.url_path == "/v1/stream"
-
-    model2 = models.realtime("lucy")
-    assert model2.name == "lucy"
-    assert model2.fps == 25
-    assert model2.width == 1280
-    assert model2.height == 704
-    assert model2.url_path == "/v1/stream"
 
     model2 = models.realtime("lucy-2.1")
     assert model2.name == "lucy-2.1"
@@ -86,7 +72,7 @@ async def test_realtime_client_creation_with_mock():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
                 initial_state=ModelState(prompt=Prompt(text="Test", enhance=True)),
             ),
@@ -158,7 +144,6 @@ async def test_realtime_connect_accepts_custom_model_definition():
         call_args = mock_manager_class.call_args
         config = call_args[0][0] if call_args[0] else call_args[1]["configuration"]
         assert "model=lucy_2_rt_preview" in config.webrtc_url
-        assert config.model_name == "lucy_2_rt_preview"
         assert config.fps == 20
 
         await realtime_client.disconnect()
@@ -195,7 +180,7 @@ async def test_realtime_set_prompt_with_mock():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -234,7 +219,7 @@ async def test_buffered_events_delivered_after_handler_registration():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -271,7 +256,7 @@ async def test_realtime_events():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -333,7 +318,7 @@ async def test_realtime_set_prompt_timeout():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -380,7 +365,7 @@ async def test_realtime_set_prompt_server_error():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -398,114 +383,6 @@ async def test_realtime_set_prompt_server_error():
 
         assert "Server rejected prompt" in str(exc_info.value)
         mock_manager.unregister_prompt_wait.assert_called_with("New prompt")
-
-
-# Tests for avatar-live model
-
-
-def test_avatar_live_model_available():
-    """Test that avatar-live model is available"""
-    model = models.realtime("live-avatar")
-    assert model.name == "live-avatar"
-    assert model.fps == 25
-    assert model.width == 1280
-    assert model.height == 720
-    assert model.url_path == "/v1/stream"
-
-
-@pytest.mark.asyncio
-async def test_avatar_live_connect_with_initial_image():
-    """Test avatar-live connection with initial_state.image option"""
-
-    client = DecartClient(api_key="test-key")
-
-    with (
-        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
-        patch(
-            "decart.realtime.client._image_to_base64", new_callable=AsyncMock
-        ) as mock_image_to_b64,
-        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
-    ):
-        mock_manager = AsyncMock()
-        mock_manager.connect = AsyncMock(return_value=True)
-        mock_manager.is_connected = MagicMock(return_value=True)
-        mock_manager_class.return_value = mock_manager
-
-        mock_image_to_b64.return_value = "base64encodedimage"
-
-        mock_session = MagicMock()
-        mock_session.closed = False
-        mock_session.close = AsyncMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_track = MagicMock()
-
-        from decart.realtime.types import RealtimeConnectOptions
-        from decart.types import ModelState
-
-        realtime_client = await RealtimeClient.connect(
-            base_url=client.realtime_base_url,
-            api_key=client.api_key,
-            local_track=mock_track,
-            options=RealtimeConnectOptions(
-                model=models.realtime("live-avatar"),
-                on_remote_stream=lambda t: None,
-                initial_state=ModelState(image=b"fake image bytes"),
-            ),
-        )
-
-        assert realtime_client is not None
-        assert realtime_client._model_name == "live-avatar"
-        mock_image_to_b64.assert_called_once()
-        # Verify initial_image was passed to connect
-        mock_manager.connect.assert_called_once()
-        call_kwargs = mock_manager.connect.call_args[1]
-        assert "initial_image" in call_kwargs
-        assert call_kwargs["initial_image"] == "base64encodedimage"
-
-
-@pytest.mark.asyncio
-async def test_avatar_live_set_image():
-    """Test set_image method for avatar-live"""
-
-    client = DecartClient(api_key="test-key")
-
-    with (
-        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
-        patch("decart.realtime.client.file_input_to_bytes") as mock_file_input,
-        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
-    ):
-        mock_manager = AsyncMock()
-        mock_manager.connect = AsyncMock(return_value=True)
-        mock_manager.set_image = AsyncMock()
-        mock_manager_class.return_value = mock_manager
-
-        mock_file_input.return_value = (b"new image data", "image/png")
-
-        mock_session = MagicMock()
-        mock_session.closed = False
-        mock_session.close = AsyncMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_track = MagicMock()
-
-        from decart.realtime.types import RealtimeConnectOptions
-
-        realtime_client = await RealtimeClient.connect(
-            base_url=client.realtime_base_url,
-            api_key=client.api_key,
-            local_track=mock_track,
-            options=RealtimeConnectOptions(
-                model=models.realtime("live-avatar"),
-                on_remote_stream=lambda t: None,
-            ),
-        )
-
-        await realtime_client.set_image(b"new avatar image")
-
-        mock_manager.set_image.assert_called_once()
-        image_base64_arg = mock_manager.set_image.call_args[0][0]
-        assert image_base64_arg is not None
 
 
 @pytest.mark.asyncio
@@ -539,7 +416,7 @@ async def test_set_image_works_for_any_model():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -576,7 +453,7 @@ async def test_set_image_null_clears_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -617,7 +494,7 @@ async def test_set_image_with_prompt_and_enhance():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -626,96 +503,6 @@ async def test_set_image_with_prompt_and_enhance():
         opts = mock_manager.set_image.call_args[0][1]
         assert opts["prompt"] == "a dog"
         assert opts["enhance"] is False
-
-
-@pytest.mark.asyncio
-async def test_avatar_live_set_image_timeout():
-    """Test set_image raises on timeout"""
-
-    client = DecartClient(api_key="test-key")
-
-    with (
-        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
-        patch("decart.realtime.client.file_input_to_bytes") as mock_file_input,
-        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
-    ):
-        from decart.errors import DecartSDKError
-
-        mock_manager = AsyncMock()
-        mock_manager.connect = AsyncMock(return_value=True)
-        mock_manager.set_image = AsyncMock(side_effect=DecartSDKError("Image send timed out"))
-        mock_manager_class.return_value = mock_manager
-
-        mock_file_input.return_value = (b"image data", "image/png")
-
-        mock_session = MagicMock()
-        mock_session.closed = False
-        mock_session.close = AsyncMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_track = MagicMock()
-
-        from decart.realtime.types import RealtimeConnectOptions
-
-        realtime_client = await RealtimeClient.connect(
-            base_url=client.realtime_base_url,
-            api_key=client.api_key,
-            local_track=mock_track,
-            options=RealtimeConnectOptions(
-                model=models.realtime("live-avatar"),
-                on_remote_stream=lambda t: None,
-            ),
-        )
-
-        with pytest.raises(DecartSDKError) as exc_info:
-            await realtime_client.set_image(b"test image")
-
-        assert "timed out" in str(exc_info.value).lower()
-
-
-@pytest.mark.asyncio
-async def test_avatar_live_set_image_server_error():
-    """Test set_image raises on server error"""
-
-    client = DecartClient(api_key="test-key")
-
-    with (
-        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
-        patch("decart.realtime.client.file_input_to_bytes") as mock_file_input,
-        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
-    ):
-        from decart.errors import DecartSDKError
-
-        mock_manager = AsyncMock()
-        mock_manager.connect = AsyncMock(return_value=True)
-        mock_manager.set_image = AsyncMock(side_effect=DecartSDKError("Invalid image format"))
-        mock_manager_class.return_value = mock_manager
-
-        mock_file_input.return_value = (b"image data", "image/png")
-
-        mock_session = MagicMock()
-        mock_session.closed = False
-        mock_session.close = AsyncMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_track = MagicMock()
-
-        from decart.realtime.types import RealtimeConnectOptions
-
-        realtime_client = await RealtimeClient.connect(
-            base_url=client.realtime_base_url,
-            api_key=client.api_key,
-            local_track=mock_track,
-            options=RealtimeConnectOptions(
-                model=models.realtime("live-avatar"),
-                on_remote_stream=lambda t: None,
-            ),
-        )
-
-        with pytest.raises(DecartSDKError) as exc_info:
-            await realtime_client.set_image(b"test image")
-
-        assert "Invalid image format" in str(exc_info.value)
 
 
 # Tests for set() method
@@ -750,7 +537,7 @@ async def test_set_rejects_when_neither_prompt_nor_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -788,7 +575,7 @@ async def test_set_rejects_empty_prompt():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -826,7 +613,7 @@ async def test_set_sends_prompt_only():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -872,7 +659,7 @@ async def test_set_sends_prompt_with_enhance():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -921,7 +708,7 @@ async def test_set_sends_image_only():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -971,7 +758,7 @@ async def test_set_sends_prompt_and_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -1020,7 +807,7 @@ async def test_set_converts_bytes_image():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
             ),
         )
@@ -1069,7 +856,7 @@ async def test_connect_with_initial_prompt():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
                 initial_state=ModelState(prompt=Prompt(text="Test prompt", enhance=False)),
             ),
@@ -1175,7 +962,7 @@ async def test_connect_without_initial_state_sends_passthrough():
             api_key=client.api_key,
             local_track=mock_track,
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-restyle"),
+                model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
                 # No initial_state — should trigger passthrough
             ),

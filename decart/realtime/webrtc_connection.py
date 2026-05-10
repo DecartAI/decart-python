@@ -60,7 +60,6 @@ class WebRTCConnection:
         self._pending_prompts: dict[str, tuple[asyncio.Event, dict]] = {}
         self._pending_image_set: Optional[tuple[asyncio.Event, dict]] = None
         self._local_track: Optional[MediaStreamTrack] = None
-        self._model_name: Optional[str] = None
         self._connection_error: Optional[str] = None
         # Per-connect() dedup: _handle_error and connect()'s except branches both
         # may see the same error; whichever fires first flips this to True and the
@@ -73,13 +72,11 @@ class WebRTCConnection:
         local_track: Optional[MediaStreamTrack],
         timeout: float,
         integration: Optional[str] = None,
-        model_name: Optional[str] = None,
         initial_image: Optional[str] = None,
         initial_prompt: Optional[dict] = None,
     ) -> None:
         try:
             self._local_track = local_track
-            self._model_name = model_name
             self._connection_error = None
             self._on_error_fired = False
 
@@ -107,7 +104,7 @@ class WebRTCConnection:
             elif local_track is not None:
                 # No image and no prompt — send passthrough (skip for subscribe mode which has no local stream)
                 await self._send_passthrough_and_wait()
-            await self._setup_peer_connection(local_track, model_name=model_name)
+            await self._setup_peer_connection(local_track)
 
             await self._create_and_send_offer()
 
@@ -218,7 +215,6 @@ class WebRTCConnection:
     async def _setup_peer_connection(
         self,
         local_track: Optional[MediaStreamTrack],
-        model_name: Optional[str] = None,
     ) -> None:
         config = RTCConfiguration(iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])])
 
@@ -263,9 +259,6 @@ class WebRTCConnection:
             self._pc.addTransceiver("audio", direction="recvonly")
             logger.debug("Added video+audio transceivers (recvonly) for subscribe mode")
         else:
-            if model_name in ("live_avatar", "live-avatar"):
-                self._pc.addTransceiver("video", direction="recvonly")
-                logger.debug("Added video transceiver (recvonly) for avatar-live mode")
             self._pc.addTrack(local_track)
             logger.debug("Added local track to peer connection")
 

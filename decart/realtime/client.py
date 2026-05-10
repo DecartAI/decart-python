@@ -8,7 +8,6 @@ import aiohttp
 from aiortc import MediaStreamTrack
 from pydantic import BaseModel
 
-from .audio_stream_manager import AudioStreamManager
 from .webrtc_manager import WebRTCManager, WebRTCConfiguration
 from .messages import PromptMessage, SessionIdMessage, GenerationTickMessage
 from .subscribe import (
@@ -70,12 +69,9 @@ class RealtimeClient:
         self,
         manager: WebRTCManager,
         http_session: Optional[aiohttp.ClientSession] = None,
-        model_name: Optional[str] = None,
     ):
         self._manager = manager
         self._http_session = http_session
-        self._model_name = model_name
-        self._audio_stream_manager: Optional[AudioStreamManager] = None
         self._connection_callbacks: list[Callable[[ConnectionState], None]] = []
         self._error_callbacks: list[Callable[[DecartSDKError], None]] = []
         self._generation_tick_callbacks: list[Callable[[GenerationTickMessage], None]] = []
@@ -110,15 +106,6 @@ class RealtimeClient:
         ws_url = f"{base_url}{options.model.url_path}"
         ws_url += f"?api_key={quote(api_key)}&model={quote(options.model.name)}"
 
-        model_name: str = options.model.name
-
-        is_avatar_live = model_name in ("live_avatar", "live-avatar")
-        audio_stream_manager: Optional[AudioStreamManager] = None
-
-        if is_avatar_live and local_track is None:
-            audio_stream_manager = AudioStreamManager()
-            local_track = audio_stream_manager.get_track()
-
         config = WebRTCConfiguration(
             webrtc_url=ws_url,
             api_key=api_key,
@@ -131,7 +118,6 @@ class RealtimeClient:
             initial_state=options.initial_state,
             customize_offer=options.customize_offer,
             integration=integration,
-            model_name=model_name,
         )
 
         http_session = aiohttp.ClientSession()
@@ -140,9 +126,7 @@ class RealtimeClient:
         client = cls(
             manager=manager,
             http_session=http_session,
-            model_name=model_name,
         )
-        client._audio_stream_manager = audio_stream_manager
 
         config.on_connection_state_change = client._emit_connection_change
         config.on_error = lambda error: client._emit_error(WebRTCError(str(error), cause=error))
@@ -167,8 +151,6 @@ class RealtimeClient:
                 initial_prompt=initial_prompt,
             )
         except Exception as e:
-            if audio_stream_manager:
-                audio_stream_manager.cleanup()
             await manager.cleanup()
             await http_session.close()
             raise WebRTCError(str(e), cause=e)
@@ -329,17 +311,6 @@ class RealtimeClient:
         finally:
             self._manager.unregister_prompt_wait(prompt)
 
-    async def play_audio(self, audio: Union[bytes, str, Path]) -> None:
-        """Play audio through the avatar stream. Resolves when audio finishes.
-
-        Only available for live_avatar connections without a user-provided audio track.
-        """
-        if self._audio_stream_manager is None:
-            raise InvalidInputError(
-                "play_audio() is only available for live_avatar without a user-provided audio track"
-            )
-        await self._audio_stream_manager.play_audio(audio)
-
     async def set_image(
         self,
         image: Optional[FileInput],
@@ -370,9 +341,6 @@ class RealtimeClient:
     async def disconnect(self) -> None:
         self._buffering = False
         self._buffer.clear()
-        if self._audio_stream_manager:
-            self._audio_stream_manager.cleanup()
-            self._audio_stream_manager = None
         await self._manager.cleanup()
         if self._http_session and not self._http_session.closed:
             await self._http_session.close()

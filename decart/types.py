@@ -21,9 +21,3 @@ class Prompt(BaseModel):
 class ModelState(BaseModel):
     prompt: Optional[Prompt] = None
     image: Optional[Union[bytes, str, Path]] = None
-
-
-class MotionTrajectoryInput(BaseModel):
-    frame: int = Field(..., ge=0)
-    x: float = Field(..., ge=0)
-    y: float = Field(..., ge=0)
