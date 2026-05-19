@@ -105,6 +105,8 @@ class RealtimeClient:
     ) -> "RealtimeClient":
         ws_url = f"{base_url}{options.model.url_path}"
         ws_url += f"?api_key={quote(api_key)}&model={quote(options.model.name)}"
+        if options.resolution is not None:
+            ws_url += f"&resolution={quote(options.resolution)}"
 
         config = WebRTCConfiguration(
             webrtc_url=ws_url,

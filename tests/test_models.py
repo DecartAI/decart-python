@@ -7,20 +7,20 @@ from decart.models import _warned_aliases
 def test_canonical_realtime_models() -> None:
     model = models.realtime("lucy-restyle-2")
     assert model.name == "lucy-restyle-2"
-    assert model.fps == 22
+    assert model.fps == 30
     assert model.width == 1280
     assert model.height == 704
     assert model.url_path == "/v1/stream"
 
     model = models.realtime("lucy-2.1")
     assert model.name == "lucy-2.1"
-    assert model.fps == 20
+    assert model.fps == 30
     assert model.width == 1088
     assert model.height == 624
 
     model = models.realtime("lucy-2.1-vton")
     assert model.name == "lucy-2.1-vton"
-    assert model.fps == 20
+    assert model.fps == 30
     assert model.width == 1088
     assert model.height == 624
 
@@ -113,21 +113,21 @@ def test_latest_realtime_models() -> None:
     model = models.realtime("lucy-latest")
     assert model.name == "lucy-latest"
     assert model.url_path == "/v1/stream"
-    assert model.fps == 20
+    assert model.fps == 30
     assert model.width == 1088
     assert model.height == 624
 
     model = models.realtime("lucy-vton-latest")
     assert model.name == "lucy-vton-latest"
     assert model.url_path == "/v1/stream"
-    assert model.fps == 20
+    assert model.fps == 30
     assert model.width == 1088
     assert model.height == 624
 
     model = models.realtime("lucy-restyle-latest")
     assert model.name == "lucy-restyle-latest"
     assert model.url_path == "/v1/stream"
-    assert model.fps == 22
+    assert model.fps == 30
     assert model.width == 1280
     assert model.height == 704
 

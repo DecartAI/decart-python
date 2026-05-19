@@ -27,14 +27,14 @@ def test_realtime_models_available():
     """Test that realtime models are available"""
     model = models.realtime("lucy-restyle-2")
     assert model.name == "lucy-restyle-2"
-    assert model.fps == 22
+    assert model.fps == 30
     assert model.width == 1280
     assert model.height == 704
     assert model.url_path == "/v1/stream"
 
     model2 = models.realtime("lucy-2.1")
     assert model2.name == "lucy-2.1"
-    assert model2.fps == 20
+    assert model2.fps == 30
     assert model2.width == 1088
     assert model2.height == 624
     assert model2.url_path == "/v1/stream"
@@ -147,6 +147,63 @@ async def test_realtime_connect_accepts_custom_model_definition():
         assert config.fps == 20
 
         await realtime_client.disconnect()
+
+
+async def _connect_and_capture_url(resolution=None) -> str:
+    client = DecartClient(api_key="test-key")
+
+    with (
+        patch("decart.realtime.client.WebRTCManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
+        mock_manager = AsyncMock()
+        mock_manager.connect = AsyncMock(return_value=True)
+        mock_manager.is_connected = MagicMock(return_value=True)
+        mock_manager_class.return_value = mock_manager
+
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        from decart.realtime.types import RealtimeConnectOptions
+
+        kwargs = {"resolution": resolution} if resolution is not None else {}
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.realtime_base_url,
+            api_key=client.api_key,
+            local_track=MagicMock(),
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy-2.1"),
+                on_remote_stream=lambda t: None,
+                **kwargs,
+            ),
+        )
+
+        call_args = mock_manager_class.call_args
+        config = call_args[0][0] if call_args[0] else call_args[1]["configuration"]
+        url = config.webrtc_url
+
+        await realtime_client.disconnect()
+        return url
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_omits_resolution_when_unset():
+    url = await _connect_and_capture_url()
+    assert "resolution=" not in url
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_appends_resolution_720p():
+    url = await _connect_and_capture_url("720p")
+    assert "&resolution=720p" in url
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_appends_resolution_1080p():
+    url = await _connect_and_capture_url("1080p")
+    assert "&resolution=1080p" in url
 
 
 @pytest.mark.asyncio

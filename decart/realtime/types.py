@@ -18,3 +18,4 @@ class RealtimeConnectOptions:
     on_remote_stream: Callable[[MediaStreamTrack], None]
     initial_state: Optional[ModelState] = None
     customize_offer: Optional[Callable] = None
+    resolution: Optional[Literal["720p", "1080p"]] = None
