@@ -95,8 +95,6 @@ class LiveKitConnection:
                 await self._connect_signaling(url, integration)
                 room_info = await self._join_livekit_room(timeout=LIVEKIT_HANDSHAKE_TIMEOUT)
 
-            await self._connect_room(room_info, local_track, preferred_video_codec)
-
             if initial_image is not None:
                 await self._send_initial_image_and_wait(
                     initial_image,
@@ -107,6 +105,8 @@ class LiveKitConnection:
                 await self._send_initial_prompt_and_wait(initial_prompt)
             elif local_track is not None:
                 await self._send_passthrough_and_wait()
+
+            await self._connect_room(room_info, local_track, preferred_video_codec)
 
             if self._on_session_started:
                 self._on_session_started(room_info)
@@ -203,12 +203,12 @@ class LiveKitConnection:
 
     def _map_room_state(self, connection_state) -> Optional[ConnectionState]:
         state_name = getattr(connection_state, "name", str(connection_state)).lower()
+        if "reconnecting" in state_name:
+            return "reconnecting"
         if "connecting" in state_name:
             return "connecting"
         if "connected" in state_name and "disconnected" not in state_name:
             return "connected"
-        if "reconnecting" in state_name:
-            return "reconnecting"
         if "disconnected" in state_name:
             return "disconnected"
         return None

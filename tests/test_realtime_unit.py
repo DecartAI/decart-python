@@ -53,9 +53,16 @@ async def test_realtime_connect_wires_livekit_manager_and_session_started_callba
 
     client = DecartClient(api_key="test-key")
 
-    with patch("decart.realtime.client.LiveKitManager") as mock_manager_class:
+    with (
+        patch("decart.realtime.client.LiveKitManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
         mock_manager = _mock_manager()
         mock_manager_class.return_value = mock_manager
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.realtime_base_url,
@@ -184,9 +191,16 @@ async def test_realtime_connect_allows_preferred_video_codec_override():
 
     client = DecartClient(api_key="test-key")
 
-    with patch("decart.realtime.client.LiveKitManager") as mock_manager_class:
+    with (
+        patch("decart.realtime.client.LiveKitManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
         mock_manager = _mock_manager()
         mock_manager_class.return_value = mock_manager
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.realtime_base_url,
@@ -210,13 +224,20 @@ async def test_realtime_set_prompt_with_mock():
 
     client = DecartClient(api_key="test-key")
 
-    with patch("decart.realtime.client.LiveKitManager") as mock_manager_class:
+    with (
+        patch("decart.realtime.client.LiveKitManager") as mock_manager_class,
+        patch("decart.realtime.client.aiohttp.ClientSession") as mock_session_cls,
+    ):
         mock_manager = _mock_manager()
         prompt_event = asyncio.Event()
         prompt_result = {"success": True, "error": None}
         mock_manager.register_prompt_wait = MagicMock(return_value=(prompt_event, prompt_result))
         mock_manager.unregister_prompt_wait = MagicMock()
         mock_manager_class.return_value = mock_manager
+        mock_session = MagicMock()
+        mock_session.closed = False
+        mock_session.close = AsyncMock()
+        mock_session_cls.return_value = mock_session
 
         realtime_client = await RealtimeClient.connect(
             base_url=client.realtime_base_url,
@@ -371,6 +392,44 @@ async def test_livekit_connection_can_connect_directly_with_room_info():
     connection._connect_signaling.assert_not_called()
     connection._join_livekit_room.assert_not_called()
     connection._connect_room.assert_awaited_once_with(room_info, None, "h264")
+
+
+@pytest.mark.asyncio
+async def test_livekit_connection_sends_initial_control_before_media_connect():
+    from decart.realtime.livekit_connection import LiveKitConnection
+    from decart.realtime.messages import LiveKitRoomInfoMessage
+
+    order = []
+    room_info = LiveKitRoomInfoMessage(
+        type="livekit_room_info",
+        livekit_url="wss://livekit.example",
+        token="lk-token",
+        room_name="room-123",
+        session_id="session-123",
+    )
+
+    async def send_passthrough():
+        order.append("passthrough")
+
+    async def connect_room(*_args):
+        order.append("connect_room")
+
+    connection = LiveKitConnection()
+    connection._connect_signaling = AsyncMock()  # type: ignore[method-assign]
+    connection._join_livekit_room = AsyncMock(return_value=room_info)  # type: ignore[method-assign]
+    connection._send_passthrough_and_wait = AsyncMock(side_effect=send_passthrough)  # type: ignore[method-assign]
+    connection._connect_room = AsyncMock(side_effect=connect_room)  # type: ignore[method-assign]
+    connection._wait_until_connected = AsyncMock()  # type: ignore[method-assign]
+
+    await connection.connect(url="wss://example", local_track=MagicMock(), timeout=1)
+
+    assert order == ["passthrough", "connect_room"]
+
+
+def test_livekit_connection_maps_reconnecting_state_before_connecting():
+    from decart.realtime.livekit_connection import LiveKitConnection
+
+    assert LiveKitConnection()._map_room_state("reconnecting") == "reconnecting"
 
 
 @pytest.mark.asyncio
