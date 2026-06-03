@@ -159,6 +159,7 @@ class RealtimeClient:
             on_error=None,
             on_session_started=None,
             initial_state=options.initial_state,
+            preferred_video_codec=options.preferred_video_codec,
             integration=integration,
         )
 

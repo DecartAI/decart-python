@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 
 ConnectionState = Literal["connecting", "connected", "generating", "disconnected", "reconnecting"]
+VideoCodec = Literal["h264", "vp8", "vp9", "av1"]
 
 
 @dataclass
@@ -16,3 +17,4 @@ class RealtimeConnectOptions:
     on_remote_stream: Callable[["RemoteVideoTrack"], None]
     initial_state: Optional[ModelState] = None
     resolution: Optional[Literal["720p", "1080p"]] = None
+    preferred_video_codec: VideoCodec = "h264"

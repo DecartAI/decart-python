@@ -72,6 +72,7 @@ async def test_realtime_connect_wires_livekit_manager_and_session_started_callba
         config = mock_manager_class.call_args.args[0]
         assert config.on_session_started is not None
         assert "livekit_early_room_info=true" in config.livekit_url
+        assert config.preferred_video_codec == "h264"
 
         config.on_session_started(
             LiveKitRoomInfoMessage(
@@ -175,6 +176,32 @@ async def test_realtime_connect_omits_resolution_when_unset():
 async def test_realtime_connect_appends_resolution_720p():
     url = await _connect_and_capture_url("720p")
     assert "&resolution=720p" in url
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_allows_preferred_video_codec_override():
+    from decart.realtime.types import RealtimeConnectOptions
+
+    client = DecartClient(api_key="test-key")
+
+    with patch("decart.realtime.client.LiveKitManager") as mock_manager_class:
+        mock_manager = _mock_manager()
+        mock_manager_class.return_value = mock_manager
+
+        realtime_client = await RealtimeClient.connect(
+            base_url=client.realtime_base_url,
+            api_key=client.api_key,
+            local_track=MagicMock(),
+            options=RealtimeConnectOptions(
+                model=models.realtime("lucy-restyle-2"),
+                on_remote_stream=lambda t: None,
+                preferred_video_codec="vp8",
+            ),
+        )
+
+        config = mock_manager_class.call_args.args[0]
+        assert config.preferred_video_codec == "vp8"
+        await realtime_client.disconnect()
 
 
 @pytest.mark.asyncio
@@ -343,7 +370,7 @@ async def test_livekit_connection_can_connect_directly_with_room_info():
 
     connection._connect_signaling.assert_not_called()
     connection._join_livekit_room.assert_not_called()
-    connection._connect_room.assert_awaited_once_with(room_info, None)
+    connection._connect_room.assert_awaited_once_with(room_info, None, "h264")
 
 
 @pytest.mark.asyncio
@@ -404,6 +431,54 @@ async def test_livekit_connection_filters_remote_tracks_to_inference_video():
     handlers["track_subscribed"](video_track, MagicMock(), FakeParticipant("inference-server-1"))
 
     assert remote_tracks == [video_track]
+
+
+@pytest.mark.asyncio
+async def test_livekit_connection_publishes_local_track_with_preferred_codec():
+    from livekit import rtc
+
+    from decart.realtime.livekit_connection import LiveKitConnection
+    from decart.realtime.messages import LiveKitRoomInfoMessage
+
+    handlers = {}
+
+    class FakeLocalParticipant:
+        def __init__(self):
+            self.publish_track = AsyncMock()
+
+    class FakeRoom:
+        def __init__(self):
+            self.local_participant = FakeLocalParticipant()
+
+        def on(self, event):
+            def decorator(callback):
+                handlers[event] = callback
+                return callback
+
+            return decorator
+
+        async def connect(self, _url, _token):
+            return None
+
+    local_track = MagicMock()
+    connection = LiveKitConnection()
+
+    with patch("decart.realtime.livekit_connection.rtc.Room", FakeRoom):
+        await connection._connect_room(
+            LiveKitRoomInfoMessage(
+                type="livekit_room_info",
+                livekit_url="wss://livekit.example",
+                token="lk-token",
+                room_name="room-123",
+                session_id="session-123",
+            ),
+            local_track=local_track,
+            preferred_video_codec="vp8",
+        )
+
+    room = connection.room
+    publish_options = room.local_participant.publish_track.call_args.args[1]
+    assert publish_options.video_codec == rtc.VideoCodec.VP8
 
 
 @pytest.mark.asyncio

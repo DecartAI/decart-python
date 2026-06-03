@@ -18,7 +18,7 @@ from .messages import (
     OutgoingMessage,
     QueuePositionMessage,
 )
-from .types import ConnectionState
+from .types import ConnectionState, VideoCodec
 from ..types import ModelState
 
 if TYPE_CHECKING:
@@ -56,6 +56,7 @@ class LiveKitConfiguration:
     on_queue_position: Optional[Callable[[QueuePositionMessage], None]] = None
     room_info: Optional[LiveKitRoomInfoMessage] = None
     initial_state: Optional[ModelState] = None
+    preferred_video_codec: VideoCodec = "h264"
     integration: Optional[str] = None
 
 
@@ -165,6 +166,7 @@ class LiveKitManager:
                 timeout=CONNECTION_TIMEOUT,
                 integration=self._config.integration,
                 room_info=self._config.room_info,
+                preferred_video_codec=self._config.preferred_video_codec,
             )
 
             if self._intentional_disconnect or reconnect_generation != self._reconnect_generation:
@@ -204,6 +206,7 @@ class LiveKitManager:
                 initial_image=initial_image,
                 initial_prompt=initial_prompt,
                 room_info=self._config.room_info,
+                preferred_video_codec=self._config.preferred_video_codec,
             )
             return True
         except Exception as e:

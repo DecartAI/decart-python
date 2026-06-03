@@ -23,7 +23,7 @@ from .messages import (
     message_to_json,
     parse_incoming_message,
 )
-from .types import ConnectionState
+from .types import ConnectionState, VideoCodec
 
 if TYPE_CHECKING:
     from livekit.rtc import (
@@ -37,6 +37,13 @@ logger = logging.getLogger(__name__)
 
 INFERENCE_SERVER_IDENTITY_PREFIX = "inference-server-"
 LIVEKIT_HANDSHAKE_TIMEOUT = 15.0
+
+VIDEO_CODEC_MAP = {
+    "h264": rtc.VideoCodec.H264,
+    "vp8": rtc.VideoCodec.VP8,
+    "vp9": rtc.VideoCodec.VP9,
+    "av1": rtc.VideoCodec.AV1,
+}
 
 
 class LiveKitConnection:
@@ -78,6 +85,7 @@ class LiveKitConnection:
         initial_image: Optional[str] = None,
         initial_prompt: Optional[dict] = None,
         room_info: Optional[LiveKitRoomInfoMessage] = None,
+        preferred_video_codec: VideoCodec = "h264",
     ) -> None:
         try:
             self._connection_error = None
@@ -89,7 +97,7 @@ class LiveKitConnection:
                 await self._connect_signaling(url, integration)
                 room_info = await self._join_livekit_room(timeout=LIVEKIT_HANDSHAKE_TIMEOUT)
 
-            await self._connect_room(room_info, local_track)
+            await self._connect_room(room_info, local_track, preferred_video_codec)
 
             if initial_image is not None:
                 await self._send_initial_image_and_wait(
@@ -151,6 +159,7 @@ class LiveKitConnection:
         self,
         room_info: LiveKitRoomInfoMessage,
         local_track: Optional["LocalVideoTrack"],
+        preferred_video_codec: VideoCodec = "h264",
     ) -> None:
         room = rtc.Room()
         self._room = room
@@ -182,9 +191,17 @@ class LiveKitConnection:
         await room.connect(room_info.livekit_url, room_info.token)
 
         if local_track is not None:
-            await room.local_participant.publish_track(local_track)
+            await room.local_participant.publish_track(
+                local_track,
+                self._publish_options(preferred_video_codec),
+            )
 
         await self._set_state("connected")
+
+    def _publish_options(self, preferred_video_codec: VideoCodec) -> rtc.TrackPublishOptions:
+        options = rtc.TrackPublishOptions()
+        options.video_codec = VIDEO_CODEC_MAP[preferred_video_codec]
+        return options
 
     def _map_room_state(self, connection_state) -> Optional[ConnectionState]:
         state_name = getattr(connection_state, "name", str(connection_state)).lower()
