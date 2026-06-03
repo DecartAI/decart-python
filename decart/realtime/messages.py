@@ -1,40 +1,12 @@
 from typing import Literal, Optional, Union, Annotated
 from pydantic import BaseModel, Field, TypeAdapter
 
-try:
-    from aiortc import RTCSessionDescription, RTCIceCandidate
-except ImportError:
-    RTCSessionDescription = None  # type: ignore
-    RTCIceCandidate = None  # type: ignore
-
 
 # Incoming Messages (from server)
 
 
-class AnswerMessage(BaseModel):
-    """WebRTC answer from server."""
-
-    type: Literal["answer"]
-    sdp: str
-
-
-class IceCandidatePayload(BaseModel):
-    """ICE candidate data."""
-
-    candidate: str
-    sdpMLineIndex: int
-    sdpMid: str
-
-
-class IceCandidateMessage(BaseModel):
-    """ICE candidate message."""
-
-    type: Literal["ice-candidate"]
-    candidate: IceCandidatePayload
-
-
 class SessionIdMessage(BaseModel):
-    """Session initialization message from server."""
+    """Legacy session initialization message from the pre-LiveKit protocol."""
 
     type: Literal["session_id"]
     session_id: str
@@ -67,9 +39,27 @@ class ErrorMessage(BaseModel):
 
 
 class ReadyMessage(BaseModel):
-    """Server ready signal."""
+    """Legacy server ready signal from the pre-LiveKit protocol."""
 
     type: Literal["ready"]
+
+
+class LiveKitRoomInfoMessage(BaseModel):
+    """LiveKit room credentials returned by the realtime control channel."""
+
+    type: Literal["livekit_room_info"]
+    livekit_url: str
+    token: str
+    room_name: str
+    session_id: str
+
+
+class QueuePositionMessage(BaseModel):
+    """Queue position update while waiting for LiveKit room credentials."""
+
+    type: Literal["queue_position"]
+    position: int
+    queue_size: int
 
 
 class GenerationStartedMessage(BaseModel):
@@ -96,13 +86,13 @@ class GenerationEndedMessage(BaseModel):
 # Discriminated union for incoming messages
 IncomingMessage = Annotated[
     Union[
-        AnswerMessage,
-        IceCandidateMessage,
         SessionIdMessage,
         PromptAckMessage,
         SetImageAckMessage,
         ErrorMessage,
         ReadyMessage,
+        LiveKitRoomInfoMessage,
+        QueuePositionMessage,
         GenerationStartedMessage,
         GenerationTickMessage,
         GenerationEndedMessage,
@@ -117,11 +107,10 @@ IncomingMessageAdapter = TypeAdapter(IncomingMessage)
 # Outgoing Messages (to server)
 
 
-class OfferMessage(BaseModel):
-    """WebRTC offer to server."""
+class LiveKitJoinMessage(BaseModel):
+    """Ask the control channel for LiveKit room credentials."""
 
-    type: Literal["offer"]
-    sdp: str
+    type: Literal["livekit_join"]
 
 
 class PromptMessage(BaseModel):
@@ -142,7 +131,7 @@ class SetAvatarImageMessage(BaseModel):
 
 
 # Outgoing message union (no discriminator needed - we know what we're sending)
-OutgoingMessage = Union[OfferMessage, IceCandidateMessage, PromptMessage, SetAvatarImageMessage]
+OutgoingMessage = Union[LiveKitJoinMessage, PromptMessage, SetAvatarImageMessage]
 
 
 def parse_incoming_message(data: dict) -> IncomingMessage:

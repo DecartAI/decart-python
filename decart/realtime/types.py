@@ -1,12 +1,10 @@
-from typing import Literal, Callable, Optional
+from typing import Literal, Callable, Optional, TYPE_CHECKING
 from dataclasses import dataclass
 from ..models import ModelDefinition
 from ..types import ModelState
 
-try:
-    from aiortc import MediaStreamTrack
-except ImportError:
-    MediaStreamTrack = None  # type: ignore
+if TYPE_CHECKING:
+    from livekit.rtc import RemoteVideoTrack
 
 
 ConnectionState = Literal["connecting", "connected", "generating", "disconnected", "reconnecting"]
@@ -15,7 +13,6 @@ ConnectionState = Literal["connecting", "connected", "generating", "disconnected
 @dataclass
 class RealtimeConnectOptions:
     model: ModelDefinition
-    on_remote_stream: Callable[[MediaStreamTrack], None]
+    on_remote_stream: Callable[["RemoteVideoTrack"], None]
     initial_state: Optional[ModelState] = None
-    customize_offer: Optional[Callable] = None
     resolution: Optional[Literal["720p", "1080p"]] = None

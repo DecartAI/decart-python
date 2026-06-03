@@ -32,8 +32,8 @@ First, install the realtime dependencies:
 pip install decart[realtime]
 ```
 
-- **`realtime_synthetic.py`** - Test realtime API with synthetic colored frames
-- **`realtime_file.py`** - Process a video file in realtime
+- **`realtime_synthetic.py`** - Publish synthetic colored frames through LiveKit
+- **`realtime_file.py`** - Publish frames from a video file through LiveKit
 
 ### Running Examples
 
@@ -50,10 +50,10 @@ python examples/process_image.py
 # Transform video from URL
 python examples/process_url.py
 
-# Realtime API with synthetic video (saves to output_realtime_synthetic.mp4)
+# Realtime API with synthetic video
 python examples/realtime_synthetic.py
 
-# Realtime API with video file (saves to output_realtime_<filename>.mp4)
+# Realtime API with video file
 python examples/realtime_file.py input.mp4
 ```
 

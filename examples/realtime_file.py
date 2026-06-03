@@ -1,14 +1,59 @@
 import asyncio
 import os
 from pathlib import Path
+import cv2
 from decart import DecartClient, models
 
 try:
-    from aiortc.contrib.media import MediaPlayer, MediaRecorder
+    from livekit import rtc
 except ImportError:
-    print("aiortc is required for this example.")
+    print("livekit is required for this example.")
     print("Install with: pip install decart[realtime]")
     exit(1)
+
+
+class FileVideoSource:
+    """Reads frames from a video file and publishes them through a LiveKit source."""
+
+    def __init__(self, path: str, width: int, height: int, fps: int):
+        self.path = path
+        self.width = width
+        self.height = height
+        self.fps = fps
+        self.source = rtc.VideoSource(width, height)
+        self.track = rtc.LocalVideoTrack.create_video_track("file-video", self.source)
+        self._running = False
+
+    async def start(self):
+        capture = cv2.VideoCapture(self.path)
+        if not capture.isOpened():
+            raise RuntimeError(f"Could not open video file: {self.path}")
+
+        self._running = True
+        frame_interval = 1 / self.fps
+        try:
+            while self._running:
+                ok, frame = capture.read()
+                if not ok:
+                    capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    continue
+
+                frame = cv2.resize(frame, (self.width, self.height))
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self.source.capture_frame(
+                    rtc.VideoFrame(
+                        width=self.width,
+                        height=self.height,
+                        type=rtc.VideoBufferType.RGB24,
+                        data=frame.tobytes(),
+                    )
+                )
+                await asyncio.sleep(frame_interval)
+        finally:
+            capture.release()
+
+    def stop(self):
+        self._running = False
 
 
 async def main():
@@ -30,13 +75,6 @@ async def main():
         print(f"Error: Video file not found: {video_file}")
         return
 
-    print(f"Loading video file: {video_file}")
-    player = MediaPlayer(video_file)
-
-    if not player.video:
-        print("Error: No video stream found in file")
-        return
-
     try:
         from decart.realtime.client import RealtimeClient
     except ImportError:
@@ -50,21 +88,22 @@ async def main():
         print(f"Using model: {model.name}")
 
         frame_count = 0
-        recorder = None
         input_name = Path(video_file).stem
-        output_file = Path(f"output_realtime_{input_name}.mp4")
+        output_file = Path(f"output_realtime_{input_name}.frames")
+        video_source = FileVideoSource(video_file, model.width, model.height, model.fps)
+        source_task = asyncio.create_task(video_source.start())
 
         def on_remote_stream(track):
-            nonlocal frame_count, recorder
-            frame_count += 1
-            if frame_count % 25 == 0:
-                print(f"📹 Processed {frame_count} frames...")
+            print(f"📹 Received remote LiveKit track: {track.sid}")
 
-            if recorder is None:
-                print(f"💾 Recording to {output_file}")
-                recorder = MediaRecorder(str(output_file))
-                recorder.addTrack(track)
-                asyncio.create_task(recorder.start())
+            async def consume_frames():
+                nonlocal frame_count
+                async for event in rtc.VideoStream(track):
+                    frame_count += 1
+                    if frame_count % 25 == 0:
+                        print(f"📹 Processed {frame_count} remote frames...")
+
+            asyncio.create_task(consume_frames())
 
         def on_connection_change(state):
             print(f"🔄 Connection state: {state}")
@@ -81,7 +120,7 @@ async def main():
             realtime_client = await RealtimeClient.connect(
                 base_url=client.realtime_base_url,
                 api_key=client.api_key,
-                local_track=player.video,
+                local_track=video_source.track,
                 options=RealtimeConnectOptions(
                     model=model,
                     on_remote_stream=on_remote_stream,
@@ -102,15 +141,7 @@ async def main():
             except KeyboardInterrupt:
                 print(f"\n\n✓ Processed {frame_count} frames total")
             finally:
-                if recorder:
-                    try:
-                        print(f"💾 Saving video to {output_file}...")
-                        await asyncio.sleep(0.5)
-                        await recorder.stop()
-                        print(f"✓ Video saved to {output_file}")
-                    except Exception as e:
-                        print(f"⚠️ Warning: Could not save video cleanly: {e}")
-                        print("   Video file may be incomplete or corrupted")
+                print(f"Remote frame count written to console; placeholder output: {output_file}")
 
         except Exception as e:
             print(f"\n❌ Connection failed: {e}")
@@ -122,6 +153,12 @@ async def main():
                 print("\nDisconnecting...")
                 await realtime_client.disconnect()
                 print("✓ Disconnected")
+            video_source.stop()
+            source_task.cancel()
+            try:
+                await source_task
+            except asyncio.CancelledError:
+                pass
 
 
 if __name__ == "__main__":
