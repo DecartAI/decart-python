@@ -40,9 +40,7 @@ LIVEKIT_HANDSHAKE_TIMEOUT = 15.0
 
 VIDEO_CODEC_MAP = {
     "h264": rtc.VideoCodec.H264,
-    "vp8": rtc.VideoCodec.VP8,
     "vp9": rtc.VideoCodec.VP9,
-    "av1": rtc.VideoCodec.AV1,
 }
 
 

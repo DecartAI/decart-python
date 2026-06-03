@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 ConnectionState = Literal["connecting", "connected", "generating", "disconnected", "reconnecting"]
-VideoCodec = Literal["h264", "vp8", "vp9", "av1"]
+VideoCodec = Literal["h264", "vp9"]
 
 
 @dataclass

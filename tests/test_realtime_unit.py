@@ -195,12 +195,12 @@ async def test_realtime_connect_allows_preferred_video_codec_override():
             options=RealtimeConnectOptions(
                 model=models.realtime("lucy-restyle-2"),
                 on_remote_stream=lambda t: None,
-                preferred_video_codec="vp8",
+                preferred_video_codec="vp9",
             ),
         )
 
         config = mock_manager_class.call_args.args[0]
-        assert config.preferred_video_codec == "vp8"
+        assert config.preferred_video_codec == "vp9"
         await realtime_client.disconnect()
 
 
@@ -473,12 +473,12 @@ async def test_livekit_connection_publishes_local_track_with_preferred_codec():
                 session_id="session-123",
             ),
             local_track=local_track,
-            preferred_video_codec="vp8",
+            preferred_video_codec="vp9",
         )
 
     room = connection.room
     publish_options = room.local_participant.publish_track.call_args.args[1]
-    assert publish_options.video_codec == rtc.VideoCodec.VP8
+    assert publish_options.video_codec == rtc.VideoCodec.VP9
 
 
 @pytest.mark.asyncio
