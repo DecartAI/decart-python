@@ -9,6 +9,7 @@ RealTimeModels = Literal[
     "lucy-2.1",
     "lucy-2.1-vton",
     "lucy-vton-2",
+    "lucy-vton-3",
     "lucy-restyle-2",
     # Latest aliases (server-side resolution)
     "lucy-latest",
@@ -25,6 +26,7 @@ VideoModels = Literal[
     "lucy-2.1",
     "lucy-2.1-vton",
     "lucy-vton-2",
+    "lucy-vton-3",
     "lucy-restyle-2",
     # Latest aliases (server-side resolution)
     "lucy-latest",
@@ -223,6 +225,13 @@ _MODELS = {
             width=1088,
             height=624,
         ),
+        "lucy-vton-3": ModelDefinition(
+            name="lucy-vton-3",
+            url_path="/v1/stream",
+            fps=30,
+            width=1088,
+            height=624,
+        ),
         "lucy-2.1-vton-2": ModelDefinition(
             name="lucy-2.1-vton-2",
             url_path="/v1/stream",
@@ -282,6 +291,14 @@ _MODELS = {
         "lucy-vton-2": ModelDefinition(
             name="lucy-vton-2",
             url_path="/v1/jobs/lucy-vton-2",
+            fps=20,
+            width=1088,
+            height=624,
+            input_schema=VideoEdit2Input,
+        ),
+        "lucy-vton-3": ModelDefinition(
+            name="lucy-vton-3",
+            url_path="/v1/jobs/lucy-vton-3",
             fps=20,
             width=1088,
             height=624,
