@@ -95,6 +95,8 @@ class LiveKitConnection:
                 await self._connect_signaling(url, integration)
                 room_info = await self._join_livekit_room(timeout=LIVEKIT_HANDSHAKE_TIMEOUT)
 
+            has_initial_state = initial_image is not None or initial_prompt is not None
+
             if initial_image is not None:
                 await self._send_initial_image_and_wait(
                     initial_image,
@@ -103,10 +105,11 @@ class LiveKitConnection:
                 )
             elif initial_prompt:
                 await self._send_initial_prompt_and_wait(initial_prompt)
-            elif local_track is not None:
-                await self._send_passthrough_and_wait()
 
             await self._connect_room(room_info, local_track, preferred_video_codec)
+
+            if not has_initial_state and local_track is not None:
+                await self._send_passthrough_and_wait()
 
             if self._on_session_started:
                 self._on_session_started(room_info)
