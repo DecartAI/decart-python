@@ -362,7 +362,7 @@ toml = [
 
 [[package]]
 name = "decart"
-version = "0.0.39"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
