@@ -10,21 +10,19 @@ from dataclasses import dataclass
 from .types import ConnectionState
 
 if TYPE_CHECKING:
-    from aiortc import MediaStreamTrack
-    from .webrtc_manager import WebRTCManager
+    from livekit.rtc import RemoteVideoTrack
+    from .livekit_manager import LiveKitManager
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class TokenPayload:
-    sid: str
-    ip: str
-    port: int
+    room_name: str
 
 
-def encode_subscribe_token(session_id: str, server_ip: str, server_port: int) -> str:
-    payload = json.dumps({"sid": session_id, "ip": server_ip, "port": server_port})
+def encode_subscribe_token(room_name: str) -> str:
+    payload = json.dumps({"room_name": room_name})
     return base64.urlsafe_b64encode(payload.encode()).decode()
 
 
@@ -32,9 +30,9 @@ def decode_subscribe_token(token: str) -> TokenPayload:
     try:
         raw = base64.urlsafe_b64decode(token).decode()
         data = json.loads(raw)
-        if not data.get("sid") or not data.get("ip") or not data.get("port"):
+        if not data.get("room_name"):
             raise ValueError("Invalid subscribe token format")
-        return TokenPayload(sid=data["sid"], ip=data["ip"], port=data["port"])
+        return TokenPayload(room_name=data["room_name"])
     except Exception:
         raise ValueError("Invalid subscribe token")
 
@@ -42,11 +40,11 @@ def decode_subscribe_token(token: str) -> TokenPayload:
 @dataclass
 class SubscribeOptions:
     token: str
-    on_remote_stream: Callable[[MediaStreamTrack], None]
+    on_remote_stream: Callable[["RemoteVideoTrack"], None]
 
 
 class SubscribeClient:
-    def __init__(self, manager: WebRTCManager):
+    def __init__(self, manager: "LiveKitManager"):
         self._manager = manager
         self._connection_callbacks: list[Callable[[ConnectionState], None]] = []
         self._error_callbacks: list[Callable[[Exception], None]] = []

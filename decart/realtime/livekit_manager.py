@@ -1,20 +1,28 @@
 import asyncio
 import logging
-from typing import Optional, Callable
 from dataclasses import dataclass
-from aiortc import MediaStreamTrack
+from typing import Callable, Optional, TYPE_CHECKING
+
 from tenacity import (
+    before_sleep_log,
     retry,
+    retry_if_exception,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception,
-    before_sleep_log,
 )
 
-from .webrtc_connection import WebRTCConnection
-from .messages import OutgoingMessage, SessionIdMessage, GenerationTickMessage
-from .types import ConnectionState
+from .livekit_connection import LiveKitConnection
+from .messages import (
+    GenerationTickMessage,
+    LiveKitRoomInfoMessage,
+    OutgoingMessage,
+    QueuePositionMessage,
+)
+from .types import ConnectionState, VideoCodec
 from ..types import ModelState
+
+if TYPE_CHECKING:
+    from livekit.rtc import LocalVideoTrack, RemoteVideoTrack
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +35,7 @@ PERMANENT_ERRORS = [
     "unauthorized",
 ]
 
-CONNECTION_TIMEOUT = 60 * 5  # 5 minutes
+CONNECTION_TIMEOUT = 60 * 5
 
 RETRY_MAX_ATTEMPTS = 5
 RETRY_MIN_WAIT = 1
@@ -35,18 +43,20 @@ RETRY_MAX_WAIT = 10
 
 
 @dataclass
-class WebRTCConfiguration:
-    webrtc_url: str
+class LiveKitConfiguration:
+    livekit_url: str
     api_key: str
     session_id: str
     fps: int
-    on_remote_stream: Callable[[MediaStreamTrack], None]
+    on_remote_stream: Callable[["RemoteVideoTrack"], None]
     on_connection_state_change: Optional[Callable[[ConnectionState], None]] = None
     on_error: Optional[Callable[[Exception], None]] = None
-    on_session_id: Optional[Callable[[SessionIdMessage], None]] = None
+    on_session_started: Optional[Callable[[LiveKitRoomInfoMessage], None]] = None
     on_generation_tick: Optional[Callable[[GenerationTickMessage], None]] = None
+    on_queue_position: Optional[Callable[[QueuePositionMessage], None]] = None
+    room_info: Optional[LiveKitRoomInfoMessage] = None
     initial_state: Optional[ModelState] = None
-    customize_offer: Optional[Callable] = None
+    preferred_video_codec: VideoCodec = "h264"
     integration: Optional[str] = None
 
 
@@ -61,11 +71,11 @@ def _is_retryable_error(exception: BaseException) -> bool:
     return not _is_permanent_error(exception)
 
 
-class WebRTCManager:
-    def __init__(self, configuration: WebRTCConfiguration):
+class LiveKitManager:
+    def __init__(self, configuration: LiveKitConfiguration):
         self._config = configuration
-        self._connection: Optional[WebRTCConnection] = None
-        self._local_track: Optional[MediaStreamTrack] = None
+        self._connection: Optional[LiveKitConnection] = None
+        self._local_track: Optional["LocalVideoTrack"] = None
         self._subscribe_mode = False
         self._manager_state: ConnectionState = "disconnected"
         self._has_connected = False
@@ -74,9 +84,9 @@ class WebRTCManager:
         self._reconnect_generation = 0
         self._reconnect_task: Optional[asyncio.Task] = None
 
-    def _get_connection(self) -> WebRTCConnection:
+    def _get_connection(self) -> LiveKitConnection:
         if self._connection is None:
-            raise RuntimeError("WebRTCManager not connected")
+            raise RuntimeError("LiveKitManager not connected")
         return self._connection
 
     def _emit_state(self, state: ConnectionState) -> None:
@@ -86,6 +96,9 @@ class WebRTCManager:
                 self._has_connected = True
             if self._config.on_connection_state_change:
                 self._config.on_connection_state_change(state)
+
+    def _handle_remote_stream(self, track, _publication, _participant) -> None:
+        self._config.on_remote_stream(track)
 
     def _handle_connection_state_change(self, state: ConnectionState) -> None:
         if self._intentional_disconnect:
@@ -98,10 +111,9 @@ class WebRTCManager:
                 self._emit_state(state)
             return
 
-        # Unexpected disconnect after having been connected → trigger auto-reconnect
-        # _has_connected guards against triggering during initial connect (which has its own retry)
         if state == "disconnected" and not self._intentional_disconnect and self._has_connected:
-            self._reconnect_task = asyncio.ensure_future(self._reconnect())
+            if not self._reconnect_task or self._reconnect_task.done():
+                self._reconnect_task = asyncio.ensure_future(self._reconnect())
             return
 
         self._emit_state(state)
@@ -120,7 +132,6 @@ class WebRTCManager:
         try:
             await self._retry_reconnect(reconnect_generation)
         except asyncio.CancelledError:
-            # Task cancelled or intentional disconnect — don't emit error
             pass
         except Exception as error:
             if self._intentional_disconnect or reconnect_generation != self._reconnect_generation:
@@ -150,10 +161,12 @@ class WebRTCManager:
             conn = self._create_connection()
             self._connection = conn
             await conn.connect(
-                url=self._config.webrtc_url,
+                url=self._config.livekit_url,
                 local_track=self._local_track,
                 timeout=CONNECTION_TIMEOUT,
                 integration=self._config.integration,
+                room_info=self._config.room_info,
+                preferred_video_codec=self._config.preferred_video_codec,
             )
 
             if self._intentional_disconnect or reconnect_generation != self._reconnect_generation:
@@ -171,7 +184,7 @@ class WebRTCManager:
     )
     async def connect(
         self,
-        local_track: Optional[MediaStreamTrack],
+        local_track: Optional["LocalVideoTrack"],
         initial_image: Optional[str] = None,
         initial_prompt: Optional[dict] = None,
     ) -> bool:
@@ -186,28 +199,30 @@ class WebRTCManager:
 
         try:
             await self._connection.connect(
-                url=self._config.webrtc_url,
+                url=self._config.livekit_url,
                 local_track=local_track,
                 timeout=CONNECTION_TIMEOUT,
                 integration=self._config.integration,
                 initial_image=initial_image,
                 initial_prompt=initial_prompt,
+                room_info=self._config.room_info,
+                preferred_video_codec=self._config.preferred_video_codec,
             )
             return True
         except Exception as e:
-            logger.error(f"Connection attempt failed: {e}")
+            logger.error("Connection attempt failed: %s", e)
             await self._connection.cleanup()
             self._connection = None
             raise
 
-    def _create_connection(self) -> WebRTCConnection:
-        return WebRTCConnection(
-            on_remote_stream=self._config.on_remote_stream,
+    def _create_connection(self) -> LiveKitConnection:
+        return LiveKitConnection(
+            on_remote_stream=self._handle_remote_stream,
             on_state_change=self._handle_connection_state_change,
             on_error=self._config.on_error,
-            on_session_id=self._config.on_session_id,
+            on_session_started=self._config.on_session_started,
             on_generation_tick=self._config.on_generation_tick,
-            customize_offer=self._config.customize_offer,
+            on_queue_position=self._config.on_queue_position,
         )
 
     async def set_image(
@@ -258,6 +273,10 @@ class WebRTCManager:
         self._reconnect_generation += 1
         if self._reconnect_task and not self._reconnect_task.done():
             self._reconnect_task.cancel()
+            try:
+                await self._reconnect_task
+            except asyncio.CancelledError:
+                pass
         if self._connection:
             await self._connection.cleanup()
             self._connection = None

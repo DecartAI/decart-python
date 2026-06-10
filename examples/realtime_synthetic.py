@@ -10,28 +10,37 @@ logging.basicConfig(
 )
 
 try:
-    from aiortc import VideoStreamTrack
-    from aiortc.contrib.media import MediaRecorder
-    from av import VideoFrame
+    from livekit import rtc
 except ImportError:
-    print("aiortc is required for this example.")
+    print("livekit is required for this example.")
     print("Install with: pip install decart[realtime]")
     exit(1)
 
 
-class SyntheticVideoTrack(VideoStreamTrack):
-    """
-    Generates synthetic video frames for testing.
-    Creates colored frames that change over time.
-    """
+class SyntheticVideoSource:
+    """Pushes synthetic RGB frames into a LiveKit video source."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, width: int, height: int, fps: int):
+        self.width = width
+        self.height = height
+        self.fps = fps
+        self.source = rtc.VideoSource(width, height)
+        self.track = rtc.LocalVideoTrack.create_video_track("synthetic-video", self.source)
         self.counter = 0
+        self._running = False
 
-    async def recv(self):
-        pts, time_base = await self.next_timestamp()
+    async def start(self):
+        self._running = True
+        frame_interval = 1 / self.fps
 
+        while self._running:
+            self.source.capture_frame(self._next_frame())
+            await asyncio.sleep(frame_interval)
+
+    def stop(self):
+        self._running = False
+
+    def _next_frame(self):
         colors = [
             (255, 0, 0),  # Red
             (0, 255, 0),  # Green
@@ -42,16 +51,16 @@ class SyntheticVideoTrack(VideoStreamTrack):
         color_index = (self.counter // 25) % len(colors)
         color = colors[color_index]
 
-        img = np.zeros((704, 1280, 3), dtype=np.uint8)
+        img = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         img[:] = color
 
-        frame = VideoFrame.from_ndarray(img, format="rgb24")
-        frame.pts = pts
-        frame.time_base = time_base
-
         self.counter += 1
-
-        return frame
+        return rtc.VideoFrame(
+            width=self.width,
+            height=self.height,
+            type=rtc.VideoBufferType.RGB24,
+            data=img.tobytes(),
+        )
 
 
 async def main():
@@ -71,26 +80,26 @@ async def main():
     print("Creating Decart client...")
     async with DecartClient(api_key=api_key) as client:
         print("Creating synthetic video track...")
-        video_track = SyntheticVideoTrack()
-
         model = models.realtime("lucy-2.1")
+        video_source = SyntheticVideoSource(model.width, model.height, model.fps)
         print(f"Using model: {model.name}")
         print(f"Model config - FPS: {model.fps}, Size: {model.width}x{model.height}")
 
         frame_count = 0
-        recorder = None
-        output_file = Path("output_realtime_synthetic.mp4")
+        source_task = asyncio.create_task(video_source.start())
+        output_file = Path("output_realtime_synthetic.frames")
 
         def on_remote_stream(track):
-            nonlocal frame_count, recorder
-            frame_count += 1
-            print(f"📹 Received remote stream frame #{frame_count}")
+            print(f"📹 Received remote LiveKit track: {track.sid}")
 
-            if recorder is None:
-                print(f"💾 Recording to {output_file}")
-                recorder = MediaRecorder(str(output_file))
-                recorder.addTrack(track)
-                asyncio.create_task(recorder.start())
+            async def consume_frames():
+                nonlocal frame_count
+                async for event in rtc.VideoStream(track):
+                    frame_count += 1
+                    if frame_count % 25 == 0:
+                        print(f"📹 Received {frame_count} remote frames")
+
+            asyncio.create_task(consume_frames())
 
         def on_connection_change(state):
             print(f"🔄 Connection state: {state}")
@@ -107,7 +116,7 @@ async def main():
             realtime_client = await RealtimeClient.connect(
                 base_url=client.realtime_base_url,
                 api_key=client.api_key,
-                local_track=video_track,
+                local_track=video_source.track,
                 options=RealtimeConnectOptions(
                     model=model,
                     on_remote_stream=on_remote_stream,
@@ -142,15 +151,7 @@ async def main():
 
                 print(f"\n✓ Processed {frame_count} frames total")
             finally:
-                if recorder:
-                    try:
-                        print(f"💾 Saving video to {output_file}...")
-                        await asyncio.sleep(0.5)
-                        await recorder.stop()
-                        print(f"✓ Video saved to {output_file}")
-                    except Exception as e:
-                        print(f"⚠️ Warning: Could not save video cleanly: {e}")
-                        print("   Video file may be incomplete or corrupted")
+                print(f"Remote frame count written to console; placeholder output: {output_file}")
 
         except Exception as e:
             print(f"\n❌ Connection failed: {e}")
@@ -162,6 +163,12 @@ async def main():
                 print("\nDisconnecting...")
                 await realtime_client.disconnect()
                 print("✓ Disconnected")
+            video_source.stop()
+            source_task.cancel()
+            try:
+                await source_task
+            except asyncio.CancelledError:
+                pass
 
 
 if __name__ == "__main__":
