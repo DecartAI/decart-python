@@ -20,7 +20,7 @@ class TokensClient:
         ```python
         client = DecartClient(api_key=os.getenv("DECART_API_KEY"))
         token = await client.tokens.create()
-        # Returns: CreateTokenResponse(api_key="ek_...", expires_at="...")
+        # Returns: CreateTokenResponse(api_key="ek_...", token="eyJhbGciOiJFZERTQS...", expires_at="...")
 
         # With metadata:
         token = await client.tokens.create(metadata={"role": "viewer"})
@@ -71,7 +71,7 @@ class TokensClient:
         Example:
             ```python
             token = await client.tokens.create()
-            # Returns: CreateTokenResponse(api_key="ek_...", expires_at="...")
+            # Returns: CreateTokenResponse(api_key="ek_...", token="eyJhbGciOiJFZERTQS...", expires_at="...")
 
             # With all options:
             token = await client.tokens.create(
@@ -120,6 +120,7 @@ class TokensClient:
             data = await response.json()
             return CreateTokenResponse(
                 api_key=data["apiKey"],
+                token=data.get("token"),
                 expires_at=data["expiresAt"],
                 permissions=data.get("permissions"),
                 constraints=data.get("constraints"),
