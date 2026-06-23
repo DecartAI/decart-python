@@ -14,6 +14,7 @@ async def main() -> None:
 
         print("Token created successfully:")
         print(f"  API Key: {token.api_key[:10]}...")
+        print(f"  JWT: {f'{token.token[:16]}...' if token.token else '(not issued)'}")
         print(f"  Expires At: {token.expires_at}")
         origins = (token.permissions or {}).get("origins")
         print(f"  Allowed Origins: {', '.join(origins) if origins else '(any)'}")

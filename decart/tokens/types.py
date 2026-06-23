@@ -20,6 +20,8 @@ class CreateTokenResponse(BaseModel):
     """Response from creating a client token."""
 
     api_key: str
+    token: str | None = None
+    """Signed JWT mirroring ``api_key``, verifiable offline via the public JWKS."""
     expires_at: str
     permissions: TokenPermissions | None = None
     constraints: TokenConstraints | None = None

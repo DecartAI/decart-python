@@ -25,6 +25,7 @@ async def test_create_token() -> None:
         result = await client.tokens.create()
 
     assert result.api_key == "ek_test123"
+    assert result.token is None
     assert result.expires_at == "2024-12-15T12:10:00Z"
     assert result.permissions is None
     assert result.constraints is None
@@ -225,6 +226,7 @@ async def test_create_token_with_all_v2_fields() -> None:
     mock_response.json = AsyncMock(
         return_value={
             "apiKey": "ek_test123",
+            "token": "eyJhbGciOiJFZERTQS123",
             "expiresAt": "2024-12-15T12:10:00Z",
             "permissions": {
                 "models": ["lucy-2.1"],
@@ -249,6 +251,7 @@ async def test_create_token_with_all_v2_fields() -> None:
         )
 
     assert result.api_key == "ek_test123"
+    assert result.token == "eyJhbGciOiJFZERTQS123"
     assert result.expires_at == "2024-12-15T12:10:00Z"
     assert result.permissions == {
         "models": ["lucy-2.1"],
