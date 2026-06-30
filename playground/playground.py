@@ -58,7 +58,7 @@ logging.basicConfig(level=logging.WARNING)
 
 REALTIME_MODELS = [
     "lucy-2.1",
-    "lucy-2.1-vton",
+    "lucy-vton-3",
     "lucy-restyle-2",
 ]
 
