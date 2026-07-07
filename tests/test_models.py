@@ -21,9 +21,9 @@ def test_canonical_realtime_models() -> None:
     model = models.realtime("lucy-2.5")
     assert model.name == "lucy-2.5"
     assert model.url_path == "/v1/stream"
-    assert model.fps == 20
-    assert model.width == 1088
-    assert model.height == 624
+    assert model.fps == 30
+    assert model.width == 1280
+    assert model.height == 720
 
     model = models.realtime("lucy-vton-2")
     assert model.name == "lucy-vton-2"
@@ -68,8 +68,8 @@ def test_canonical_video_models() -> None:
     assert model.name == "lucy-2.5"
     assert model.url_path == "/v1/jobs/lucy-2.5"
     assert model.fps == 20
-    assert model.width == 1088
-    assert model.height == 624
+    assert model.width == 1280
+    assert model.height == 720
 
     model = models.video("lucy-vton-2")
     assert model.name == "lucy-vton-2"
