@@ -189,9 +189,9 @@ _MODELS = {
         "lucy-2.5": ModelDefinition(
             name="lucy-2.5",
             url_path="/v1/stream",
-            fps=20,
-            width=1088,
-            height=624,
+            fps=30,
+            width=1280,
+            height=720,
         ),
         "lucy-restyle-2": ModelDefinition(
             name="lucy-restyle-2",
@@ -274,8 +274,8 @@ _MODELS = {
             name="lucy-2.5",
             url_path="/v1/jobs/lucy-2.5",
             fps=20,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
             input_schema=VideoEdit2Input,
         ),
         "lucy-vton-2": ModelDefinition(
