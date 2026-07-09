@@ -45,11 +45,11 @@ def test_deprecated_realtime_models() -> None:
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        model = models.realtime("mirage_v2")
-        assert model.name == "mirage_v2"
+        model = models.realtime("lucy-2.1-vton-2")
+        assert model.name == "lucy-2.1-vton-2"
         assert len(w) == 1
         assert "deprecated" in str(w[0].message).lower()
-        assert "lucy-restyle-2" in str(w[0].message)
+        assert "lucy-vton-2" in str(w[0].message)
 
 
 def test_canonical_video_models() -> None:
@@ -132,9 +132,9 @@ def test_deprecation_warning_only_once() -> None:
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        models.realtime("mirage_v2")
-        models.realtime("mirage_v2")
-        models.realtime("mirage_v2")
+        models.realtime("lucy-2.1-vton-2")
+        models.realtime("lucy-2.1-vton-2")
+        models.realtime("lucy-2.1-vton-2")
         assert len(w) == 1
 
 
