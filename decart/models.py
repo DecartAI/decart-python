@@ -17,7 +17,6 @@ RealTimeModels = Literal[
     "lucy-restyle-latest",
     # Deprecated names
     "lucy-2.1-vton-2",
-    "mirage_v2",
 ]
 VideoModels = Literal[
     # Canonical names
@@ -48,8 +47,6 @@ ImageModels = Literal[
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
 
 MODEL_ALIASES: dict[str, str] = {
-    # Realtime aliases
-    "mirage_v2": "lucy-restyle-2",
     # Video aliases
     "lucy-pro-v2v": "lucy-clip",
     "lucy-restyle-v2v": "lucy-restyle-2",
@@ -238,14 +235,6 @@ _MODELS = {
         ),
         "lucy-restyle-latest": ModelDefinition(
             name="lucy-restyle-latest",
-            url_path="/v1/stream",
-            fps=30,
-            width=1280,
-            height=704,
-        ),
-        # Deprecated names
-        "mirage_v2": ModelDefinition(
-            name="mirage_v2",
             url_path="/v1/stream",
             fps=30,
             width=1280,
