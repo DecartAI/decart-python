@@ -39,6 +39,13 @@ def test_canonical_realtime_models() -> None:
     assert model.width == 1088
     assert model.height == 624
 
+    model = models.realtime("lucy-vton-3.5")
+    assert model.name == "lucy-vton-3.5"
+    assert model.url_path == "/v1/stream"
+    assert model.fps == 30
+    assert model.width == 1280
+    assert model.height == 720
+
 
 def test_deprecated_realtime_models() -> None:
     _warned_aliases.clear()
@@ -84,6 +91,13 @@ def test_canonical_video_models() -> None:
     assert model.fps == 20
     assert model.width == 1088
     assert model.height == 624
+
+    model = models.video("lucy-vton-3.5")
+    assert model.name == "lucy-vton-3.5"
+    assert model.url_path == "/v1/jobs/lucy-vton-3.5"
+    assert model.fps == 20
+    assert model.width == 1280
+    assert model.height == 720
 
     model = models.video("lucy-restyle-2")
     assert model.name == "lucy-restyle-2"
@@ -150,8 +164,8 @@ def test_latest_realtime_models() -> None:
     assert model.name == "lucy-vton-latest"
     assert model.url_path == "/v1/stream"
     assert model.fps == 30
-    assert model.width == 1088
-    assert model.height == 624
+    assert model.width == 1280
+    assert model.height == 720
 
     model = models.realtime("lucy-restyle-latest")
     assert model.name == "lucy-restyle-latest"
@@ -173,8 +187,8 @@ def test_latest_video_models() -> None:
     assert model.name == "lucy-vton-latest"
     assert model.url_path == "/v1/jobs/lucy-vton-latest"
     assert model.fps == 20
-    assert model.width == 1088
-    assert model.height == 624
+    assert model.width == 1280
+    assert model.height == 720
 
     model = models.video("lucy-restyle-latest")
     assert model.name == "lucy-restyle-latest"
