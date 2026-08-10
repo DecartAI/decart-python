@@ -10,6 +10,7 @@ RealTimeModels = Literal[
     "lucy-2.5",
     "lucy-vton-2",
     "lucy-vton-3",
+    "lucy-vton-3.5",
     "lucy-restyle-2",
     # Latest aliases (server-side resolution)
     "lucy-latest",
@@ -25,6 +26,7 @@ VideoModels = Literal[
     "lucy-2.5",
     "lucy-vton-2",
     "lucy-vton-3",
+    "lucy-vton-3.5",
     "lucy-restyle-2",
     # Latest aliases (server-side resolution)
     "lucy-latest",
@@ -205,12 +207,13 @@ _MODELS = {
             width=1088,
             height=624,
         ),
+        # Server-side alias currently resolves to lucy-vton-3.5.
         "lucy-vton-latest": ModelDefinition(
             name="lucy-vton-latest",
             url_path="/v1/stream",
             fps=30,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
         ),
         "lucy-vton-2": ModelDefinition(
             name="lucy-vton-2",
@@ -225,6 +228,13 @@ _MODELS = {
             fps=30,
             width=1088,
             height=624,
+        ),
+        "lucy-vton-3.5": ModelDefinition(
+            name="lucy-vton-3.5",
+            url_path="/v1/stream",
+            fps=30,
+            width=1280,
+            height=720,
         ),
         "lucy-2.1-vton-2": ModelDefinition(
             name="lucy-2.1-vton-2",
@@ -283,6 +293,14 @@ _MODELS = {
             height=624,
             input_schema=VideoEdit2Input,
         ),
+        "lucy-vton-3.5": ModelDefinition(
+            name="lucy-vton-3.5",
+            url_path="/v1/jobs/lucy-vton-3.5",
+            fps=20,
+            width=1280,
+            height=720,
+            input_schema=VideoEdit2Input,
+        ),
         "lucy-2.1-vton-2": ModelDefinition(
             name="lucy-2.1-vton-2",
             url_path="/v1/jobs/lucy-2.1-vton-2",
@@ -308,12 +326,13 @@ _MODELS = {
             height=624,
             input_schema=VideoEdit2Input,
         ),
+        # Server-side alias currently resolves to lucy-vton-3.5.
         "lucy-vton-latest": ModelDefinition(
             name="lucy-vton-latest",
             url_path="/v1/jobs/lucy-vton-latest",
             fps=20,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
             input_schema=VideoEdit2Input,
         ),
         "lucy-restyle-latest": ModelDefinition(
