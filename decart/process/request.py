@@ -14,6 +14,16 @@ async def file_input_to_bytes(
 ) -> tuple[bytes, str]:
     """Convert various file input types to bytes asynchronously.
 
+    A ``str`` input is read from disk when it names an existing file, otherwise
+    fetched as an ``http(s)`` URL.
+
+    Security note: the local-file read and the URL fetch are conveniences meant
+    for *trusted* inputs. Do not pass an untrusted / user-supplied string here
+    from a server — a filesystem path is read from your server's disk (local
+    file disclosure) and an ``http(s)`` value is fetched from your server's
+    network position (SSRF — internal services, cloud metadata). For untrusted
+    input, resolve it yourself and pass ``bytes``.
+
     Args:
         input_data: The file input (bytes, Path, str, or file-like object)
         session: Reusable aiohttp session for URL fetching

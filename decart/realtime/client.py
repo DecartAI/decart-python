@@ -40,6 +40,24 @@ async def _image_to_base64(
     image: Union[bytes, str, Path],
     http_session: aiohttp.ClientSession,
 ) -> str:
+    """Resolve an image input to a raw base64 string (no ``data:`` prefix).
+
+    Accepted inputs:
+
+    - ``bytes`` — encoded directly.
+    - ``Path`` — read from the local filesystem, then encoded.
+    - ``str`` — interpreted by shape: a ``data:`` URL is decoded locally; an
+      ``http(s)`` URL is fetched and encoded; an existing local file path is
+      read from disk; anything else is assumed to already be raw base64.
+
+    Security note: the ``http(s)`` fetch and the local-file read are
+    conveniences meant for *trusted* inputs — your own code, local files, a CLI
+    or notebook. Do **not** pass an untrusted / user-supplied string here from a
+    server. An ``http(s)`` value is fetched from your server's network position
+    (SSRF — it can reach internal services and cloud-metadata endpoints), and a
+    filesystem path is read from your server's disk (local file disclosure).
+    For untrusted input, resolve it yourself and pass ``bytes``.
+    """
     if isinstance(image, Path):
         image_bytes, _ = await file_input_to_bytes(image, http_session)
         return base64.b64encode(image_bytes).decode("utf-8")
@@ -62,6 +80,14 @@ async def _image_to_base64(
         if Path(image).exists():
             image_bytes, _ = await file_input_to_bytes(image, http_session)
             return base64.b64encode(image_bytes).decode("utf-8")
+
+        # A URL-shaped string with a scheme we don't handle (e.g. file://,
+        # ftp://, s3://, blob:) would otherwise be returned verbatim and sent
+        # onward as if it were base64, failing opaquely at the API. Reject it
+        # here instead. A single-character scheme is a Windows drive letter
+        # (e.g. "C:\\img.png"), not a URL; raw base64 has no scheme at all.
+        if len(parsed.scheme) > 1:
+            raise InvalidInputError(f"Unsupported image URL scheme: {parsed.scheme!r}")
 
         # Non-URL, non-file string — treat as raw base64 (matches TS SDK behavior)
         return image

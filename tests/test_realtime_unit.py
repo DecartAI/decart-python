@@ -628,3 +628,28 @@ async def test_fetch_watch_stream_credentials_uses_http_base_and_api_key():
     ]
     assert room_info.livekit_url == "wss://livekit.example"
     assert room_info.session_id == "room-123"
+
+
+@pytest.mark.asyncio
+async def test_image_to_base64_passes_through_raw_base64():
+    from decart.realtime.client import _image_to_base64
+
+    b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNgAAAAAgAB"
+    assert await _image_to_base64(b64, AsyncMock()) == b64
+
+
+@pytest.mark.asyncio
+async def test_image_to_base64_decodes_data_url():
+    from decart.realtime.client import _image_to_base64
+
+    assert await _image_to_base64("data:image/png;base64,AAAA", AsyncMock()) == "AAAA"
+
+
+@pytest.mark.asyncio
+async def test_image_to_base64_rejects_unsupported_url_scheme():
+    from decart.realtime.client import _image_to_base64
+    from decart.errors import InvalidInputError
+
+    for value in ("file:///etc/passwd", "ftp://example.com/x.png", "blob:https://x/uuid"):
+        with pytest.raises(InvalidInputError):
+            await _image_to_base64(value, AsyncMock())
