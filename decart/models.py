@@ -8,24 +8,18 @@ RealTimeModels = Literal[
     # Canonical names
     "lucy-2.1",
     "lucy-2.5",
-    "lucy-vton-2",
-    "lucy-vton-3",
     "lucy-vton-3.5",
     "lucy-restyle-2",
     # Latest aliases (server-side resolution)
     "lucy-latest",
     "lucy-vton-latest",
     "lucy-restyle-latest",
-    # Deprecated names
-    "lucy-2.1-vton-2",
 ]
 VideoModels = Literal[
     # Canonical names
     "lucy-clip",
     "lucy-2.1",
     "lucy-2.5",
-    "lucy-vton-2",
-    "lucy-vton-3",
     "lucy-vton-3.5",
     "lucy-restyle-2",
     # Latest aliases (server-side resolution)
@@ -34,7 +28,6 @@ VideoModels = Literal[
     "lucy-restyle-latest",
     "lucy-clip-latest",
     # Deprecated / alias names
-    "lucy-2.1-vton-2",
     "lucy-pro-v2v",
     "lucy-restyle-v2v",
 ]
@@ -52,8 +45,6 @@ MODEL_ALIASES: dict[str, str] = {
     # Video aliases
     "lucy-pro-v2v": "lucy-clip",
     "lucy-restyle-v2v": "lucy-restyle-2",
-    # VTON aliases
-    "lucy-2.1-vton-2": "lucy-vton-2",
     # Image aliases
     "lucy-pro-i2i": "lucy-image-2",
 }
@@ -215,33 +206,12 @@ _MODELS = {
             width=1280,
             height=720,
         ),
-        "lucy-vton-2": ModelDefinition(
-            name="lucy-vton-2",
-            url_path="/v1/stream",
-            fps=30,
-            width=1088,
-            height=624,
-        ),
-        "lucy-vton-3": ModelDefinition(
-            name="lucy-vton-3",
-            url_path="/v1/stream",
-            fps=30,
-            width=1088,
-            height=624,
-        ),
         "lucy-vton-3.5": ModelDefinition(
             name="lucy-vton-3.5",
             url_path="/v1/stream",
             fps=30,
             width=1280,
             height=720,
-        ),
-        "lucy-2.1-vton-2": ModelDefinition(
-            name="lucy-2.1-vton-2",
-            url_path="/v1/stream",
-            fps=30,
-            width=1088,
-            height=624,
         ),
         "lucy-restyle-latest": ModelDefinition(
             name="lucy-restyle-latest",
@@ -277,36 +247,12 @@ _MODELS = {
             height=720,
             input_schema=VideoEdit2Input,
         ),
-        "lucy-vton-2": ModelDefinition(
-            name="lucy-vton-2",
-            url_path="/v1/jobs/lucy-vton-2",
-            fps=20,
-            width=1088,
-            height=624,
-            input_schema=VideoEdit2Input,
-        ),
-        "lucy-vton-3": ModelDefinition(
-            name="lucy-vton-3",
-            url_path="/v1/jobs/lucy-vton-3",
-            fps=20,
-            width=1088,
-            height=624,
-            input_schema=VideoEdit2Input,
-        ),
         "lucy-vton-3.5": ModelDefinition(
             name="lucy-vton-3.5",
             url_path="/v1/jobs/lucy-vton-3.5",
             fps=20,
             width=1280,
             height=720,
-            input_schema=VideoEdit2Input,
-        ),
-        "lucy-2.1-vton-2": ModelDefinition(
-            name="lucy-2.1-vton-2",
-            url_path="/v1/jobs/lucy-2.1-vton-2",
-            fps=20,
-            width=1088,
-            height=624,
             input_schema=VideoEdit2Input,
         ),
         "lucy-restyle-2": ModelDefinition(
