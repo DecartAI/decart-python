@@ -13,7 +13,11 @@ async def test_create_token() -> None:
     mock_response = AsyncMock()
     mock_response.ok = True
     mock_response.json = AsyncMock(
-        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+        return_value={
+            "apiKey": "ek_test123",
+            "token": "eyJhbGciOiJFZERTQS123",
+            "expiresAt": "2024-12-15T12:10:00Z",
+        }
     )
 
     mock_session = MagicMock()
@@ -25,7 +29,7 @@ async def test_create_token() -> None:
         result = await client.tokens.create()
 
     assert result.api_key == "ek_test123"
-    assert result.token is None
+    assert result.token == "eyJhbGciOiJFZERTQS123"
     assert result.expires_at == "2024-12-15T12:10:00Z"
     assert result.permissions is None
     assert result.constraints is None
@@ -79,7 +83,11 @@ async def test_create_token_with_metadata() -> None:
     mock_response = AsyncMock()
     mock_response.ok = True
     mock_response.json = AsyncMock(
-        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+        return_value={
+            "apiKey": "ek_test123",
+            "token": "eyJhbGciOiJFZERTQS123",
+            "expiresAt": "2024-12-15T12:10:00Z",
+        }
     )
 
     mock_session = MagicMock()
@@ -104,7 +112,11 @@ async def test_create_token_without_metadata_sends_null() -> None:
     mock_response = AsyncMock()
     mock_response.ok = True
     mock_response.json = AsyncMock(
-        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+        return_value={
+            "apiKey": "ek_test123",
+            "token": "eyJhbGciOiJFZERTQS123",
+            "expiresAt": "2024-12-15T12:10:00Z",
+        }
     )
 
     mock_session = MagicMock()
@@ -127,7 +139,11 @@ async def test_create_token_with_expires_in() -> None:
     mock_response = AsyncMock()
     mock_response.ok = True
     mock_response.json = AsyncMock(
-        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+        return_value={
+            "apiKey": "ek_test123",
+            "token": "eyJhbGciOiJFZERTQS123",
+            "expiresAt": "2024-12-15T12:10:00Z",
+        }
     )
 
     mock_session = MagicMock()
@@ -150,7 +166,11 @@ async def test_create_token_with_allowed_models() -> None:
     mock_response = AsyncMock()
     mock_response.ok = True
     mock_response.json = AsyncMock(
-        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+        return_value={
+            "apiKey": "ek_test123",
+            "token": "eyJhbGciOiJFZERTQS123",
+            "expiresAt": "2024-12-15T12:10:00Z",
+        }
     )
 
     mock_session = MagicMock()
@@ -173,7 +193,11 @@ async def test_create_token_with_allowed_origins() -> None:
     mock_response = AsyncMock()
     mock_response.ok = True
     mock_response.json = AsyncMock(
-        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+        return_value={
+            "apiKey": "ek_test123",
+            "token": "eyJhbGciOiJFZERTQS123",
+            "expiresAt": "2024-12-15T12:10:00Z",
+        }
     )
 
     mock_session = MagicMock()
@@ -200,7 +224,11 @@ async def test_create_token_with_constraints() -> None:
     mock_response = AsyncMock()
     mock_response.ok = True
     mock_response.json = AsyncMock(
-        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+        return_value={
+            "apiKey": "ek_test123",
+            "token": "eyJhbGciOiJFZERTQS123",
+            "expiresAt": "2024-12-15T12:10:00Z",
+        }
     )
 
     mock_session = MagicMock()
@@ -267,3 +295,25 @@ async def test_create_token_with_all_v2_fields() -> None:
         "allowedOrigins": ["https://example.com"],
         "constraints": {"realtime": {"maxSessionDuration": 120}},
     }
+
+
+@pytest.mark.asyncio
+async def test_create_token_without_signed_token_raises() -> None:
+    """A response without the signed token is a contract violation, not a None."""
+    client = DecartClient(api_key="test-api-key")
+
+    mock_response = AsyncMock()
+    mock_response.ok = True
+    mock_response.status = 200
+    mock_response.json = AsyncMock(
+        return_value={"apiKey": "ek_test123", "expiresAt": "2024-12-15T12:10:00Z"}
+    )
+
+    mock_session = MagicMock()
+    mock_session.post = MagicMock(
+        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
+    )
+
+    with patch.object(client, "_get_session", AsyncMock(return_value=mock_session)):
+        with pytest.raises(TokenCreateError, match="missing the signed token"):
+            await client.tokens.create()

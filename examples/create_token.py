@@ -14,13 +14,13 @@ async def main() -> None:
 
         print("Token created successfully:")
         print(f"  API Key: {token.api_key[:10]}...")
-        print(f"  JWT: {f'{token.token[:16]}...' if token.token else '(not issued)'}")
+        print(f"  Token: {token.token[:16]}...")
         print(f"  Expires At: {token.expires_at}")
         origins = (token.permissions or {}).get("origins")
         print(f"  Allowed Origins: {', '.join(origins) if origins else '(any)'}")
 
         # Client-side: Use the client token
-        # In a real app, you would send token.api_key to the frontend
+        # In a real app, you would send token.token to the frontend
         _client = DecartClient(api_key=token.api_key)
 
         print("Client created with client token.")
