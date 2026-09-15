@@ -1,7 +1,7 @@
 """
 Virtual Try-On Example
 
-This example demonstrates how to use the lucy-vton-3 model to perform
+This example demonstrates how to use the lucy-vton-latest model to perform
 virtual try-on on a video using a reference garment image.
 
 Usage:
@@ -69,7 +69,7 @@ async def main():
 
     async with DecartClient(api_key=api_key) as client:
         options = {
-            "model": models.video("lucy-vton-3"),
+            "model": models.video("lucy-vton-latest"),
             "data": video_path,
             "prompt": args.prompt,
             "reference_image": ref_path,

@@ -25,38 +25,12 @@ def test_canonical_realtime_models() -> None:
     assert model.width == 1280
     assert model.height == 720
 
-    model = models.realtime("lucy-vton-2")
-    assert model.name == "lucy-vton-2"
-    assert model.url_path == "/v1/stream"
-    assert model.fps == 30
-    assert model.width == 1088
-    assert model.height == 624
-
-    model = models.realtime("lucy-vton-3")
-    assert model.name == "lucy-vton-3"
-    assert model.url_path == "/v1/stream"
-    assert model.fps == 30
-    assert model.width == 1088
-    assert model.height == 624
-
     model = models.realtime("lucy-vton-3.5")
     assert model.name == "lucy-vton-3.5"
     assert model.url_path == "/v1/stream"
     assert model.fps == 30
     assert model.width == 1280
     assert model.height == 720
-
-
-def test_deprecated_realtime_models() -> None:
-    _warned_aliases.clear()
-
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        model = models.realtime("lucy-2.1-vton-2")
-        assert model.name == "lucy-2.1-vton-2"
-        assert len(w) == 1
-        assert "deprecated" in str(w[0].message).lower()
-        assert "lucy-vton-2" in str(w[0].message)
 
 
 def test_canonical_video_models() -> None:
@@ -77,20 +51,6 @@ def test_canonical_video_models() -> None:
     assert model.fps == 20
     assert model.width == 1280
     assert model.height == 720
-
-    model = models.video("lucy-vton-2")
-    assert model.name == "lucy-vton-2"
-    assert model.url_path == "/v1/jobs/lucy-vton-2"
-    assert model.fps == 20
-    assert model.width == 1088
-    assert model.height == 624
-
-    model = models.video("lucy-vton-3")
-    assert model.name == "lucy-vton-3"
-    assert model.url_path == "/v1/jobs/lucy-vton-3"
-    assert model.fps == 20
-    assert model.width == 1088
-    assert model.height == 624
 
     model = models.video("lucy-vton-3.5")
     assert model.name == "lucy-vton-3.5"
@@ -146,9 +106,9 @@ def test_deprecation_warning_only_once() -> None:
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        models.realtime("lucy-2.1-vton-2")
-        models.realtime("lucy-2.1-vton-2")
-        models.realtime("lucy-2.1-vton-2")
+        models.video("lucy-pro-v2v")
+        models.video("lucy-pro-v2v")
+        models.video("lucy-pro-v2v")
         assert len(w) == 1
 
 
