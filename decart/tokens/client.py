@@ -66,7 +66,8 @@ class TokensClient:
                 ``{"realtime": {"maxSessionDuration": 120}}``.
 
         Returns:
-            A short-lived API key safe for client-side use.
+            A short-lived client token: the signed ``token`` your frontend uses for
+            realtime connections and file uploads, plus its opaque ``api_key`` twin.
 
         Example:
             ```python
@@ -118,9 +119,16 @@ class TokensClient:
                     data={"status": response.status},
                 )
             data = await response.json()
+            if "token" not in data:
+                # The platform guarantees the signed token; a response without it
+                # is a contract violation, not a value to hand back as None.
+                raise TokenCreateError(
+                    "Failed to create token: response is missing the signed token",
+                    data={"status": response.status},
+                )
             return CreateTokenResponse(
                 api_key=data["apiKey"],
-                token=data.get("token"),
+                token=data["token"],
                 expires_at=data["expiresAt"],
                 permissions=data.get("permissions"),
                 constraints=data.get("constraints"),
