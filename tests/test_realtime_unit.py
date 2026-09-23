@@ -215,6 +215,12 @@ async def test_realtime_connect_appends_speed_after_resolution():
     assert url.endswith("&livekit_early_room_info=true&resolution=720p&speed=fast")
 
 
+def _speed_warnings(recorded) -> list:
+    # Unrelated warnings (e.g. aiohttp "Unclosed client session" ResourceWarnings raised
+    # during GC of sessions from earlier tests) can land in the same recording window.
+    return [x for x in recorded if "does not support speed" in str(x.message)]
+
+
 @pytest.mark.asyncio
 async def test_realtime_connect_speed_fast_no_warning_for_supported_model():
     import warnings
@@ -227,7 +233,7 @@ async def test_realtime_connect_speed_fast_no_warning_for_supported_model():
         for model in ("lucy-2.5", "lucy-latest", "lucy-vton-3.5", "lucy-vton-latest"):
             url = await _connect_and_capture_url(speed="fast", model=model)
             assert "&speed=fast" in url
-        assert w == []
+        assert _speed_warnings(w) == []
 
 
 @pytest.mark.asyncio
@@ -241,13 +247,14 @@ async def test_realtime_connect_speed_fast_warns_once_but_still_sends_for_unsupp
         warnings.simplefilter("always")
         url = await _connect_and_capture_url(speed="fast", model="lucy-2.1")
         assert "&speed=fast" in url
-        assert len(w) == 1
-        assert issubclass(w[0].category, UserWarning)
-        assert 'Model "lucy-2.1" does not support speed="fast"' in str(w[0].message)
+        speed_warnings = _speed_warnings(w)
+        assert len(speed_warnings) == 1
+        assert issubclass(speed_warnings[0].category, UserWarning)
+        assert 'Model "lucy-2.1" does not support speed="fast"' in str(speed_warnings[0].message)
 
         # One-shot per (model, speed): a second connect does not warn again.
         await _connect_and_capture_url(speed="fast", model="lucy-2.1")
-        assert len(w) == 1
+        assert len(_speed_warnings(w)) == 1
 
 
 @pytest.mark.asyncio
