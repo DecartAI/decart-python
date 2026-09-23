@@ -127,6 +127,10 @@ async def main():
                         ),
                         image=Path("examples/files/image.png"),
                     ),
+                    # Fast mode: uncomment with a supporting model (lucy-2.5 / lucy-latest,
+                    # lucy-vton-3.5 / lucy-vton-latest). US region only, billed at 2x the
+                    # standard realtime rate; other models ignore it. Omit for standard mode.
+                    # speed="fast",
                 ),
             )
 

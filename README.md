@@ -89,6 +89,36 @@ async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
             f.write(data)
 ```
 
+### Realtime fast mode
+
+Realtime sessions accept an optional `speed` on `RealtimeConnectOptions`, alongside `resolution`.
+Fast mode (`speed="fast"`) serves the session from a higher-compute tier for lower latency and
+higher throughput; output quality is unchanged. It is currently available for `lucy-2.5` /
+`lucy-latest` and `lucy-vton-3.5` / `lucy-vton-latest`, in the US region only, and is billed at
+2x the standard realtime rate for those models. Other models ignore the option (the SDK emits a
+warning). Omit it (the default) for standard mode.
+
+```python
+from decart import DecartClient, models
+from decart.realtime import RealtimeClient, RealtimeConnectOptions
+
+client = DecartClient(api_key=os.getenv("DECART_API_KEY"))
+realtime = await RealtimeClient.connect(
+    base_url=client.realtime_base_url,
+    api_key=client.api_key,
+    local_track=local_track,
+    options=RealtimeConnectOptions(
+        model=models.realtime("lucy-2.5"),
+        on_remote_stream=on_remote_stream,
+        speed="fast",  # omit for standard mode
+    ),
+)
+```
+
+Each model definition lists the speed tiers it advertises via `ModelDefinition.supported_speeds`
+(for example `models.realtime("lucy-2.5").supported_speeds == ("fast",)`). See the
+[realtime docs](https://docs.platform.decart.ai/sdks/python) for the full realtime API.
+
 ## Development
 
 ### Setup with UV

@@ -1,7 +1,7 @@
 import warnings
 import pytest
-from decart import models, DecartSDKError, ModelDefinition
-from decart.models import _warned_aliases
+from decart import models, DecartSDKError, ModelDefinition, RealtimeSpeed
+from decart.models import _MODELS, _warned_aliases
 
 
 def test_canonical_realtime_models() -> None:
@@ -183,6 +183,35 @@ def test_latest_aliases_no_deprecation_warning() -> None:
         assert len(w) == 0
 
 
+FAST_REALTIME_MODELS = {"lucy-2.5", "lucy-latest", "lucy-vton-3.5", "lucy-vton-latest"}
+
+
+def test_realtime_fast_speed_capability_pinned_to_lucy_2_5_and_vton_3_5() -> None:
+    # Matches the JS SDK registry: only these realtime entries advertise speed="fast".
+    fast_models = {
+        name for name, model in _MODELS["realtime"].items() if "fast" in model.supported_speeds
+    }
+    assert fast_models == FAST_REALTIME_MODELS
+
+    for name, model in _MODELS["realtime"].items():
+        if name in FAST_REALTIME_MODELS:
+            assert model.supported_speeds == ("fast",)
+        else:
+            assert model.supported_speeds == ()
+
+
+def test_non_realtime_models_advertise_no_speeds() -> None:
+    for surface in ("video", "image"):
+        for model in _MODELS[surface].values():
+            assert model.supported_speeds == ()
+
+
+def test_realtime_speed_literal_is_fast_only() -> None:
+    from typing import get_args
+
+    assert get_args(RealtimeSpeed) == ("fast",)
+
+
 def test_custom_model_definition_allows_arbitrary_model_names() -> None:
     model = ModelDefinition(
         name="lucy_2_rt_preview",
@@ -194,6 +223,7 @@ def test_custom_model_definition_allows_arbitrary_model_names() -> None:
 
     assert model.name == "lucy_2_rt_preview"
     assert model.input_schema is None
+    assert model.supported_speeds == ()
 
 
 def test_invalid_model() -> None:

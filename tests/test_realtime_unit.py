@@ -138,7 +138,7 @@ async def test_realtime_connect_accepts_custom_model_definition():
         await realtime_client.disconnect()
 
 
-async def _connect_and_capture_url(resolution=None) -> str:
+async def _connect_and_capture_url(resolution=None, speed=None, model="lucy-2.1") -> str:
     from decart.realtime.types import RealtimeConnectOptions
 
     client = DecartClient(api_key="test-key")
@@ -155,13 +155,17 @@ async def _connect_and_capture_url(resolution=None) -> str:
         mock_session.close = AsyncMock()
         mock_session_cls.return_value = mock_session
 
-        kwargs = {"resolution": resolution} if resolution is not None else {}
+        kwargs = {}
+        if resolution is not None:
+            kwargs["resolution"] = resolution
+        if speed is not None:
+            kwargs["speed"] = speed
         realtime_client = await RealtimeClient.connect(
             base_url=client.realtime_base_url,
             api_key=client.api_key,
             local_track=MagicMock(),
             options=RealtimeConnectOptions(
-                model=models.realtime("lucy-2.1"),
+                model=models.realtime(model),
                 on_remote_stream=lambda t: None,
                 **kwargs,
             ),
@@ -183,6 +187,114 @@ async def test_realtime_connect_omits_resolution_when_unset():
 async def test_realtime_connect_appends_resolution_720p():
     url = await _connect_and_capture_url("720p")
     assert "&resolution=720p" in url
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_omits_speed_when_unset():
+    url = await _connect_and_capture_url(model="lucy-2.5")
+    assert "speed" not in url
+    assert url == (
+        "wss://api3.decart.ai/v1/stream"
+        "?api_key=test-key&model=lucy-2.5&livekit_early_room_info=true"
+    )
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_appends_speed_fast():
+    url = await _connect_and_capture_url(speed="fast", model="lucy-2.5")
+    assert url == (
+        "wss://api3.decart.ai/v1/stream"
+        "?api_key=test-key&model=lucy-2.5&livekit_early_room_info=true&speed=fast"
+    )
+    assert url.count("speed=") == 1
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_appends_speed_after_resolution():
+    url = await _connect_and_capture_url(resolution="720p", speed="fast", model="lucy-2.5")
+    assert url.endswith("&livekit_early_room_info=true&resolution=720p&speed=fast")
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_speed_fast_no_warning_for_supported_model():
+    import warnings
+
+    from decart.models import _warned_unsupported_speeds
+
+    _warned_unsupported_speeds.clear()
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        for model in ("lucy-2.5", "lucy-latest", "lucy-vton-3.5", "lucy-vton-latest"):
+            url = await _connect_and_capture_url(speed="fast", model=model)
+            assert "&speed=fast" in url
+        assert w == []
+
+
+@pytest.mark.asyncio
+async def test_realtime_connect_speed_fast_warns_once_but_still_sends_for_unsupported_model():
+    import warnings
+
+    from decart.models import _warned_unsupported_speeds
+
+    _warned_unsupported_speeds.clear()
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        url = await _connect_and_capture_url(speed="fast", model="lucy-2.1")
+        assert "&speed=fast" in url
+        assert len(w) == 1
+        assert issubclass(w[0].category, UserWarning)
+        assert 'Model "lucy-2.1" does not support speed="fast"' in str(w[0].message)
+
+        # One-shot per (model, speed): a second connect does not warn again.
+        await _connect_and_capture_url(speed="fast", model="lucy-2.1")
+        assert len(w) == 1
+
+
+@pytest.mark.asyncio
+async def test_realtime_reconnect_redials_with_speed_fast_preserved():
+    from decart.realtime.livekit_manager import LiveKitConfiguration, LiveKitManager
+
+    # Build the signaling URL through the real connect() path, then drive the manager's
+    # reconnect loop with it to prove the re-dial reuses the same URL (speed included).
+    ws_url = await _connect_and_capture_url(speed="fast", model="lucy-2.5")
+    assert "&speed=fast" in ws_url
+
+    dialed_urls: list[str] = []
+
+    def fake_connection() -> MagicMock:
+        conn = MagicMock()
+
+        async def _connect(url, **_kwargs):
+            dialed_urls.append(url)
+
+        conn.connect = AsyncMock(side_effect=_connect)
+        conn.cleanup = AsyncMock()
+        return conn
+
+    config = LiveKitConfiguration(
+        livekit_url=ws_url,
+        api_key="test-key",
+        session_id="",
+        fps=30,
+        on_remote_stream=lambda t: None,
+    )
+    manager = LiveKitManager(config)
+    manager._create_connection = fake_connection  # type: ignore[method-assign]
+
+    assert await manager.connect(local_track=MagicMock())
+    manager._handle_connection_state_change("connected")
+    assert manager.is_connected()
+
+    # Unexpected drop -> manager schedules a reconnect and re-dials the stored URL.
+    manager._handle_connection_state_change("disconnected")
+    assert manager._reconnect_task is not None
+    await manager._reconnect_task
+
+    assert len(dialed_urls) == 2
+    assert dialed_urls[1] == ws_url
+    assert all(url.count("speed=fast") == 1 for url in dialed_urls)
+
+    await manager.cleanup()
 
 
 @pytest.mark.asyncio

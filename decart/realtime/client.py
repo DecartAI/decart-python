@@ -19,6 +19,7 @@ from .subscribe import (
 from .types import ConnectionState, RealtimeConnectOptions
 from ..types import FileInput
 from ..errors import DecartSDKError, InvalidInputError, WebRTCError
+from ..models import _warn_unsupported_speed
 from ..process.request import file_input_to_bytes
 
 if TYPE_CHECKING:
@@ -174,6 +175,9 @@ class RealtimeClient:
         )
         if options.resolution is not None:
             ws_url += f"&resolution={quote(options.resolution)}"
+        if options.speed is not None:
+            _warn_unsupported_speed(options.model, options.speed)
+            ws_url += f"&speed={quote(options.speed)}"
 
         config = LiveKitConfiguration(
             livekit_url=ws_url,

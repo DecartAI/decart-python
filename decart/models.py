@@ -1,5 +1,5 @@
 import warnings
-from typing import Literal, Optional, Generic, TypeVar
+from typing import Any, Literal, Optional, Generic, TypeVar
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from .errors import ModelNotFoundError
 from .types import FileInput
@@ -41,6 +41,10 @@ ImageModels = Literal[
 ]
 Model = Literal[RealTimeModels, VideoModels, ImageModels]
 
+RealtimeSpeed = Literal["fast"]
+"""Realtime speed tier. ``"fast"`` serves the session from a higher-compute tier
+for lower latency and higher throughput; omit it (the default) for standard mode."""
+
 MODEL_ALIASES: dict[str, str] = {
     # Video aliases
     "lucy-pro-v2v": "lucy-clip",
@@ -64,6 +68,29 @@ def _warn_deprecated(model: str) -> None:
         )
 
 
+_warned_unsupported_speeds: set[tuple[str, str]] = set()
+
+
+def _warn_unsupported_speed(model: "ModelDefinition[Any]", speed: str) -> None:
+    """Warn once per (model, speed) when a realtime speed tier the model does not
+    advertise is requested. The option is still sent; the server ignores it for
+    models without the tier."""
+    if speed in model.supported_speeds:
+        return
+    key = (model.name, speed)
+    if key in _warned_unsupported_speeds:
+        return
+    _warned_unsupported_speeds.add(key)
+    warnings.warn(
+        f'Model "{model.name}" does not support speed="{speed}"; the option is ignored by the '
+        "server for this model. Fast mode is currently available for lucy-2.5 / lucy-latest and "
+        "lucy-vton-3.5 / lucy-vton-latest only. See https://docs.platform.decart.ai/models "
+        "for details.",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
 # Type variable for model name
 ModelT = TypeVar("ModelT", bound=str)
 
@@ -79,6 +106,8 @@ class ModelDefinition(DecartBaseModel, Generic[ModelT]):
     width: int = Field(ge=1)
     height: int = Field(ge=1)
     input_schema: Optional[type[BaseModel]] = None
+    supported_speeds: tuple[RealtimeSpeed, ...] = ()
+    """Realtime speed tiers this model advertises (empty for standard mode only)."""
 
 
 # Type aliases for model definitions that support specific APIs
@@ -182,6 +211,7 @@ _MODELS = {
             fps=30,
             width=1280,
             height=720,
+            supported_speeds=("fast",),
         ),
         "lucy-restyle-2": ModelDefinition(
             name="lucy-restyle-2",
@@ -197,6 +227,7 @@ _MODELS = {
             fps=30,
             width=1088,
             height=624,
+            supported_speeds=("fast",),
         ),
         # Server-side alias currently resolves to lucy-vton-3.5.
         "lucy-vton-latest": ModelDefinition(
@@ -205,6 +236,7 @@ _MODELS = {
             fps=30,
             width=1280,
             height=720,
+            supported_speeds=("fast",),
         ),
         "lucy-vton-3.5": ModelDefinition(
             name="lucy-vton-3.5",
@@ -212,6 +244,7 @@ _MODELS = {
             fps=30,
             width=1280,
             height=720,
+            supported_speeds=("fast",),
         ),
         "lucy-restyle-latest": ModelDefinition(
             name="lucy-restyle-latest",
