@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+from datetime import datetime, timezone
 from typing import Any, TypeVar
 
 from ..errors import TokenDecodeError, TokenVerifyError
@@ -50,6 +51,10 @@ def _service_tier(payload: dict[str, Any]) -> int | None:
 
 def _claims(payload: dict[str, Any], model: type[_ClaimsT]) -> _ClaimsT:
     """Map a JWT payload onto ``model``; pydantic rejects payloads that are not client tokens."""
+    exp = payload.get("exp")
+    # Convert explicitly so expires_at is UTC-aware on every supported pydantic version.
+    if isinstance(exp, (int, float)) and not isinstance(exp, bool):
+        exp = datetime.fromtimestamp(exp, tz=timezone.utc)
     return model.model_validate(
         {
             "user_id": payload.get("sub"),
@@ -63,7 +68,7 @@ def _claims(payload: dict[str, Any], model: type[_ClaimsT]) -> _ClaimsT:
             "realtime_concurrent_session_limit": payload.get("realtimeConcurrentSessionLimit"),
             "zero_data_retention": bool(payload.get("zeroDataRetention")),
             "attribution": payload.get("attribution"),
-            "expires_at": payload.get("exp"),
+            "expires_at": exp,
             "claims": payload,
         }
     )

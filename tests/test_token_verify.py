@@ -119,6 +119,7 @@ async def test_verify_valid_token_exposes_claims() -> None:
     assert verified.zero_data_retention is False
     assert verified.attribution == {"campaign": "launch"}
     assert verified.expires_at == datetime.fromtimestamp(claims["exp"], tz=timezone.utc)
+    assert verified.expires_at.tzinfo == timezone.utc
     assert verified.claims == claims
     # Keys come from the platform host, not the SDK's API base URL.
     assert list(verify_module._jwks_clients) == ["https://platform.decart.ai/api/auth/jwks"]
