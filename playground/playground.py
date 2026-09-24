@@ -49,7 +49,7 @@ import numpy as np  # noqa: E402
 from livekit import rtc  # noqa: E402
 
 from decart import DecartClient, models  # noqa: E402
-from decart.models import RealTimeModels  # noqa: E402
+from decart.models import RealtimeSpeed, RealTimeModels  # noqa: E402
 from decart.realtime.client import RealtimeClient  # noqa: E402
 from decart.realtime.types import RealtimeConnectOptions  # noqa: E402
 from decart.types import ModelState, Prompt  # noqa: E402
@@ -119,6 +119,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--api-key", "-k", help="API key (or set DECART_API_KEY)")
     parser.add_argument("--image", "-i", help="Optional reference image")
     parser.add_argument("--prompt", "-p", help="Initial prompt text")
+    parser.add_argument(
+        "--speed",
+        choices=["fast"],
+        help=(
+            "Realtime speed tier. 'fast' uses a higher-compute tier for lower latency "
+            "(lucy-2.5 / lucy-vton-3.5 and their -latest aliases only, US region, billed at 2x). "
+            "Omit for standard mode."
+        ),
+    )
     parser.add_argument("--camera", "-c", type=int, default=0, help="Camera device index")
     parser.add_argument("--no-local", action="store_true", help="Hide local camera feed")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
@@ -156,8 +165,10 @@ async def run() -> None:
 
     model_name = args.model or select_model_interactive()
     model = models.realtime(cast(RealTimeModels, model_name))
+    speed = cast(Optional[RealtimeSpeed], args.speed)
     print(f"\n  Model : {model_name}")
     print(f"  Res   : {model.width}x{model.height} @ {model.fps}fps")
+    print(f"  Speed : {speed or 'standard'}")
 
     if args.image and not Path(args.image).exists():
         print(f"\nError: Image not found: {args.image}")
@@ -223,6 +234,7 @@ async def run() -> None:
                 model=model,
                 on_remote_stream=on_remote_stream,
                 initial_state=initial_state,
+                speed=speed,
             ),
         )
         realtime.on("connection_change", on_connection_change)

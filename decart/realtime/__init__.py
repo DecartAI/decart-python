@@ -6,7 +6,7 @@ from .subscribe import (
     decode_subscribe_token,
 )
 from .messages import GenerationTickMessage
-from .types import RealtimeConnectOptions, ConnectionState
+from .types import RealtimeConnectOptions, ConnectionState, RealtimeSpeed
 
 __all__ = [
     "RealtimeClient",
@@ -18,4 +18,5 @@ __all__ = [
     "GenerationTickMessage",
     "RealtimeConnectOptions",
     "ConnectionState",
+    "RealtimeSpeed",
 ]

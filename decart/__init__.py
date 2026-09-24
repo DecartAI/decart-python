@@ -12,7 +12,13 @@ from .errors import (
     QueueResultError,
     TokenCreateError,
 )
-from .models import models, ModelDefinition, CustomModelDefinition, VideoRestyleInput
+from .models import (
+    models,
+    ModelDefinition,
+    CustomModelDefinition,
+    VideoRestyleInput,
+    RealtimeSpeed,
+)
 from .types import FileInput, ModelState, Prompt
 from .queue import (
     QueueClient,
@@ -71,6 +77,7 @@ __all__ = [
     "ModelDefinition",
     "CustomModelDefinition",
     "VideoRestyleInput",
+    "RealtimeSpeed",
     "FileInput",
     "ModelState",
     "Prompt",
