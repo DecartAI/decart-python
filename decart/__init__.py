@@ -11,6 +11,8 @@ from .errors import (
     QueueStatusError,
     QueueResultError,
     TokenCreateError,
+    TokenDecodeError,
+    TokenVerifyError,
 )
 from .models import (
     models,
@@ -29,10 +31,14 @@ from .queue import (
 )
 from .tokens import (
     TokensClient,
+    ClientTokenClaims,
     CreateTokenResponse,
     RealtimeConstraints,
     TokenConstraints,
     TokenPermissions,
+    VerifiedClientToken,
+    decode_client_token,
+    verify_client_token,
 )
 
 try:
@@ -87,11 +93,17 @@ __all__ = [
     "JobStatusResponse",
     "QueueJobResult",
     "TokensClient",
+    "ClientTokenClaims",
     "CreateTokenResponse",
     "RealtimeConstraints",
     "TokenConstraints",
     "TokenPermissions",
+    "VerifiedClientToken",
+    "decode_client_token",
+    "verify_client_token",
     "TokenCreateError",
+    "TokenDecodeError",
+    "TokenVerifyError",
 ]
 
 if REALTIME_AVAILABLE:

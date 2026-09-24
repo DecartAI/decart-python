@@ -89,6 +89,32 @@ async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
             f.write(data)
 ```
 
+### Client tokens
+
+Create short-lived client tokens on your backend and hand the signed `token` to your frontend.
+Its claims (`service_tier`, allowed models and origins, expiry, ...) are signed into the JWT, so
+your backend can verify and read them **offline** instead of round-tripping to the platform.
+Verification needs the `verify` extra (`pip install "decart[verify]"`, adds PyJWT + cryptography):
+
+```python
+from decart import DecartClient, TokenVerifyError, verify_client_token
+
+async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
+    token = await client.tokens.create(expires_in=300, metadata={"service_tier": 0})
+
+    verified = await client.tokens.verify(token.token)  # or: await verify_client_token(token.token)
+    verified.service_tier  # 0
+    verified.pool          # "free" for tier 0, else "paid"
+    verified.user_id, verified.organization_id, verified.api_key_id, verified.expires_at
+```
+
+`verify` checks the Ed25519 signature against the platform JWKS (`https://platform.decart.ai/api/auth/jwks`,
+fetched once and cached), plus `exp`, `iss` and `aud`. It raises `TokenVerifyError` on a tampered,
+expired or foreign token. It is offline JWKS verification, unrelated to the gateway's online
+`POST /v1/verify`. To inspect a token *without* verifying it, `client.tokens.decode(token)` /
+`decode_client_token(token)` returns the same fields, untrusted. The SDK is async-only; from sync
+code use `asyncio.run(verify_client_token(token))`.
+
 ### Realtime fast mode
 
 Realtime sessions accept an optional `speed` on `RealtimeConnectOptions`, alongside `resolution`.

@@ -5,7 +5,15 @@ import aiohttp
 from ..errors import TokenCreateError
 from ..models import Model
 from .._user_agent import build_user_agent
-from .types import CreateTokenResponse, TokenConstraints
+from .types import ClientTokenClaims, CreateTokenResponse, TokenConstraints, VerifiedClientToken
+from .verify import (
+    DEFAULT_AUDIENCE,
+    DEFAULT_ISSUER,
+    DEFAULT_JWKS_URL,
+    DEFAULT_LEEWAY,
+    decode_client_token,
+    verify_client_token,
+)
 
 if TYPE_CHECKING:
     from ..client import DecartClient
@@ -13,7 +21,7 @@ if TYPE_CHECKING:
 
 class TokensClient:
     """
-    Client for creating client tokens.
+    Client for creating and verifying client tokens.
     Client tokens are short-lived API keys safe for client-side use.
 
     Example:
@@ -32,6 +40,10 @@ class TokensClient:
             allowed_origins=["https://example.com"],
             constraints={"realtime": {"maxSessionDuration": 300}},
         )
+
+        # Verify a token offline against the platform JWKS (needs `decart[verify]`):
+        verified = await client.tokens.verify(token.token)
+        verified.service_tier, verified.pool, verified.user_id
         ```
     """
 
@@ -133,3 +145,47 @@ class TokensClient:
                 permissions=data.get("permissions"),
                 constraints=data.get("constraints"),
             )
+
+    async def verify(
+        self,
+        token: str,
+        *,
+        jwks_url: str = DEFAULT_JWKS_URL,
+        issuer: str = DEFAULT_ISSUER,
+        audience: str = DEFAULT_AUDIENCE,
+        leeway: float = DEFAULT_LEEWAY,
+    ) -> VerifiedClientToken:
+        """
+        Verify a client token offline against the platform's public JWKS.
+
+        Same as the module-level ``verify_client_token``: checks the EdDSA
+        signature, ``exp`` (with ``leeway``), ``iss`` and ``aud`` and returns the
+        claims signed into the token. The JWKS comes from the platform host (not
+        this client's ``base_url``) and is cached in-process. Requires the
+        ``verify`` extra: ``pip install 'decart[verify]'``.
+
+        Example:
+            ```python
+            verified = await client.tokens.verify(token.token)
+            verified.service_tier, verified.pool, verified.user_id
+            ```
+
+        Raises:
+            TokenVerifyError: If the token is malformed, tampered with, expired,
+                from the wrong issuer or audience, or signed by an unknown key.
+            ImportError: If the ``verify`` extra is not installed.
+        """
+        return await verify_client_token(
+            token, jwks_url=jwks_url, issuer=issuer, audience=audience, leeway=leeway
+        )
+
+    def decode(self, token: str) -> ClientTokenClaims:
+        """
+        Decode a client token's claims **without verifying it** (no network, no extra).
+        Same as the module-level ``decode_client_token``. The result is untrusted:
+        use ``verify()`` before acting on a token you received from elsewhere.
+
+        Raises:
+            TokenDecodeError: If the string is not a well-formed client-token JWT.
+        """
+        return decode_client_token(token)

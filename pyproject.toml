@@ -44,6 +44,11 @@ realtime = [
     "livekit>=1.0.0",
     "tenacity>=8.0.0",
 ]
+# Offline client-token verification (client.tokens.verify / verify_client_token).
+# PyJWT is pure Python; the cryptography backend provides Ed25519 (EdDSA).
+verify = [
+    "pyjwt[crypto]>=2.8.0",
+]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
