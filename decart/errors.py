@@ -88,3 +88,16 @@ class TokenCreateError(DecartSDKError):
     """Raised when token creation fails."""
 
     pass
+
+
+class TokenDecodeError(DecartSDKError):
+    """Raised when a string is not a well-formed client-token JWT (decoding checks no signature)."""
+
+    pass
+
+
+class TokenVerifyError(DecartSDKError):
+    """Raised when offline verification of a client token fails (signature, expiry, issuer,
+    audience, unknown signing key, or unreachable JWKS)."""
+
+    pass
