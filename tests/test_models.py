@@ -32,6 +32,15 @@ def test_canonical_realtime_models() -> None:
     assert model.width == 1280
     assert model.height == 720
 
+    model = models.realtime("lucy-vton-3.6")
+    assert model.name == "lucy-vton-3.6"
+    assert model.url_path == "/v1/stream"
+    assert model.fps == 30
+    assert model.width == 1280
+    assert model.height == 720
+    # 3.6 is not offered on the fast tier, unlike 3.5.
+    assert model.supported_speeds == ()
+
 
 def test_canonical_video_models() -> None:
     model = models.video("lucy-clip")
@@ -55,6 +64,13 @@ def test_canonical_video_models() -> None:
     model = models.video("lucy-vton-3.5")
     assert model.name == "lucy-vton-3.5"
     assert model.url_path == "/v1/jobs/lucy-vton-3.5"
+    assert model.fps == 20
+    assert model.width == 1280
+    assert model.height == 720
+
+    model = models.video("lucy-vton-3.6")
+    assert model.name == "lucy-vton-3.6"
+    assert model.url_path == "/v1/jobs/lucy-vton-3.6"
     assert model.fps == 20
     assert model.width == 1280
     assert model.height == 720
