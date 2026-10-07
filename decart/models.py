@@ -9,6 +9,7 @@ RealTimeModels = Literal[
     "lucy-2.1",
     "lucy-2.5",
     "lucy-vton-3.5",
+    "lucy-vton-3.6",
     "lucy-restyle-2",
     # Latest aliases (server-side resolution)
     "lucy-latest",
@@ -21,6 +22,7 @@ VideoModels = Literal[
     "lucy-2.1",
     "lucy-2.5",
     "lucy-vton-3.5",
+    "lucy-vton-3.6",
     "lucy-restyle-2",
     # Latest aliases (server-side resolution)
     "lucy-latest",
@@ -246,6 +248,14 @@ _MODELS = {
             height=720,
             supported_speeds=("fast",),
         ),
+        # No supported_speeds: lucy-vton-3.6 is not offered on the fast tier.
+        "lucy-vton-3.6": ModelDefinition(
+            name="lucy-vton-3.6",
+            url_path="/v1/stream",
+            fps=30,
+            width=1280,
+            height=720,
+        ),
         "lucy-restyle-latest": ModelDefinition(
             name="lucy-restyle-latest",
             url_path="/v1/stream",
@@ -283,6 +293,14 @@ _MODELS = {
         "lucy-vton-3.5": ModelDefinition(
             name="lucy-vton-3.5",
             url_path="/v1/jobs/lucy-vton-3.5",
+            fps=20,
+            width=1280,
+            height=720,
+            input_schema=VideoEdit2Input,
+        ),
+        "lucy-vton-3.6": ModelDefinition(
+            name="lucy-vton-3.6",
+            url_path="/v1/jobs/lucy-vton-3.6",
             fps=20,
             width=1280,
             height=720,
