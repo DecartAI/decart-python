@@ -248,7 +248,6 @@ _MODELS = {
             height=720,
             supported_speeds=("fast",),
         ),
-        # No supported_speeds: lucy-vton-3.6 is not offered on the fast tier.
         "lucy-vton-3.6": ModelDefinition(
             name="lucy-vton-3.6",
             url_path="/v1/stream",
