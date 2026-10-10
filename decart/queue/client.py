@@ -23,6 +23,19 @@ POLLING_INTERVAL = 1.5  # seconds
 INITIAL_DELAY = 0.5  # seconds
 
 
+async def _wait_or_cancel(delay: float, cancel_token: Optional[asyncio.Event]) -> None:
+    if cancel_token is None:
+        await asyncio.sleep(delay)
+        return
+    if cancel_token.is_set():
+        raise asyncio.CancelledError("Queue polling cancelled by user")
+    try:
+        await asyncio.wait_for(cancel_token.wait(), timeout=delay)
+    except asyncio.TimeoutError:
+        return
+    raise asyncio.CancelledError("Queue polling cancelled by user")
+
+
 class QueueClient:
     """
     Queue client for async jobs.
@@ -186,7 +199,12 @@ class QueueClient:
             QueueStatusError: If status check fails
             QueueResultError: If result retrieval fails
         """
+        options = options.copy()
         on_status_change: Optional[OnStatusChangeCallback] = options.pop("on_status_change", None)
+        cancel_token: Optional[asyncio.Event] = options.get("cancel_token")
+
+        if cancel_token and cancel_token.is_set():
+            raise asyncio.CancelledError("Queue polling cancelled by user")
 
         # Submit the job
         job = await self.submit(options)
@@ -196,13 +214,14 @@ class QueueClient:
             on_status_change(JobStatusResponse(job_id=job.job_id, status=job.status))
 
         # Initial delay before polling
-        await asyncio.sleep(INITIAL_DELAY)
+        await _wait_or_cancel(INITIAL_DELAY, cancel_token)
 
+        last_status = job.status
         # Poll until complete
         while True:
             status = await self.status(job.job_id)
 
-            if on_status_change:
+            if on_status_change and status.status != last_status:
                 on_status_change(status)
 
             if status.status == "completed":
@@ -212,5 +231,6 @@ class QueueClient:
             if status.status == "failed":
                 return QueueJobResultFailed(status="failed", error="Job failed")
 
+            last_status = status.status
             # Still pending or processing
-            await asyncio.sleep(POLLING_INTERVAL)
+            await _wait_or_cancel(POLLING_INTERVAL, cancel_token)

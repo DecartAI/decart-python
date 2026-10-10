@@ -1,5 +1,6 @@
 """Tests for the queue API."""
 
+import asyncio
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from decart import (
@@ -203,23 +204,37 @@ async def test_queue_submit_and_poll_with_callback() -> None:
 
         mock_submit.return_value = MagicMock(job_id="job-123", status="pending")
         mock_status.side_effect = [
+            MagicMock(job_id="job-123", status="pending"),
             MagicMock(job_id="job-123", status="processing"),
             MagicMock(job_id="job-123", status="completed"),
         ]
         mock_content.return_value = b"fake video data"
 
-        await client.queue.submit_and_poll(
-            {
-                "model": models.video("lucy-clip"),
-                "prompt": "Add anime shading and crisp outlines",
-                "data": b"fake video data",
-                "on_status_change": on_status_change,
-            }
-        )
+        options = {
+            "model": models.video("lucy-clip"),
+            "prompt": "Add anime shading and crisp outlines",
+            "data": b"fake video data",
+            "on_status_change": on_status_change,
+        }
+        await client.queue.submit_and_poll(options)
 
-        assert "pending" in status_changes
-        assert "processing" in status_changes
-        assert "completed" in status_changes
+        assert status_changes == ["pending", "processing", "completed"]
+        assert "on_status_change" in options
+
+
+@pytest.mark.asyncio
+async def test_queue_submit_and_poll_can_be_cancelled() -> None:
+    client = DecartClient(api_key="test-key")
+    cancel_token = asyncio.Event()
+    cancel_token.set()
+
+    with patch("decart.queue.client.submit_job") as mock_submit:
+        with pytest.raises(asyncio.CancelledError):
+            await client.queue.submit_and_poll(
+                {"model": models.video("lucy-clip"), "cancel_token": cancel_token}
+            )
+
+        mock_submit.assert_not_called()
 
 
 @pytest.mark.asyncio
