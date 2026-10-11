@@ -125,8 +125,8 @@ def parse_args() -> argparse.Namespace:
         choices=["fast"],
         help=(
             "Realtime speed tier. 'fast' uses a higher-compute tier for lower latency "
-            "(lucy-2.5 / lucy-vton-3.5 and their -latest aliases only, US region, billed at 2x). "
-            "Omit for standard mode."
+            "(lucy-2.5, lucy-vton-3.5, lucy-vton-3.6 and their -latest aliases only, US region, "
+            "billed at 2x). Omit for standard mode."
         ),
     )
     parser.add_argument("--camera", "-c", type=int, default=0, help="Camera device index")

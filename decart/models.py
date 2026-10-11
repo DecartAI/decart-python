@@ -85,8 +85,9 @@ def _warn_unsupported_speed(model: "ModelDefinition[Any]", speed: str) -> None:
     _warned_unsupported_speeds.add(key)
     warnings.warn(
         f'Model "{model.name}" does not support speed="{speed}"; the option is ignored by the '
-        "server for this model. Fast mode is currently available for lucy-2.5 / lucy-latest and "
-        "lucy-vton-3.5 / lucy-vton-latest only. See https://docs.platform.decart.ai/models "
+        "server for this model. Fast mode is currently available for lucy-2.5 / lucy-latest, "
+        "lucy-vton-3.5, and lucy-vton-3.6 / lucy-vton-latest only. "
+        "See https://docs.platform.decart.ai/models "
         "for details.",
         UserWarning,
         stacklevel=3,
@@ -231,7 +232,7 @@ _MODELS = {
             height=624,
             supported_speeds=("fast",),
         ),
-        # Server-side alias currently resolves to lucy-vton-3.5.
+        # Server-side alias currently resolves to lucy-vton-3.6.
         "lucy-vton-latest": ModelDefinition(
             name="lucy-vton-latest",
             url_path="/v1/stream",
@@ -254,6 +255,7 @@ _MODELS = {
             fps=30,
             width=1280,
             height=720,
+            supported_speeds=("fast",),
         ),
         "lucy-restyle-latest": ModelDefinition(
             name="lucy-restyle-latest",
@@ -322,7 +324,7 @@ _MODELS = {
             height=624,
             input_schema=VideoEdit2Input,
         ),
-        # Server-side alias currently resolves to lucy-vton-3.5.
+        # Server-side alias currently resolves to lucy-vton-3.6.
         "lucy-vton-latest": ModelDefinition(
             name="lucy-vton-latest",
             url_path="/v1/jobs/lucy-vton-latest",
