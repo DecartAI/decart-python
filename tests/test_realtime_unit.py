@@ -230,7 +230,13 @@ async def test_realtime_connect_speed_fast_no_warning_for_supported_model():
     _warned_unsupported_speeds.clear()
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        for model in ("lucy-2.5", "lucy-latest", "lucy-vton-3.5", "lucy-vton-latest"):
+        for model in (
+            "lucy-2.5",
+            "lucy-latest",
+            "lucy-vton-3.5",
+            "lucy-vton-3.6",
+            "lucy-vton-latest",
+        ):
             url = await _connect_and_capture_url(speed="fast", model=model)
             assert "&speed=fast" in url
         assert _speed_warnings(w) == []

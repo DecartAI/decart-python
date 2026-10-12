@@ -1,8 +1,9 @@
 """
 Virtual Try-On Example
 
-This example demonstrates how to use the lucy-vton-latest model to perform
-virtual try-on on a video using a reference garment image.
+This example demonstrates how to use the lucy-vton-latest model (currently
+lucy-vton-3.6, resolved server-side) to perform virtual try-on on a video
+using a reference garment image.
 
 Usage:
     # With reference image and prompt:

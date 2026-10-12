@@ -38,8 +38,8 @@ def test_canonical_realtime_models() -> None:
     assert model.fps == 30
     assert model.width == 1280
     assert model.height == 720
-    # 3.6 is not offered on the fast tier, unlike 3.5.
-    assert model.supported_speeds == ()
+    # 3.6 is served on the fast tier, like 3.5.
+    assert model.supported_speeds == ("fast",)
 
 
 def test_canonical_video_models() -> None:
@@ -136,6 +136,7 @@ def test_latest_realtime_models() -> None:
     assert model.width == 1088
     assert model.height == 624
 
+    # Server-side alias currently resolves to lucy-vton-3.6 (same geometry).
     model = models.realtime("lucy-vton-latest")
     assert model.name == "lucy-vton-latest"
     assert model.url_path == "/v1/stream"
@@ -159,6 +160,7 @@ def test_latest_video_models() -> None:
     assert model.width == 1088
     assert model.height == 624
 
+    # Server-side alias currently resolves to lucy-vton-3.6 (same geometry).
     model = models.video("lucy-vton-latest")
     assert model.name == "lucy-vton-latest"
     assert model.url_path == "/v1/jobs/lucy-vton-latest"
@@ -199,10 +201,16 @@ def test_latest_aliases_no_deprecation_warning() -> None:
         assert len(w) == 0
 
 
-FAST_REALTIME_MODELS = {"lucy-2.5", "lucy-latest", "lucy-vton-3.5", "lucy-vton-latest"}
+FAST_REALTIME_MODELS = {
+    "lucy-2.5",
+    "lucy-latest",
+    "lucy-vton-3.5",
+    "lucy-vton-3.6",
+    "lucy-vton-latest",
+}
 
 
-def test_realtime_fast_speed_capability_pinned_to_lucy_2_5_and_vton_3_5() -> None:
+def test_realtime_fast_speed_capability_pinned_to_lucy_2_5_and_vton_3_5_3_6() -> None:
     # Matches the JS SDK registry: only these realtime entries advertise speed="fast".
     fast_models = {
         name for name, model in _MODELS["realtime"].items() if "fast" in model.supported_speeds
