@@ -15,8 +15,8 @@ def test_canonical_realtime_models() -> None:
     model = models.realtime("lucy-2.1")
     assert model.name == "lucy-2.1"
     assert model.fps == 30
-    assert model.width == 1088
-    assert model.height == 624
+    assert model.width == 1280
+    assert model.height == 720
 
     model = models.realtime("lucy-2.5")
     assert model.name == "lucy-2.5"
@@ -47,8 +47,8 @@ def test_canonical_video_models() -> None:
     assert model.name == "lucy-2.1"
     assert model.url_path == "/v1/jobs/lucy-2.1"
     assert model.fps == 20
-    assert model.width == 1088
-    assert model.height == 624
+    assert model.width == 1280
+    assert model.height == 720
 
     model = models.video("lucy-2.5")
     assert model.name == "lucy-2.5"
@@ -116,12 +116,15 @@ def test_deprecation_warning_only_once() -> None:
 
 
 def test_latest_realtime_models() -> None:
+    # Server-side alias currently resolves to lucy-2.5 (same geometry).
     model = models.realtime("lucy-latest")
     assert model.name == "lucy-latest"
     assert model.url_path == "/v1/stream"
     assert model.fps == 30
-    assert model.width == 1088
-    assert model.height == 624
+    assert model.width == 1280
+    assert model.height == 720
+    resolved = models.realtime("lucy-2.5")
+    assert (model.width, model.height) == (resolved.width, resolved.height)
 
     # Server-side alias currently resolves to lucy-vton-3.6 (same geometry).
     model = models.realtime("lucy-vton-latest")
@@ -140,12 +143,15 @@ def test_latest_realtime_models() -> None:
 
 
 def test_latest_video_models() -> None:
+    # Server-side alias currently resolves to lucy-2.5 (same geometry).
     model = models.video("lucy-latest")
     assert model.name == "lucy-latest"
     assert model.url_path == "/v1/jobs/lucy-latest"
     assert model.fps == 20
-    assert model.width == 1088
-    assert model.height == 624
+    assert model.width == 1280
+    assert model.height == 720
+    resolved = models.video("lucy-2.5")
+    assert (model.width, model.height) == (resolved.width, resolved.height)
 
     # Server-side alias currently resolves to lucy-vton-3.6 (same geometry).
     model = models.video("lucy-vton-latest")

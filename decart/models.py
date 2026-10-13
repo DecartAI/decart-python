@@ -188,8 +188,8 @@ _MODELS = {
             name="lucy-2.1",
             url_path="/v1/stream",
             fps=30,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
         ),
         "lucy-2.5": ModelDefinition(
             name="lucy-2.5",
@@ -211,8 +211,8 @@ _MODELS = {
             name="lucy-latest",
             url_path="/v1/stream",
             fps=30,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
             supported_speeds=("fast",),
         ),
         # Server-side alias currently resolves to lucy-vton-3.6.
@@ -254,8 +254,8 @@ _MODELS = {
             name="lucy-2.1",
             url_path="/v1/jobs/lucy-2.1",
             fps=20,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
             input_schema=VideoEdit2Input,
         ),
         "lucy-2.5": ModelDefinition(
@@ -295,8 +295,8 @@ _MODELS = {
             name="lucy-latest",
             url_path="/v1/jobs/lucy-latest",
             fps=20,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
             input_schema=VideoEdit2Input,
         ),
         # Server-side alias currently resolves to lucy-vton-3.6.
