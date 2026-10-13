@@ -43,10 +43,6 @@ def test_canonical_realtime_models() -> None:
 
 
 def test_canonical_video_models() -> None:
-    model = models.video("lucy-clip")
-    assert model.name == "lucy-clip"
-    assert model.url_path == "/v1/jobs/lucy-clip"
-
     model = models.video("lucy-2.1")
     assert model.name == "lucy-2.1"
     assert model.url_path == "/v1/jobs/lucy-2.1"
@@ -85,15 +81,6 @@ def test_deprecated_video_models() -> None:
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        model = models.video("lucy-pro-v2v")
-        assert model.name == "lucy-pro-v2v"
-        assert len(w) == 1
-        assert "lucy-clip" in str(w[0].message)
-
-    _warned_aliases.clear()
-
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
         model = models.video("lucy-restyle-v2v")
         assert model.name == "lucy-restyle-v2v"
         assert len(w) == 1
@@ -122,9 +109,9 @@ def test_deprecation_warning_only_once() -> None:
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        models.video("lucy-pro-v2v")
-        models.video("lucy-pro-v2v")
-        models.video("lucy-pro-v2v")
+        models.video("lucy-restyle-v2v")
+        models.video("lucy-restyle-v2v")
+        models.video("lucy-restyle-v2v")
         assert len(w) == 1
 
 
@@ -173,11 +160,6 @@ def test_latest_video_models() -> None:
     assert model.url_path == "/v1/jobs/lucy-restyle-latest"
     assert model.fps == 22
 
-    model = models.video("lucy-clip-latest")
-    assert model.name == "lucy-clip-latest"
-    assert model.url_path == "/v1/jobs/lucy-clip-latest"
-    assert model.fps == 25
-
 
 def test_latest_image_models() -> None:
     model = models.image("lucy-image-latest")
@@ -196,7 +178,6 @@ def test_latest_aliases_no_deprecation_warning() -> None:
         models.video("lucy-latest")
         models.video("lucy-vton-latest")
         models.video("lucy-restyle-latest")
-        models.video("lucy-clip-latest")
         models.image("lucy-image-latest")
         assert len(w) == 0
 

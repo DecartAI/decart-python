@@ -20,7 +20,7 @@ export DECART_API_KEY="your-api-key-here"
 
 ### Process API
 
-- **`process_video.py`** - Edit a local video with `lucy-clip`
+- **`process_video.py`** - Edit a local video with `lucy-latest`
 - **`process_image.py`** - Edit the bundled example image with `lucy-image-2`
 - **`process_url.py`** - Transform videos from URLs
 
