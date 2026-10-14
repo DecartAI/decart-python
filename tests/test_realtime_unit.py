@@ -194,7 +194,7 @@ async def test_realtime_connect_omits_speed_when_unset():
     url = await _connect_and_capture_url(model="lucy-2.5")
     assert "speed" not in url
     assert url == (
-        "wss://api3.decart.ai/v1/stream"
+        "wss://api.decart.ai/v1/stream"
         "?api_key=test-key&model=lucy-2.5&livekit_early_room_info=true"
     )
 
@@ -203,7 +203,7 @@ async def test_realtime_connect_omits_speed_when_unset():
 async def test_realtime_connect_appends_speed_fast():
     url = await _connect_and_capture_url(speed="fast", model="lucy-2.5")
     assert url == (
-        "wss://api3.decart.ai/v1/stream"
+        "wss://api.decart.ai/v1/stream"
         "?api_key=test-key&model=lucy-2.5&livekit_early_room_info=true&speed=fast"
     )
     assert url.count("speed=") == 1
@@ -743,13 +743,13 @@ async def test_fetch_watch_stream_credentials_uses_http_base_and_api_key():
 
     with patch("decart.realtime.client.aiohttp.ClientSession", return_value=fake_session):
         room_info = await _fetch_watch_stream_credentials(
-            base_url="wss://api3.decart.ai",
+            base_url="wss://api.decart.ai",
             api_key="test-key",
             room_name="room-123",
         )
 
     assert fake_session.post_calls == [
-        ("https://api3.decart.ai/watch-stream/room-123", {"x-api-key": "test-key"})
+        ("https://api.decart.ai/watch-stream/room-123", {"x-api-key": "test-key"})
     ]
     assert room_info.livekit_url == "wss://livekit.example"
     assert room_info.session_id == "room-123"
