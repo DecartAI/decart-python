@@ -21,7 +21,7 @@ async def test_queue_submit_video_to_video_basic() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-clip"),
+                "model": models.video("lucy-latest"),
                 "prompt": "Restyle this clip with a cinematic dusk grade",
                 "data": b"fake video data",
                 "seed": 42,
@@ -43,7 +43,7 @@ async def test_queue_submit_video_to_video() -> None:
 
         job = await client.queue.submit(
             {
-                "model": models.video("lucy-clip"),
+                "model": models.video("lucy-latest"),
                 "prompt": "Anime style",
                 "data": b"fake video data",
                 "enhance_prompt": True,
@@ -149,7 +149,7 @@ async def test_queue_submit_and_poll_completed() -> None:
 
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-clip"),
+                "model": models.video("lucy-latest"),
                 "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
             }
@@ -175,7 +175,7 @@ async def test_queue_submit_and_poll_failed() -> None:
 
         result = await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-clip"),
+                "model": models.video("lucy-latest"),
                 "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
             }
@@ -210,7 +210,7 @@ async def test_queue_submit_and_poll_with_callback() -> None:
 
         await client.queue.submit_and_poll(
             {
-                "model": models.video("lucy-clip"),
+                "model": models.video("lucy-latest"),
                 "prompt": "Add anime shading and crisp outlines",
                 "data": b"fake video data",
                 "on_status_change": on_status_change,
@@ -230,7 +230,7 @@ async def test_queue_submit_missing_required_field() -> None:
     with pytest.raises(DecartSDKError):
         await client.queue.submit(
             {
-                "model": models.video("lucy-clip"),
+                "model": models.video("lucy-latest"),
                 # Missing 'prompt' and 'data' which are required for v2v
             }
         )
@@ -245,13 +245,13 @@ async def test_queue_submit_max_prompt_length() -> None:
     with pytest.raises(DecartSDKError) as exception:
         await client.queue.submit(
             {
-                "model": models.video("lucy-clip"),
+                "model": models.video("lucy-latest"),
                 "prompt": prompt,
                 "data": b"fake video data",
             }
         )
 
-    assert "Invalid inputs for lucy-clip" in str(exception)
+    assert "Invalid inputs for lucy-latest" in str(exception)
 
 
 @pytest.mark.asyncio
@@ -275,7 +275,7 @@ async def test_queue_includes_user_agent_header() -> None:
 
         await client.queue.submit(
             {
-                "model": models.video("lucy-clip"),
+                "model": models.video("lucy-latest"),
                 "prompt": "Apply a cinematic grade",
                 "data": b"fake video data",
             }
@@ -287,7 +287,7 @@ async def test_queue_includes_user_agent_header() -> None:
 
         assert "User-Agent" in headers
         assert headers["User-Agent"].startswith("decart-python-sdk/")
-        assert mock_session.post.call_args.args[0] == "https://api.decart.ai/v1/jobs/lucy-clip"
+        assert mock_session.post.call_args.args[0] == "https://api.decart.ai/v1/jobs/lucy-latest"
 
 
 @pytest.mark.asyncio
@@ -312,7 +312,7 @@ async def test_queue_submit_surfaces_backend_error() -> None:
         with pytest.raises(QueueSubmitError) as exc_info:
             await client.queue.submit(
                 {
-                    "model": models.video("lucy-clip"),
+                    "model": models.video("lucy-latest"),
                     "prompt": "Apply a cinematic grade",
                     "data": b"fake video data",
                 }

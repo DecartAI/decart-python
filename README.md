@@ -53,7 +53,7 @@ For video editing jobs, use the queue API to submit jobs and poll for results:
 async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
     # Submit and poll automatically
     result = await client.queue.submit_and_poll({
-        "model": models.video("lucy-clip"),
+        "model": models.video("lucy-latest"),
         "prompt": "Restyle this footage with anime shading and vibrant neon highlights",
         "data": open("input.mp4", "rb"),
         "on_status_change": lambda job: print(f"Status: {job.status}"),
@@ -72,7 +72,7 @@ Or manage the polling manually:
 async with DecartClient(api_key=os.getenv("DECART_API_KEY")) as client:
     # Submit the job
     job = await client.queue.submit({
-        "model": models.video("lucy-clip"),
+        "model": models.video("lucy-latest"),
         "prompt": "Add cinematic teal-and-orange grading and gentle film grain",
         "data": open("input.mp4", "rb"),
     })

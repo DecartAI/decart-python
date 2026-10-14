@@ -82,7 +82,7 @@ async def process_video_v2v(
         client = get_client(api_key)
 
         options = {
-            "model": models.video("lucy-clip"),
+            "model": models.video("lucy-latest"),
             "prompt": prompt,
             "data": Path(input_video),
         }

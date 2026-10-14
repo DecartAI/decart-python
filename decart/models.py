@@ -18,7 +18,6 @@ RealTimeModels = Literal[
 ]
 VideoModels = Literal[
     # Canonical names
-    "lucy-clip",
     "lucy-2.1",
     "lucy-2.5",
     "lucy-vton-3.5",
@@ -28,9 +27,7 @@ VideoModels = Literal[
     "lucy-latest",
     "lucy-vton-latest",
     "lucy-restyle-latest",
-    "lucy-clip-latest",
     # Deprecated / alias names
-    "lucy-pro-v2v",
     "lucy-restyle-v2v",
 ]
 ImageModels = Literal[
@@ -49,7 +46,6 @@ for lower latency and higher throughput; omit it (the default) for standard mode
 
 MODEL_ALIASES: dict[str, str] = {
     # Video aliases
-    "lucy-pro-v2v": "lucy-clip",
     "lucy-restyle-v2v": "lucy-restyle-2",
     # Image aliases
     "lucy-pro-i2i": "lucy-image-2",
@@ -127,19 +123,6 @@ CustomModelDefinition = ModelDefinition[str]
 """Type alias for model definitions with arbitrary (non-registry) model names."""
 
 
-class VideoToVideoInput(DecartBaseModel):
-    prompt: str = Field(
-        ...,
-        min_length=1,
-        max_length=1000,
-    )
-    data: FileInput
-    reference_image: Optional[FileInput] = None
-    seed: Optional[int] = None
-    resolution: Optional[str] = None
-    enhance_prompt: Optional[bool] = None
-
-
 class VideoRestyleInput(DecartBaseModel):
     """Input for lucy-restyle-v2v model.
 
@@ -205,8 +188,8 @@ _MODELS = {
             name="lucy-2.1",
             url_path="/v1/stream",
             fps=30,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
         ),
         "lucy-2.5": ModelDefinition(
             name="lucy-2.5",
@@ -228,8 +211,8 @@ _MODELS = {
             name="lucy-latest",
             url_path="/v1/stream",
             fps=30,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
             supported_speeds=("fast",),
         ),
         # Server-side alias currently resolves to lucy-vton-3.6.
@@ -267,20 +250,12 @@ _MODELS = {
     },
     "video": {
         # Canonical names
-        "lucy-clip": ModelDefinition(
-            name="lucy-clip",
-            url_path="/v1/jobs/lucy-clip",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=VideoToVideoInput,
-        ),
         "lucy-2.1": ModelDefinition(
             name="lucy-2.1",
             url_path="/v1/jobs/lucy-2.1",
             fps=20,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
             input_schema=VideoEdit2Input,
         ),
         "lucy-2.5": ModelDefinition(
@@ -320,8 +295,8 @@ _MODELS = {
             name="lucy-latest",
             url_path="/v1/jobs/lucy-latest",
             fps=20,
-            width=1088,
-            height=624,
+            width=1280,
+            height=720,
             input_schema=VideoEdit2Input,
         ),
         # Server-side alias currently resolves to lucy-vton-3.6.
@@ -341,23 +316,7 @@ _MODELS = {
             height=704,
             input_schema=VideoRestyleInput,
         ),
-        "lucy-clip-latest": ModelDefinition(
-            name="lucy-clip-latest",
-            url_path="/v1/jobs/lucy-clip-latest",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=VideoToVideoInput,
-        ),
         # Deprecated names
-        "lucy-pro-v2v": ModelDefinition(
-            name="lucy-pro-v2v",
-            url_path="/v1/jobs/lucy-pro-v2v",
-            fps=25,
-            width=1280,
-            height=704,
-            input_schema=VideoToVideoInput,
-        ),
         "lucy-restyle-v2v": ModelDefinition(
             name="lucy-restyle-v2v",
             url_path="/v1/jobs/lucy-restyle-v2v",
@@ -416,7 +375,6 @@ class Models:
         Video models only support the queue API.
 
         Available models:
-            - "lucy-clip" - Video-to-video
             - "lucy-2.1" - Video editing (newer, higher quality)
             - "lucy-2.5" - Video editing (latest generation)
             - "lucy-restyle-2" - Video restyling with prompt or reference image
