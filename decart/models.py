@@ -8,6 +8,7 @@ RealTimeModels = Literal[
     # Canonical names
     "lucy-2.1",
     "lucy-2.5",
+    "lucy-2.6",
     "lucy-vton-3.5",
     "lucy-vton-3.6",
     "lucy-restyle-2",
@@ -20,6 +21,7 @@ VideoModels = Literal[
     # Canonical names
     "lucy-2.1",
     "lucy-2.5",
+    "lucy-2.6",
     "lucy-vton-3.5",
     "lucy-vton-3.6",
     "lucy-restyle-2",
@@ -82,7 +84,7 @@ def _warn_unsupported_speed(model: "ModelDefinition[Any]", speed: str) -> None:
     warnings.warn(
         f'Model "{model.name}" does not support speed="{speed}"; the option is ignored by the '
         "server for this model. Fast mode is currently available for lucy-2.5 / lucy-latest, "
-        "lucy-vton-3.5, and lucy-vton-3.6 / lucy-vton-latest only. "
+        "lucy-2.6, lucy-vton-3.5, and lucy-vton-3.6 / lucy-vton-latest only. "
         "See https://docs.platform.decart.ai/models "
         "for details.",
         UserWarning,
@@ -199,6 +201,14 @@ _MODELS = {
             height=720,
             supported_speeds=("fast",),
         ),
+        "lucy-2.6": ModelDefinition(
+            name="lucy-2.6",
+            url_path="/v1/stream",
+            fps=30,
+            width=1280,
+            height=720,
+            supported_speeds=("fast",),
+        ),
         "lucy-restyle-2": ModelDefinition(
             name="lucy-restyle-2",
             url_path="/v1/stream",
@@ -261,6 +271,14 @@ _MODELS = {
         "lucy-2.5": ModelDefinition(
             name="lucy-2.5",
             url_path="/v1/jobs/lucy-2.5",
+            fps=20,
+            width=1280,
+            height=720,
+            input_schema=VideoEdit2Input,
+        ),
+        "lucy-2.6": ModelDefinition(
+            name="lucy-2.6",
+            url_path="/v1/jobs/lucy-2.6",
             fps=20,
             width=1280,
             height=720,
@@ -376,7 +394,8 @@ class Models:
 
         Available models:
             - "lucy-2.1" - Video editing (newer, higher quality)
-            - "lucy-2.5" - Video editing (latest generation)
+            - "lucy-2.5" - Video editing
+            - "lucy-2.6" - Video editing (latest generation)
             - "lucy-restyle-2" - Video restyling with prompt or reference image
         """
         _warn_deprecated(model)

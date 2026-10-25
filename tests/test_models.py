@@ -25,6 +25,14 @@ def test_canonical_realtime_models() -> None:
     assert model.width == 1280
     assert model.height == 720
 
+    model = models.realtime("lucy-2.6")
+    assert model.name == "lucy-2.6"
+    assert model.url_path == "/v1/stream"
+    assert model.fps == 30
+    assert model.width == 1280
+    assert model.height == 720
+    assert model.supported_speeds == ("fast",)
+
     model = models.realtime("lucy-vton-3.5")
     assert model.name == "lucy-vton-3.5"
     assert model.url_path == "/v1/stream"
@@ -53,6 +61,13 @@ def test_canonical_video_models() -> None:
     model = models.video("lucy-2.5")
     assert model.name == "lucy-2.5"
     assert model.url_path == "/v1/jobs/lucy-2.5"
+    assert model.fps == 20
+    assert model.width == 1280
+    assert model.height == 720
+
+    model = models.video("lucy-2.6")
+    assert model.name == "lucy-2.6"
+    assert model.url_path == "/v1/jobs/lucy-2.6"
     assert model.fps == 20
     assert model.width == 1280
     assert model.height == 720
@@ -190,6 +205,7 @@ def test_latest_aliases_no_deprecation_warning() -> None:
 
 FAST_REALTIME_MODELS = {
     "lucy-2.5",
+    "lucy-2.6",
     "lucy-latest",
     "lucy-vton-3.5",
     "lucy-vton-3.6",
@@ -197,7 +213,7 @@ FAST_REALTIME_MODELS = {
 }
 
 
-def test_realtime_fast_speed_capability_pinned_to_lucy_2_5_and_vton_3_5_3_6() -> None:
+def test_realtime_fast_speed_capability_pinned_to_lucy_2_5_2_6_and_vton_3_5_3_6() -> None:
     # Matches the JS SDK registry: only these realtime entries advertise speed="fast".
     fast_models = {
         name for name, model in _MODELS["realtime"].items() if "fast" in model.supported_speeds

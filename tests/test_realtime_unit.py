@@ -232,6 +232,7 @@ async def test_realtime_connect_speed_fast_no_warning_for_supported_model():
         warnings.simplefilter("always")
         for model in (
             "lucy-2.5",
+            "lucy-2.6",
             "lucy-latest",
             "lucy-vton-3.5",
             "lucy-vton-3.6",

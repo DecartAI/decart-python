@@ -59,6 +59,7 @@ logging.basicConfig(level=logging.WARNING)
 REALTIME_MODELS = [
     "lucy-2.1",
     "lucy-2.5",
+    "lucy-2.6",
     "lucy-vton-3.5",
     "lucy-vton-3.6",
     "lucy-vton-latest",
@@ -125,8 +126,8 @@ def parse_args() -> argparse.Namespace:
         choices=["fast"],
         help=(
             "Realtime speed tier. 'fast' uses a higher-compute tier for lower latency "
-            "(lucy-2.5, lucy-vton-3.5, lucy-vton-3.6 and their -latest aliases only, US region, "
-            "billed at 2x). Omit for standard mode."
+            "(lucy-2.5, lucy-2.6, lucy-vton-3.5, lucy-vton-3.6 and their -latest aliases only, "
+            "US region, billed at 2x). Omit for standard mode."
         ),
     )
     parser.add_argument("--camera", "-c", type=int, default=0, help="Camera device index")
