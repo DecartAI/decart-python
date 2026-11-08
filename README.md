@@ -119,8 +119,8 @@ code use `asyncio.run(verify_client_token(token))`.
 
 Realtime sessions accept an optional `speed` on `RealtimeConnectOptions`, alongside `resolution`.
 Fast mode (`speed="fast"`) serves the session from a higher-compute tier for lower latency and
-higher throughput; output quality is unchanged. It is currently available for `lucy-2.5` /
-`lucy-latest`, `lucy-2.6`, `lucy-vton-3.5`, and `lucy-vton-3.6` / `lucy-vton-latest`
+higher throughput; output quality is unchanged. It is currently available for `lucy-2.6` /
+`lucy-latest`, `lucy-2.5`, `lucy-vton-3.5`, and `lucy-vton-3.6` / `lucy-vton-latest`
 (`lucy-vton-latest` currently resolves to `lucy-vton-3.6`), in the US region only, and is billed
 at 2x the standard realtime rate for those models. Other models ignore the option (the SDK emits
 a warning). Omit it (the default) for standard mode.

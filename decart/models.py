@@ -83,8 +83,8 @@ def _warn_unsupported_speed(model: "ModelDefinition[Any]", speed: str) -> None:
     _warned_unsupported_speeds.add(key)
     warnings.warn(
         f'Model "{model.name}" does not support speed="{speed}"; the option is ignored by the '
-        "server for this model. Fast mode is currently available for lucy-2.5 / lucy-latest, "
-        "lucy-2.6, lucy-vton-3.5, and lucy-vton-3.6 / lucy-vton-latest only. "
+        "server for this model. Fast mode is currently available for lucy-2.6 / lucy-latest, "
+        "lucy-2.5, lucy-vton-3.5, and lucy-vton-3.6 / lucy-vton-latest only. "
         "See https://docs.platform.decart.ai/models "
         "for details.",
         UserWarning,
