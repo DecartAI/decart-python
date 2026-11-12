@@ -1,7 +1,6 @@
 from typing import Literal, Optional, Union, Annotated
 from pydantic import BaseModel, Field, TypeAdapter
 
-
 # Incoming Messages (from server)
 
 
