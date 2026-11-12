@@ -209,14 +209,12 @@ def create_ui():
         .status-error { color: red; }
         """,
     ) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
         # Decart SDK Test UI
 
         Interactive testing interface for the Decart Python SDK.
         Enter your API key below to get started.
-        """
-        )
+        """)
 
         # API Key input (shared across all tabs)
         api_key = gr.Textbox(
@@ -291,15 +289,13 @@ def create_ui():
             # Video Restyle Tab (NEW - with reference image support)
             # ================================================================
             with gr.TabItem("Video Restyle (NEW)"):
-                gr.Markdown(
-                    """
+                gr.Markdown("""
                 ### Video Restyle with Prompt OR Reference Image
 
                 This model supports two modes:
                 - **Text Prompt**: Describe the style you want
                 - **Reference Image**: Upload an image to use as style reference
-                """
-                )
+                """)
 
                 with gr.Row():
                     with gr.Column():
@@ -363,14 +359,12 @@ def create_ui():
             # Tokens Tab
             # ================================================================
             with gr.TabItem("Tokens"):
-                gr.Markdown(
-                    """
+                gr.Markdown("""
                 ### Create Client Token
 
                 Create a short-lived token for client-side use.
                 These tokens are meant for temporary access and expire automatically.
-                """
-                )
+                """)
 
                 with gr.Row():
                     with gr.Column():
@@ -388,13 +382,11 @@ def create_ui():
                     outputs=[token_output],
                 )
 
-        gr.Markdown(
-            """
+        gr.Markdown("""
         ---
         **Note**: This UI uses the Decart Python SDK.
         For realtime/WebRTC features, use the example scripts in `examples/`.
-        """
-        )
+        """)
 
     return demo
 
